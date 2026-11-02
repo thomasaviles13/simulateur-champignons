@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simulateur Bioclimatique & Édaphique de Pousse de Champignons</title>
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+  <style>
+    :root {
+      --bg: #101712;
+      --panel: #18231b;
+      --panel-alt: #202f24;
+      --border: #2e4334;
+      --text: #e9f2eb;
+      --muted: #9cb3a2;
+      --accent: #52b788;
+      --accent-dark: #2d6a4f;
+      --gold: #e9c46a;
+      --orange: #f4a261;
+      --red: #e76f51;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+      padding-bottom: 2.5rem;
+    }
+
+    header {
+      background: linear-gradient(135deg, #1b4332 0%, #081c15 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 1.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    header h1 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+    }
+
+    header p {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .quick-spots {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      background: var(--panel-alt);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 0.45rem 0.8rem;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn:hover {
+      background: var(--accent-dark);
+      border-color: var(--accent);
+    }
+
+    .btn-primary {
+      background: var(--accent-dark);
+      border-color: var(--accent);
+      font-weight: 600;
+    }
+
+    .container {
+      max-width: 1550px;
+      margin: 1rem auto;
+      padding: 0 1rem;
+      display: grid;
+      grid-template-columns: 440px 1fr;
+      gap: 1rem;
+    }
+
+    @media (max-width: 1100px) {
+      .container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .card h2 {
+      font-size: 1rem;
+      margin-bottom: 0.75rem;
+      color: var(--accent);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    #map {
+      width: 100%;
+      height: 360px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    .coords-bar {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+      align-items: center;
+    }
+
+    .coords-bar input {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.45rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+    }
+
+    .env-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.6rem;
+    }
+
+    .env-item {
+      background: var(--panel-alt);
+      padding: 0.65rem 0.75rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    .env-item.full {
+      grid-column: 1 / -1;
+    }
+
+    .env-label {
+      font-size: 0.74rem;
+      text-transform: uppercase;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+    }
+
+    .env-value {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-top: 0.2rem;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.18rem 0.5rem;
+      border-radius: 999px;
+      font-size: 0.76rem;
+      background: var(--accent-dark);
+      color: #d8f3dc;
+      margin: 0.15rem 0.2rem 0 0;
+    }
+
+    .filters-bar {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.85rem;
+      align-items: center;
+    }
+
+    .filters-bar input[type="search"] {
+      flex: 1;
+      min-width: 220px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.88rem;
+    }
+
+    .table-wrapper {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.84rem;
+    }
+
+    th, td {
+      padding: 0.5rem 0.42rem;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      background: var(--panel-alt);
+      color: var(--muted);
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+      white-space: nowrap;
+    }
+
+    td.species-col, th.species-col {
+      text-align: left;
+      padding-left: 0.75rem;
+      min-width: 210px;
+    }
+
+    tr.species-row {
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+
+    tr.species-row:hover {
+      background: rgba(82, 183, 136, 0.12);
+    }
+
+    .sci-name {
+      display: block;
+      font-size: 0.73rem;
+      font-style: italic;
+      color: var(--muted);
+    }
+
+    .score-pill {
+      display: inline-block;
+      min-width: 42px;
+      padding: 0.24rem 0.3rem;
+      border-radius: 5px;
+      font-weight: 700;
+      font-size: 0.79rem;
+    }
+
+    .s-excellent { background: #2d6a4f; color: #d8f3dc; border: 1px solid #52b788; }
+    .s-good      { background: #3a5a40; color: #e9f5db; }
+    .s-medium    { background: #6b5327; color: #faedcd; }
+    .s-low       { background: #5c3327; color: #f8d7da; }
+    .s-none      { background: #222925; color: #6c757d; }
+
+    .detail-box {
+      background: var(--panel-alt);
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      padding: 0.9rem;
+      margin-bottom: 1rem;
+      display: none;
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(11, minmax(75px, 1fr));
+      gap: 0.4rem;
+      margin-top: 0.65rem;
+      overflow-x: auto;
+    }
+
+    .day-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.45rem;
+      text-align: center;
+      font-size: 0.76rem;
+    }
+
+    .day-card strong {
+      display: block;
+      color: var(--accent);
+      margin-bottom: 0.15rem;
+    }
+
+    .loading-overlay {
+      padding: 2rem;
+      text-align: center;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>🍄 Simulateur Bioclimatique & Édaphique de Pousse de Champignons</h1>
+      <p>Modélisation glissante sur 20 jours d'historique + prévisions de J à J+10 • SoilGrids + IGN BD Forêt + Open-Meteo</p>
+    </div>
+    <div class="quick-spots">
+      <button class="btn" onclick="chargerSpot(50.2215, 3.7580)">🌲 Forêt de Mormal (59)</button>
+      <button class="btn" onclick="chargerSpot(48.4047, 2.6989)">🌳 Fontainebleau (77)</button>
+      <button class="btn" onclick="chargerSpot(44.1325, -0.8211)">🌲 Landes de Gascogne (40)</button>
+      <button class="btn" onclick="chargerSpot(45.7719, 2.9614)">⛰️ Chaîne des Puys (63)</button>
+      <button class="btn" onclick="chargerSpot(48.0686, 6.9708)">🌲 Massif des Vosges (88)</button>
+    </div>
+  </header>
+
+  <div class="container">
+    <!-- Colonne gauche : Carte + Profil Environnemental -->
+    <div>
+      <div class="card">
+        <h2>
+          <span>📍 Sélection Géographique (Carte)</span>
+          <small style="font-size:0.75rem;color:var(--muted);font-weight:normal;">Cliquez sur la carte</small>
+        </h2>
+        <div id="map"></div>
+        <div class="coords-bar">
+          <input type="number" id="input-lat" step="0.0001" value="50.2215" placeholder="Latitude" />
+          <input type="number" id="input-lon" step="0.0001" value="3.7580" placeholder="Longitude" />
+          <button class="btn btn-primary" onclick="lancerDepuisInputs()">Simuler</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>🌿 Profil Édaphique & Forestier du Point</h2>
+        <div class="env-grid">
+          <div class="env-item">
+            <div class="env-label">Altitude</div>
+            <div class="env-value" id="env-alt">—</div>
+          </div>
+          <div class="env-item">
+            <div class="env-label">pH du Sol (0-5 cm)</div>
+            <div class="env-value" id="env-ph">—</div>
+          </div>
+          <div class="env-item">
+            <div class="env-label">Pente du Terrain</div>
+            <div class="env-value" id="env-pente">—</div>
+          </div>
+          <div class="env-item">
+            <div class="env-label">Exposition / Versant</div>
+            <div class="env-value" id="env-orientation">—</div>
+          </div>
+          <div class="env-item full">
+            <div class="env-label">Qualification Pédologique & Texture</div>
+            <div class="env-value" id="env-sol-type">—</div>
+            <div style="font-size:0.78rem;color:var(--muted);margin-top:0.25rem;" id="env-sol-details">—</div>
+          </div>
+          <div class="env-item full">
+            <div class="env-label">Peuplements Forestiers & Effet Canopée (IGN BD Forêt V2)</div>
+            <div class="env-value" id="env-foret" style="margin-top:0.35rem;">—</div>
+            <div style="font-size:0.78rem;color:var(--muted);margin-top:0.25rem;" id="env-canopee-details">—</div>
+          </div>
+          <div class="env-item">
+            <div class="env-label">Cumul Pluie (J-20 à J)</div>
+            <div class="env-value" id="meteo-cumul-20j">—</div>
+          </div>
+          <div class="env-item">
+            <div class="env-label">Pluie Prévue (J+1 à J+10)</div>
+            <div class="env-value" id="meteo-cumul-10j">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Colonne droite : Résultats J à J+10 -->
+    <div>
+      <div class="card">
+        <h2>
+          <span>📊 Probabilités de Fructification de J à J+10</span>
+          <span id="compteur-especes" style="font-size:0.82rem;color:var(--muted);"></span>
+        </h2>
+
+        <div class="filters-bar">
+          <input
+            type="search"
+            id="filtre-recherche"
+            placeholder="Rechercher une espèce (ex: Cèpe, Amanite rougissante, Fistuline, Laccaire, Girolle...)"
+            oninput="afficherTableauEspeces()"
+          />
+          <label style="font-size:0.82rem;color:var(--muted);">
+            Score min :
+            <select id="filtre-score" onchange="afficherTableauEspeces()" style="background:var(--bg);color:var(--text);border:1px solid var(--border);padding:0.35rem;border-radius:5px;">
+              <option value="0">Toutes les espèces de saison</option>
+              <option value="40">≥ 40 %</option>
+              <option value="65">≥ 65 % (Favorable)</option>
+              <option value="80">≥ 80 % (Optimal)</option>
+            </select>
+          </label>
+          <div style="font-size:0.78rem;color:var(--muted);margin-left:auto;display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;">
+            <span><strong>Stades :</strong></span>
+            <span title="Jeunes primordia / bouchons en train de sortir">🌱 En pousse</span>
+            <span title="Carpophores adultes à pleine maturité">🍄 Adultes</span>
+            <span title="Carpophores âgés en fin de volée">🍂 Vieillissants</span>
+          </div>
+        </div>
+
+        <!-- Encadré détail d'une espèce sélectionnée -->
+        <div id="detail-espece" class="detail-box"></div>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr id="table-head-row">
+                <th class="species-col">Espèce comestible</th>
+                <th title="Compatibilité Biotope (pH sol, essences IGN, altitude)">Biotope</th>
+                <th>J</th>
+                <th>J+1</th>
+                <th>J+2</th>
+                <th>J+3</th>
+                <th>J+4</th>
+                <th>J+5</th>
+                <th>J+6</th>
+                <th>J+7</th>
+                <th>J+8</th>
+                <th>J+9</th>
+                <th>J+10</th>
+              </tr>
+            </thead>
+            <tbody id="table-especes-body">
+              <tr><td colspan="13" class="loading-overlay">Chargement de la simulation...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
+  <script>
+    let map, marker;
+    let dernierRapport = null;
+
+    function initialiserCarte() {
+      const osm = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: "© OpenStreetMap",
+      });
+      const topo = L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
+        maxZoom: 17,
+        attribution: "© OpenTopoMap",
+      });
+
+      map = L.map("map", {
+        center: [50.2215, 3.7580],
+        zoom: 12,
+        layers: [osm],
+      });
+
+      L.control.layers({ "Plan OpenStreetMap": osm, "Carte Topographique": topo }).addTo(map);
+      marker = L.marker([50.2215, 3.7580]).addTo(map);
+
+      map.on("click", (e) => {
+        const lat = parseFloat(e.latlng.lat.toFixed(4));
+        const lon = parseFloat(e.latlng.lng.toFixed(4));
+        chargerSpot(lat, lon);
+      });
+    }
+
+    function classeScore(score) {
+      if (score >= 80) return "s-excellent";
+      if (score >= 60) return "s-good";
+      if (score >= 35) return "s-medium";
+      if (score >= 15) return "s-low";
+      return "s-none";
+    }
+
+    function chargerSpot(lat, lon) {
+      document.getElementById("input-lat").value = lat;
+      document.getElementById("input-lon").value = lon;
+      marker.setLatLng([lat, lon]);
+      map.panTo([lat, lon]);
+      executerSimulation(lat, lon);
+    }
+
+    function lancerDepuisInputs() {
+      const lat = parseFloat(document.getElementById("input-lat").value);
+      const lon = parseFloat(document.getElementById("input-lon").value);
+      if (!isNaN(lat) && !isNaN(lon)) {
+        chargerSpot(lat, lon);
+      }
+    }
+
+    async function executerSimulation(lat, lon) {
+      const tbody = document.getElementById("table-especes-body");
+      tbody.innerHTML = `<tr><td colspan="13" class="loading-overlay">Interrogation Open-Meteo, SoilGrids & IGN BD Forêt pour (${lat}, ${lon})...</td></tr>`;
+      document.getElementById("detail-espece").style.display = "none";
+
+      try {
+        const resp = await fetch(`/api/simuler?lat=${lat}&lon=${lon}`);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        dernierRapport = await resp.json();
+        mettreAJourProfil(dernierRapport);
+        afficherTableauEspeces();
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="13" class="loading-overlay" style="color:var(--red);">Erreur lors de la simulation : ${err.message}</td></tr>`;
+      }
+    }
+
+    function mettreAJourProfil(data) {
+      const env = data.environnement;
+      const topo = env.topographie || {};
+      const sol = env.sol || {};
+      const foret = env.foret || {};
+      const meteo = data.meteo_periode || {};
+
+      document.getElementById("env-alt").textContent =
+        env.altitude_m !== null ? `${env.altitude_m} m` : "N/A";
+      document.getElementById("env-ph").textContent =
+        sol.ph !== null ? `pH ${sol.ph}` : "N/A";
+      document.getElementById("env-pente").textContent =
+        topo.pente_deg !== undefined ? `${topo.pente_deg}° (${topo.pente_pct}%)` : "N/A";
+      const deltaT = topo.delta_temp_sol_c || 0;
+      const signeT = deltaT > 0 ? `+${deltaT}°C` : `${deltaT}°C`;
+      document.getElementById("env-orientation").textContent =
+        topo.orientation
+          ? `${topo.orientation}${deltaT !== 0 ? ` (${signeT})` : ""}`
+          : "N/A";
+      document.getElementById("env-sol-type").textContent = sol.type_sol || "Indéterminé";
+      document.getElementById("env-sol-details").textContent =
+        `Argile : ${sol.argile_pct ?? "—"}% • Limon : ${sol.limon_pct ?? "—"}% • Sable : ${sol.sable_pct ?? "—"}% • Carbone org. : ${sol.carbone_organique_g_kg ?? "—"} g/kg (${sol.source || ""})`;
+
+      const peuplements = foret.peuplements || [];
+      const peuplementsLisiere = foret.peuplements_lisiere || [];
+      if (peuplements.length > 0) {
+        document.getElementById("env-foret").innerHTML = peuplements
+          .map((p) => `<span class="badge">🌳 ${p.formation_vegetale} (${p.essence})</span>`)
+          .join("");
+      } else if (foret.en_lisiere && peuplementsLisiere.length > 0) {
+        const distTxt = foret.distance_foret_m ? ` à ${foret.distance_foret_m} m` : "";
+        document.getElementById("env-foret").innerHTML =
+          `<div style="margin-bottom:0.3rem;color:#fbbf24;font-size:0.85rem;">🌿 Prairie en lisière forestière (bois${distTxt}) :</div>` +
+          peuplementsLisiere
+            .map((p) => `<span class="badge" style="opacity:0.85;">🌲 Lisière : ${p.formation_vegetale} (${p.essence})</span>`)
+            .join("");
+      } else {
+        const distInfo = foret.distance_foret_m ? ` (bois le plus proche à ${foret.distance_foret_m} m)` : "";
+        document.getElementById("env-foret").innerHTML =
+          `<span style="color:#a3e635;font-size:0.88rem;">🌾 Prairie / Milieu ouvert — Hors massif forestier IGN${distInfo}</span>`;
+      }
+
+      const canopee = env.microclimat_canopee_sol || {};
+      if (canopee.couvert) {
+        const redVent = Math.round((1 - (canopee.coeff_vent_sous_bois ?? 1)) * 100);
+        const redEt0 = Math.round((1 - (canopee.coeff_et0_sous_bois ?? 1)) * 100);
+        document.getElementById("env-canopee-details").textContent =
+          `${canopee.couvert} • Vent freiné de -${redVent}% • Évapotranspiration -${redEt0}% • Tampon gel nocturne +${canopee.tampon_gel_c ?? 0}°C`;
+      }
+
+      const idxJ = meteo.index_aujourd_hui || 20;
+      const precips = meteo.precipitation_sum || [];
+      const cumul20j = precips.slice(0, idxJ + 1).reduce((a, b) => a + (b || 0), 0);
+      const cumul10j = precips.slice(idxJ + 1).reduce((a, b) => a + (b || 0), 0);
+      document.getElementById("meteo-cumul-20j").textContent = `${cumul20j.toFixed(1)} mm`;
+      document.getElementById("meteo-cumul-10j").textContent = `${cumul10j.toFixed(1)} mm`;
+
+      // Met à jour les dates dans l'en-tête J à J+10
+      if (data.especes_probables && data.especes_probables.length > 0) {
+        const courbe = data.especes_probables[0].courbe_J_a_J10;
+        const ths = document.querySelectorAll("#table-head-row th");
+        courbe.forEach((jour, idx) => {
+          const th = ths[idx + 2];
+          if (th) {
+            const jjmm = jour.date.slice(5).split("-").reverse().join("/");
+            th.innerHTML = `${jour.echeance}<br><small style="font-weight:normal;font-size:0.7rem;">${jjmm}</small>`;
+          }
+        });
+      }
+    }
+
+    function afficherTableauEspeces() {
+      if (!dernierRapport) return;
+      const recherche = document.getElementById("filtre-recherche").value.trim().toLowerCase();
+      const scoreMin = parseInt(document.getElementById("filtre-score").value, 10) || 0;
+
+      const especes = dernierRapport.especes_probables.filter((e) => {
+        const matchTexte =
+          !recherche ||
+          e.nom.toLowerCase().includes(recherche) ||
+          e.nom_scientifique.toLowerCase().includes(recherche);
+        const matchScore = e.score_max_J10 >= scoreMin;
+        return matchTexte && matchScore;
+      });
+
+      document.getElementById("compteur-especes").textContent =
+        `${especes.length} / ${dernierRapport.especes_probables.length} espèces comestibles de saison affichées`;
+
+      const tbody = document.getElementById("table-especes-body");
+      if (especes.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="13" class="loading-overlay">Aucune espèce ne correspond aux filtres sélectionnés.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = especes
+        .map((esp) => {
+          const cellulesJours = esp.courbe_J_a_J10
+            .map((j) => {
+              const st = j.details.stades_carpophore || {};
+              const diagStade = st.diagnostic || "Aucune volée active";
+              const afficherStade = j.score_pct >= 10 && st.icone && st.icone !== "—";
+              const htmlStade = afficherStade
+                ? `<div style="font-size:0.72rem;line-height:1.1;margin-top:0.2rem;white-space:nowrap;">${st.icone}</div>
+                   <div style="display:flex;height:3px;width:44px;margin:2px auto 0;border-radius:2px;overflow:hidden;background:#1f2e22;">
+                     <div style="width:${st.en_pousse_pct}%;background:#4ade80;"></div>
+                     <div style="width:${st.adultes_pct}%;background:#fbbf24;"></div>
+                     <div style="width:${st.vieillissants_pct}%;background:#f97316;"></div>
+                   </div>`
+                : `<div style="font-size:0.68rem;color:var(--muted);margin-top:0.15rem;">—</div>`;
+
+              return `<td title="${j.date} : ${diagStade} | Pluie 20j=${j.details.pluie_20j_mm}mm | Maturation=${j.details.delai_maturation_j ?? '—'}j | Pousse=${j.details.vitesse_pousse ?? '—'} | Sol=${j.details.temp_sol_c}°C">
+                <span class="score-pill ${classeScore(j.score_pct)}">${j.score_pct}%</span>
+                ${htmlStade}
+              </td>`;
+            })
+            .join("");
+
+          return `<tr class="species-row" onclick="afficherDetailEspece('${esp.id}')">
+            <td class="species-col">
+              <strong>${esp.nom}</strong>
+              <span class="sci-name">${esp.nom_scientifique}</span>
+            </td>
+            <td><strong>${esp.compatibilite_biotope_pct}%</strong></td>
+            ${cellulesJours}
+          </tr>`;
+        })
+        .join("");
+    }
+
+    function afficherDetailEspece(especeId) {
+      if (!dernierRapport) return;
+      const esp = dernierRapport.especes_probables.find((e) => e.id === especeId);
+      if (!esp) return;
+
+      const box = document.getElementById("detail-espece");
+      box.style.display = "block";
+      box.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <strong style="font-size:1rem;color:var(--accent);">🔍 Détail journalier (J à J+10) : ${esp.nom}</strong>
+            <span style="font-style:italic;color:var(--muted);font-size:0.85rem;margin-left:0.5rem;">(${esp.nom_scientifique})</span>
+          </div>
+          <button class="btn" onclick="document.getElementById('detail-espece').style.display='none'">Fermer ✕</button>
+        </div>
+        <div class="detail-grid">
+          ${esp.courbe_J_a_J10
+            .map((j) => {
+              const st = j.details.stades_carpophore || {};
+              return `
+              <div class="day-card">
+                <strong>${j.echeance} (${j.date.slice(8)}/${j.date.slice(5, 7)})</strong>
+                <div style="margin:0.25rem 0;"><span class="score-pill ${classeScore(j.score_pct)}">${j.score_pct}%</span></div>
+                <div style="font-weight:600;color:#e7f3ea;margin:0.2rem 0 0.1rem;">${st.icone || "—"} ${st.label_court || "—"}</div>
+                <div style="display:flex;height:5px;width:100%;margin:0.2rem 0;border-radius:3px;overflow:hidden;background:#1a2b1d;">
+                  <div style="width:${st.en_pousse_pct ?? 0}%;background:#4ade80;" title="En pousse : ${st.en_pousse_pct ?? 0}%"></div>
+                  <div style="width:${st.adultes_pct ?? 0}%;background:#fbbf24;" title="Adultes : ${st.adultes_pct ?? 0}%"></div>
+                  <div style="width:${st.vieillissants_pct ?? 0}%;background:#f97316;" title="Vieillissants : ${st.vieillissants_pct ?? 0}%"></div>
+                </div>
+                <div style="font-size:0.72rem;color:var(--muted);margin-bottom:0.25rem;">
+                  🌱 ${st.en_pousse_pct ?? 0}% • 🍄 ${st.adultes_pct ?? 0}% • 🍂 ${st.vieillissants_pct ?? 0}%
+                </div>
+                <div style="color:var(--muted);">🌧️ 20j : ${j.details.pluie_20j_mm} mm</div>
+                <div style="color:var(--muted);">🌡️ Sol : ${j.details.temp_sol_c ?? "—"}°C (min ${j.details.tmin_sous_bois_c ?? "—"}°C)</div>
+                <div style="color:var(--muted);">💧 Sol : ${j.details.humidite_sol_m3 ?? "—"} • Air : ${j.details.humidite_air_pct ?? "—"}%</div>
+                <div style="color:var(--muted);">🌬️ Vent : ${j.details.vent_sous_bois_kmh ?? "—"} km/h</div>
+                <div style="color:var(--gold);margin-top:0.15rem;">⏱️ Matur. : ${j.details.delai_maturation_j ?? "—"} j</div>
+                <div style="color:var(--accent);">🚀 ${j.details.vitesse_pousse ?? "—"}</div>
+              </div>`;
+            })
+            .join("")}
+        </div>
+      `;
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      initialiserCarte();
+      executerSimulation(50.2215, 3.7580);
+    });
+  </script>
+</body>
+</html>
