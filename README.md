@@ -1,5 +1,7 @@
 # 🍄 Simulateur Bioclimatique & Édaphique de Pousse de Champignons
 
+📲 **[Télécharger l'application Android (`SimulateurChampignons.apk`)](https://github.com/thomasaviles13/simulateur-champignons/raw/main/SimulateurChampignons.apk)**
+
 Simulateur de fructification mycologique sauvage (42 espèces comestibles) croisant en temps réel :
 - **Météorologie sur 31 jours (`J-20` à `J+10`)** : Open-Meteo (températures air/sol, humidité du sol 0–7 cm, ETP FAO, précipitations, vent, rayonnement).
 - **Topographie fine** : Altitude, pente (degrés et %), exposition / azimut (Adret vs Ubac) et micro-climat associé.

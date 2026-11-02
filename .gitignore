@@ -18,8 +18,8 @@ android-app/.idea/
 android-app/.cxx/
 android-app/captures/
 
-# Binaires APK générés localement
-*.apk
+# Binaires APK intermédiaires (SimulateurChampignons.apk à la racine est versionné)
+android-app/app/build/outputs/apk/
 
 # OS / IDE
 .DS_Store
