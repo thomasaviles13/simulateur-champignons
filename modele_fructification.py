@@ -224,10 +224,10 @@ CATALOGUE_ESPECES = [
         "mois_actifs": [9, 10, 11, 12],
         "mois_optimaux": [10, 11],
         "ph_optimal": (5.0, 7.2),
-        "temp_sol_optimale": (7.0, 15.0),
-        "temp_sol_limites": (3.0, 19.0),
-        "pluie_20j_optimale_mm": (55.0, 150.0),
-        "delai_maturation_jours": (8, 16),
+        "temp_sol_optimale": (7.0, 14.5),
+        "temp_sol_limites": (3.0, 18.5),
+        "pluie_20j_optimale_mm": (60.0, 145.0),
+        "delai_maturation_jours": (7, 15),
         "choc_thermique": "baisse",
         "essences_hotes": ["hêtre", "chêne", "charme", "châtaignier", "feuillus"],
         "altitude_max": 1600,
@@ -597,7 +597,7 @@ CATALOGUE_ESPECES = [
         "temp_sol_optimale": (7.0, 17.5),
         "temp_sol_limites": (2.5, 22.0),
         "pluie_20j_optimale_mm": (30.0, 90.0),
-        "delai_maturation_jours": (5, 10),
+        "delai_maturation_jours": (6, 12),
         "choc_thermique": "modere",
         "essences_hotes": ["chêne", "hêtre", "châtaignier", "feuillus", "pin", "conifères", "prairie"],
         "altitude_max": 1600,
@@ -911,6 +911,36 @@ def _persistance_volee_carpophore(espece):
     # Cèpes, Bolets, Coulemelles, Amanites, Russules, Lactaires, Tricholomes, Laccaire, Marasme
     return 6
 
+
+# Espèces à mycélium superficiel (litière de feuilles 0-2 cm / mousses) ou à primordia fins/lents
+# qui avortent rapidement si la litière superficielle sèche pendant 6 à 10 jours sans pluie :
+ESPECES_SENSIBLES_SECHERESSE_LITIERE = {
+    "trompette_mort",
+    "chanterelle_tube",
+    "chanterelle_jaunissante",
+    "girolle",
+    "pied_de_mouton",
+    "pied_de_mouton_roussissant",
+    "laccaire_amethyste",
+    "laccaire_laque",
+    "marasme_oreades",
+    "rose_des_pres",
+    "coprin_chevelu",
+    "vesse_de_loup",
+}
+
+# Espèces exigeant une saturation hydrique profonde et continue de l'humus sur 35 à 45 jours
+# (très sensibles aux sécheresses de fin d'été / début d'automne ; ne sortent jamais sur une seule pluie isolée) :
+ESPECES_EXIGEANTES_SATURATION_PROFONDE = {
+    "trompette_mort",
+    "girolle",
+    "pied_de_mouton",
+    "pied_de_mouton_roussissant",
+    "chanterelle_tube",
+    "chanterelle_jaunissante",
+    "tete_de_moine",
+    "pied_bleu",
+}
 
 # Espèces cryophiles dont la fructification est stimulée par les premières gelées blanches (-2.5°C à +2°C)
 ESPECES_CRYOPHILES_GEL = {
@@ -1367,53 +1397,119 @@ def calculer_score_jour(espece, meteo, index_jour, score_biotope, topographie=No
             return (age_j - age_min) / max(0.5, (pic_debut - age_min))
         return (age_max - age_j) / max(0.5, (age_max - pic_fin))
 
+    def _survie_cohorte_secheresse(idx_pluie):
+        """
+        Évalue la survie des primordia induits par la pluie du jour `idx_pluie` jusqu'au jour `index_jour`.
+        Si une période sèche prolongée (>= 6 à 8 jours consécutifs < 1.2 mm) survient entre `idx_pluie + 1`
+        et `index_jour`, la litière superficielle sèche et fait avorter les primordia de cette cohorte
+        (qui ne ressuscitent pas même s'il repleut la veille de `index_jour`).
+        """
+        max_sec = 0
+        sec_courant = 0
+        for idx_k in range(idx_pluie + 1, index_jour + 1):
+            if _pluie_efficace_sol(precips[idx_k]) < 1.2:
+                sec_courant += 1
+                if sec_courant > max_sec:
+                    max_sec = sec_courant
+            else:
+                sec_courant = 0
+        if espece["id"] in ESPECES_SENSIBLES_SECHERESSE_LITIERE:
+            if max_sec >= 8:
+                return 0.20
+            if max_sec >= 5:
+                return 0.50
+        else:
+            if max_sec >= 9:
+                return 0.55
+        return 1.0
+
     pluie_maturation = 0.0
     for idx_p in range(debut_20j, index_jour + 1):
         age_j = index_jour - idx_p
         poids = _poids_pluie_selon_age(age_j)
         if poids > 0.0:
-            pluie_maturation += _pluie_efficace_sol(precips[idx_p]) * poids
+            survie = _survie_cohorte_secheresse(idx_p)
+            pluie_maturation += _pluie_efficace_sol(precips[idx_p]) * poids * survie
     pluie_maturation = round(pluie_maturation, 1)
 
     idx_mat_debut = max(0, index_jour - d_fin)
-    idx_mat_fin = max(0, index_jour - d_debut + 1)
+    idx_mat_fin = max(0, index_jour - 2)
     cumul_avant_emergence = round(
-        sum(_pluie_efficace_sol(p) for p in precips[debut_20j:idx_mat_fin]), 1
+        sum(
+            _pluie_efficace_sol(precips[idx_p]) * (0.25 + 0.75 * _survie_cohorte_secheresse(idx_p))
+            for idx_p in range(debut_20j, idx_mat_fin)
+        ),
+        1,
     )
 
     p_opt_min, p_opt_max = espece["pluie_20j_optimale_mm"]
     score_cumul_20j = _score_intervalle(
-        cumul_avant_emergence, p_opt_min * 0.70, p_opt_max, 4.0, p_opt_max + 90.0
+        cumul_avant_emergence, p_opt_min * 0.80, p_opt_max, 8.0, p_opt_max + 90.0
     )
     score_maturation = _score_intervalle(
-        pluie_maturation, p_opt_min * 0.42, p_opt_max * 0.80, 1.5, p_opt_max * 1.15
+        pluie_maturation, p_opt_min * 0.48, p_opt_max * 0.85, 3.0, p_opt_max * 1.15
     )
 
-    # Stress hydrique antérieur (« Réveil du mycélium » / Effet Birch) vs Asphyxie mycélienne
+    # Stress hydrique antérieur (« Réveil du mycélium » / Effet Birch) vs Déficit de saturation profonde :
+    # Attention : un épisode pluvieux isolé après une longue sécheresse réveille les espèces opportunistes
+    # (Bolet bai, Marasme, Rosé), mais est insuffisant pour les espèces exigeant une saturation profonde
+    # de l'humus (Trompette de la mort, Girolle, Pied-de-mouton) qui subissent un dieback mycélien estival !
     pluie_avant_induction = sum(
         _pluie_efficace_sol(p) for p in precips[debut_20j:idx_mat_debut]
     )
+    nb_jours_pluie_20j = sum(1 for p in fenetre_pluie if p >= 2.0)
+
     bonus_reveil_mycelien = 1.0
-    if pluie_avant_induction < 12.0 and pluie_maturation >= p_opt_min * 0.40:
-        # Contraste sec -> humide franc : stimule puissamment la fructification
-        bonus_reveil_mycelien = 1.12
-    elif params_eco["risque_asphyxie_argile"] and cumul_20j > 135.0:
-        # Engorgement hydrique sur sol argileux plat (manque d'oxygène pour le mycélium)
-        bonus_reveil_mycelien = 0.72
+    if espece["id"] in ESPECES_EXIGEANTES_SATURATION_PROFONDE:
+        # Ces espèces exigent un humus profondément réhydraté par plusieurs épisodes pluvieux :
+        # Si le cumul 20j est inférieur au seuil optimal ou concentré sur <= 3 jours de pluie isolés,
+        # le mycélium (affaibli par la sécheresse antérieure) ne fructifie pas.
+        if cumul_20j < p_opt_min * 0.75 or nb_jours_pluie_20j <= 3:
+            bonus_reveil_mycelien = 0.42
+        elif cumul_20j < p_opt_min or nb_jours_pluie_20j <= 5:
+            bonus_reveil_mycelien = 0.72
+    else:
+        if pluie_avant_induction < 12.0 and pluie_maturation >= p_opt_min * 0.45 and cumul_20j >= p_opt_min * 0.75:
+            bonus_reveil_mycelien = 1.08
+
+    if params_eco["risque_asphyxie_argile"] and cumul_20j > 135.0:
+        bonus_reveil_mycelien = min(bonus_reveil_mycelien, 0.72)
 
     score_pluie = min(1.0, (0.42 * score_cumul_20j + 0.58 * score_maturation) * bonus_reveil_mycelien)
 
-    # 5. Phase B : Humidité superficielle du sol (0-7 cm) et hygrométrie de l'air pendant la pousse
+    # 5. Phase B : Humidité du sol (0-7 cm) ET humectation de la litière superficielle (0-2 cm)
+    # Open-Meteo mesure l'humidité jusqu'à 7 cm (qui reste ~0.30 même après 10 jours sans pluie).
+    # Or, 7 à 10 jours consécutifs sans pluie (< 1.5 mm/j) sèchent la litière de feuilles mortes (0-2 cm) :
+    # - Les espèces de litière superficielle à primordia fins/lents (Trompette, Girolle, Pied-de-mouton) avortent.
+    # - Les bolets déjà sortis 7 jours plus tôt survivent uniquement à l'état "Vieillissants" (fin de volée).
+    pluie_8j_recents = sum(_pluie_efficace_sol(p) for p in precips[max(0, index_jour - 7) : index_jour + 1])
+    jours_sans_pluie = 0
+    for idx_sec in range(index_jour, debut_20j - 1, -1):
+        if _pluie_efficace_sol(precips[idx_sec]) < 1.2:
+            jours_sans_pluie += 1
+        else:
+            break
+
+    facteur_litiere_surface = 1.0
+    if espece["id"] in ESPECES_SENSIBLES_SECHERESSE_LITIERE:
+        if jours_sans_pluie >= 8 and pluie_8j_recents < 3.0:
+            facteur_litiere_surface = 0.48  # Litière de feuilles sèche depuis > 8 jours -> avortement des primordia
+        elif jours_sans_pluie >= 5 and pluie_8j_recents < 5.0:
+            facteur_litiere_surface = 0.70
+    else:
+        if jours_sans_pluie >= 9 and pluie_8j_recents < 2.0:
+            facteur_litiere_surface = 0.82  # Fin de volée sèche : seuls persistent des spécimens âgés
+
     fenetre_hum = [
         h for h in humidites_sol[max(0, index_jour - 2) : index_jour + 1] if h is not None
     ]
     hum_moy = round(sum(fenetre_hum) / len(fenetre_hum), 3) if fenetre_hum else 0.25
     score_humidite_sol = _score_intervalle(hum_moy, 0.22, 0.42, 0.09, 0.55)
-    score_humidite = 0.75 * score_humidite_sol + 0.25 * coeff_assechement_air
+    score_humidite = (0.72 * score_humidite_sol + 0.28 * coeff_assechement_air) * facteur_litiere_surface
 
-    # Facteur hydrique global (l'induction préalable est indispensable pour qu'il y ait des primordia)
-    score_hydrique = score_pluie * (0.35 + 0.65 * score_humidite) if score_pluie < 0.25 else (
-        0.58 * score_pluie + 0.42 * score_humidite
+    # Facteur hydrique global (l'induction préalable ET le maintien de l'humidité de litière sont requis)
+    score_hydrique = score_pluie * (0.30 + 0.70 * score_humidite) if (score_pluie < 0.35 or facteur_litiere_surface < 0.40) else (
+        (0.55 * score_pluie + 0.45 * score_humidite) * min(1.0, facteur_litiere_surface * 1.15)
     )
 
     # 6. Température du sol (inertie thermique mycélienne sur 12 jours + maintien sur 3 jours)
@@ -1491,9 +1587,9 @@ def calculer_score_jour(espece, meteo, index_jour, score_biotope, topographie=No
     # Le biotope (score_biotope) agit comme un facteur multiplicatif direct : sans l'arbre hôte,
     # hors de son pH toléré ou hors de son habitat, l'espèce ne peut pas fructifier.
     facteur_biotope = score_biotope
-    facteur_dessiccation = 0.35 + 0.65 * min(1.0, coeff_assechement_air * 1.25)
-    facteur_limitant_eau = min(1.0, score_hydrique * 1.45) * facteur_dessiccation
-    facteur_limitant_temp = min(1.0, score_temp * 1.45) * min(1.0, facteur_gel)
+    facteur_dessiccation = 0.35 + 0.65 * min(1.0, coeff_assechement_air * 1.15)
+    facteur_limitant_eau = min(1.0, score_hydrique * 1.12) * facteur_dessiccation
+    facteur_limitant_temp = min(1.0, score_temp * 1.25) * min(1.0, facteur_gel)
 
     score_final = (
         100.0
@@ -1514,6 +1610,17 @@ def calculer_score_jour(espece, meteo, index_jour, score_biotope, topographie=No
         coeff_assechement_air=coeff_assechement_air,
         facteur_gel=facteur_gel,
     )
+
+    # Détection du nanisme hydrique / thermique d'élongation (ex: Coulemelles ou Bolets 2x plus petits
+    # lorsque le bulbe/primordium a été induit par une pluie antérieure mais que l'élongation du pied
+    # et l'ouverture du chapeau par turgescence se font sans eau libre >= 6 jours et/ou par sol froid) :
+    if jours_sans_pluie >= 6 and pluie_8j_recents < 4.0:
+        if t_sol < espece["temp_sol_optimale"][0]:
+            note_gabarit = " • 📏 Petit gabarit (nanisme sec & froid)"
+        else:
+            note_gabarit = " • 📏 Petit gabarit (manque d'eau libre)"
+        stades_carpophore["diagnostic"] += note_gabarit
+        stades_carpophore["label_court"] += " • 📏 Petit gabarit"
 
     return {
         "date": date_str,

@@ -193,6 +193,32 @@ data class ResultatScan5km(
 
 object ModeleMycologique {
 
+    private val ESPECES_SENSIBLES_SECHERESSE_LITIERE = setOf(
+        "trompette_mort",
+        "chanterelle_tube",
+        "chanterelle_jaunissante",
+        "girolle",
+        "pied_de_mouton",
+        "pied_de_mouton_roussissant",
+        "laccaire_amethyste",
+        "laccaire_laque",
+        "marasme_oreades",
+        "rose_des_pres",
+        "coprin_chevelu",
+        "vesse_de_loup"
+    )
+
+    private val ESPECES_EXIGEANTES_SATURATION_PROFONDE = setOf(
+        "trompette_mort",
+        "girolle",
+        "pied_de_mouton",
+        "pied_de_mouton_roussissant",
+        "chanterelle_tube",
+        "chanterelle_jaunissante",
+        "tete_de_moine",
+        "pied_bleu"
+    )
+
     val SPOTS_FAVORIS_DEFAUT = listOf(
         SpotPredefini("Châtaigneraie des Terres Froides", "Isère (38)", "Forêt de châtaigniers sur versant Nord frais (510 m)", 45.4105, 5.2400, "🌰"),
         SpotPredefini("Prairies d'Ornacieux-Balbins", "Isère (38)", "Prairies ouvertes propices aux Marasmes, Rosés et Coulemelles", 45.4021, 5.2231, "🌾"),
@@ -220,7 +246,7 @@ object ModeleMycologique {
         EspeceChampignon("girolle", "Girolle (Chanterelle)", "Cantharellus cibarius", setOf(6, 7, 8, 9, 10, 11), setOf(6, 7, 9, 10), 4.5, 6.2, 9.5, 19.0, 5.0, 24.0, 45.0, 120.0, 10, 18, ChocThermique.MODERE, listOf("chêne", "hêtre", "châtaignier", "bouleau", "épicéa", "pin", "feuillus", "conifères"), 2000),
         EspeceChampignon("chanterelle_tube", "Chanterelle en tube (Grise)", "Craterellus tubaeformis", setOf(9, 10, 11, 12), setOf(10, 11, 12), 4.0, 6.0, 5.0, 13.0, 1.0, 17.0, 50.0, 140.0, 7, 15, ChocThermique.BAISSE, listOf("épicéa", "sapin", "pin", "conifères", "hêtre", "chêne", "châtaignier", "feuillus"), 2000, estCryophileGel = true),
         EspeceChampignon("chanterelle_jaunissante", "Chanterelle jaunissante", "Craterellus lutescens", setOf(9, 10, 11, 12), setOf(10, 11), 5.0, 7.2, 6.0, 14.0, 2.0, 18.0, 45.0, 130.0, 7, 15, ChocThermique.BAISSE, listOf("pin", "épicéa", "sapin", "conifères", "hêtre"), 2000, estCryophileGel = true),
-        EspeceChampignon("trompette_mort", "Trompette de la mort", "Craterellus cornucopioides", setOf(9, 10, 11, 12), setOf(10, 11), 5.0, 7.2, 7.0, 15.0, 3.0, 19.0, 55.0, 150.0, 8, 16, ChocThermique.BAISSE, listOf("hêtre", "chêne", "charme", "châtaignier", "feuillus"), 1600),
+        EspeceChampignon("trompette_mort", "Trompette de la mort", "Craterellus cornucopioides", setOf(9, 10, 11, 12), setOf(10, 11), 5.0, 7.2, 7.0, 14.5, 3.0, 18.5, 60.0, 145.0, 7, 15, ChocThermique.BAISSE, listOf("hêtre", "chêne", "charme", "châtaignier", "feuillus"), 1600),
         EspeceChampignon("pied_de_mouton", "Pied-de-mouton", "Hydnum repandum", setOf(9, 10, 11, 12), setOf(10, 11), 4.8, 7.0, 6.0, 14.0, 2.0, 18.0, 45.0, 120.0, 8, 15, ChocThermique.BAISSE, listOf("hêtre", "chêne", "châtaignier", "épicéa", "sapin", "pin", "feuillus", "conifères"), 1800),
         EspeceChampignon("pied_de_mouton_roussissant", "Pied-de-mouton roussissant", "Hydnum rufescens", setOf(9, 10, 11, 12), setOf(10, 11), 4.5, 6.5, 5.0, 13.0, 1.5, 17.0, 45.0, 125.0, 8, 15, ChocThermique.BAISSE, listOf("épicéa", "sapin", "pin", "hêtre", "chêne", "conifères", "feuillus"), 2000, estCryophileGel = true),
 
@@ -254,7 +280,7 @@ object ModeleMycologique {
         // --- PLEUROTES, LÉPIOTES, AGARICS, COPRINS & MARASMES ---
         EspeceChampignon("pleurote_huitre", "Pleurote en huître", "Pleurotus ostreatus", setOf(10, 11, 12, 1, 2), setOf(11, 12, 1), 5.2, 7.5, 2.5, 10.0, 0.0, 14.0, 30.0, 95.0, 4, 10, ChocThermique.BAISSE, listOf("hêtre", "peuplier", "saule", "frêne", "charme", "noisetier"), 1500, TypeTrophique.LIGNICOLE, estCryophileGel = true),
         EspeceChampignon("pholiote_peuplier", "Pholiote du peuplier (Pivoulade)", "Cyclocybe cylindracea", setOf(3, 4, 5, 9, 10, 11), setOf(4, 5, 9, 10, 11), 5.5, 7.5, 7.5, 18.0, 3.0, 22.0, 30.0, 90.0, 4, 10, ChocThermique.MODERE, listOf("peuplier", "saule", "orme", "frêne"), 1200, TypeTrophique.LIGNICOLE),
-        EspeceChampignon("coulemelle", "Coulemelle (Lépiote élevée)", "Macrolepiota procera", setOf(7, 8, 9, 10, 11), setOf(9, 10, 11), 4.8, 7.2, 7.0, 17.5, 2.5, 22.0, 30.0, 90.0, 5, 10, ChocThermique.MODERE, listOf("chêne", "hêtre", "châtaignier", "feuillus", "pin", "conifères", "prairie"), 1600, TypeTrophique.SAPROPHYTE),
+        EspeceChampignon("coulemelle", "Coulemelle (Lépiote élevée)", "Macrolepiota procera", setOf(7, 8, 9, 10, 11), setOf(9, 10, 11), 4.8, 7.2, 7.0, 17.5, 2.5, 22.0, 30.0, 90.0, 6, 12, ChocThermique.MODERE, listOf("chêne", "hêtre", "châtaignier", "feuillus", "pin", "conifères", "prairie"), 1600, TypeTrophique.SAPROPHYTE),
         EspeceChampignon("agaric_bois", "Agaric des bois (Rosé des bois)", "Agaricus sylvicola", setOf(7, 8, 9, 10, 11), setOf(9, 10, 11), 5.0, 7.2, 7.0, 17.0, 2.5, 21.0, 35.0, 95.0, 5, 10, ChocThermique.BAISSE, listOf("hêtre", "chêne", "châtaignier", "épicéa", "sapin", "feuillus", "conifères"), 1700, TypeTrophique.SAPROPHYTE),
         EspeceChampignon("rose_des_pres", "Rosé des prés", "Agaricus campestris", setOf(6, 7, 8, 9, 10, 11), setOf(9, 10, 11), 5.8, 7.5, 7.5, 18.0, 3.0, 22.0, 30.0, 85.0, 4, 9, ChocThermique.BAISSE, listOf("prairie"), 1800, TypeTrophique.SAPROPHYTE),
         EspeceChampignon("coprin_chevelu", "Coprin chevelu", "Coprinus comatus", setOf(5, 6, 9, 10, 11), setOf(9, 10, 11), 5.5, 7.8, 7.0, 15.0, 3.0, 20.0, 30.0, 95.0, 3, 8, ChocThermique.BAISSE, listOf("prairie", "lisière"), 1800, TypeTrophique.SAPROPHYTE),
@@ -571,6 +597,28 @@ object ModeleMycologique {
         val ageMin = max(1.0, dDebut - 1.5)
         val ageMax = min(21.0, dFin + 2.0)
 
+        fun survieCohorteSecheresse(idxPluie: Int): Double {
+            var maxSec = 0
+            var secCourant = 0
+            for (idxK in (idxPluie + 1)..indexJour) {
+                if (pluieEfficace(meteo.precipitationSum[idxK]) < 1.2) {
+                    secCourant++
+                    if (secCourant > maxSec) maxSec = secCourant
+                } else {
+                    secCourant = 0
+                }
+            }
+            return if (espece.id in ESPECES_SENSIBLES_SECHERESSE_LITIERE) {
+                when {
+                    maxSec >= 8 -> 0.20
+                    maxSec >= 5 -> 0.50
+                    else -> 1.0
+                }
+            } else {
+                if (maxSec >= 9) 0.55 else 1.0
+            }
+        }
+
         var pluieMaturation = 0.0
         for (idxP in debut20j..indexJour) {
             val ageJ = (indexJour - idxP).toDouble()
@@ -581,29 +629,67 @@ object ModeleMycologique {
                 else -> (ageMax - ageJ) / max(0.5, ageMax - picFin)
             }
             if (poids > 0.0) {
-                pluieMaturation += pluieEfficace(meteo.precipitationSum[idxP]) * poids
+                pluieMaturation += pluieEfficace(meteo.precipitationSum[idxP]) * poids * survieCohorteSecheresse(idxP)
             }
         }
         pluieMaturation = round1(pluieMaturation)
 
         val idxMatDebut = max(0, indexJour - dFin)
-        val idxMatFin = max(1, indexJour - dDebut + 1)
-        val cumulAvantEmergence = round1((debut20j until idxMatFin).sumOf { pluieEfficace(meteo.precipitationSum[it]) })
+        val idxMatFin = max(1, indexJour - 2)
+        val cumulAvantEmergence = round1(
+            (debut20j until idxMatFin).sumOf { idxP ->
+                pluieEfficace(meteo.precipitationSum[idxP]) * (0.25 + 0.75 * survieCohorteSecheresse(idxP))
+            }
+        )
 
-        val scoreCumul20j = scoreIntervalle(cumulAvantEmergence, espece.pluie20jOptMin * 0.70, espece.pluie20jOptMax, 4.0, espece.pluie20jOptMax + 90.0)
-        val scoreMaturation = scoreIntervalle(pluieMaturation, espece.pluie20jOptMin * 0.42, espece.pluie20jOptMax * 0.80, 1.5, espece.pluie20jOptMax * 1.15)
+        val scoreCumul20j = scoreIntervalle(cumulAvantEmergence, espece.pluie20jOptMin * 0.80, espece.pluie20jOptMax, 8.0, espece.pluie20jOptMax + 90.0)
+        val scoreMaturation = scoreIntervalle(pluieMaturation, espece.pluie20jOptMin * 0.48, espece.pluie20jOptMax * 0.85, 3.0, espece.pluie20jOptMax * 1.15)
 
         val pluieAvantInduction = (debut20j until idxMatDebut).sumOf { pluieEfficace(meteo.precipitationSum[it]) }
-        val bonusReveil = when {
-            pluieAvantInduction < 12.0 && pluieMaturation >= espece.pluie20jOptMin * 0.40 -> 1.12
-            paramsEco.risqueAsphyxieArgile && cumul20j > 135.0 -> 0.72
-            else -> 1.0
+        val nbJoursPluie20j = fenetrePluie.count { it >= 2.0 }
+
+        var bonusReveil = if (espece.id in ESPECES_EXIGEANTES_SATURATION_PROFONDE) {
+            when {
+                cumul20j < espece.pluie20jOptMin * 0.75 || nbJoursPluie20j <= 3 -> 0.42
+                cumul20j < espece.pluie20jOptMin || nbJoursPluie20j <= 5 -> 0.72
+                else -> 1.0
+            }
+        } else {
+            if (pluieAvantInduction < 12.0 && pluieMaturation >= espece.pluie20jOptMin * 0.45 && cumul20j >= espece.pluie20jOptMin * 0.75) 1.08 else 1.0
+        }
+        if (paramsEco.risqueAsphyxieArgile && cumul20j > 135.0) {
+            bonusReveil = min(bonusReveil, 0.72)
         }
 
         val scorePluie = min(1.0, (0.42 * scoreCumul20j + 0.58 * scoreMaturation) * bonusReveil)
+
+        val pluie8jRecents = (max(0, indexJour - 7)..indexJour).sumOf { pluieEfficace(meteo.precipitationSum[it]) }
+        var joursSansPluie = 0
+        for (idxSec in indexJour downTo debut20j) {
+            if (pluieEfficace(meteo.precipitationSum[idxSec]) < 1.2) {
+                joursSansPluie++
+            } else {
+                break
+            }
+        }
+
+        val facteurLitiereSurface = if (espece.id in ESPECES_SENSIBLES_SECHERESSE_LITIERE) {
+            when {
+                joursSansPluie >= 8 && pluie8jRecents < 3.0 -> 0.48
+                joursSansPluie >= 5 && pluie8jRecents < 5.0 -> 0.70
+                else -> 1.0
+            }
+        } else {
+            if (joursSansPluie >= 9 && pluie8jRecents < 2.0) 0.82 else 1.0
+        }
+
         val scoreHumSol = scoreIntervalle(hActuel, 0.22, 0.42, 0.09, 0.55)
-        val scoreHumidite = 0.75 * scoreHumSol + 0.25 * coeffAssechementAir
-        val scoreHydrique = if (scorePluie < 0.25) scorePluie * (0.35 + 0.65 * scoreHumidite) else (0.58 * scorePluie + 0.42 * scoreHumidite)
+        val scoreHumidite = (0.72 * scoreHumSol + 0.28 * coeffAssechementAir) * facteurLitiereSurface
+        val scoreHydrique = if (scorePluie < 0.35 || facteurLitiereSurface < 0.40) {
+            scorePluie * (0.30 + 0.70 * scoreHumidite)
+        } else {
+            (0.55 * scorePluie + 0.45 * scoreHumidite) * min(1.0, facteurLitiereSurface * 1.15)
+        }
 
         // Température du sol (65% incubation 12j + 35% maintien 3j)
         val tSol = round1(0.65 * tIncub + 0.35 * tActuel)
@@ -648,14 +734,14 @@ object ModeleMycologique {
         }
 
         val scoreThermique = min(1.0, scoreTemp * (0.78 + 0.22 * bonusChoc) * facteurGel)
-        val facteurDessiccation = 0.35 + 0.65 * min(1.0, coeffAssechementAir * 1.25)
-        val facteurLimEau = min(1.0, scoreHydrique * 1.45) * facteurDessiccation
-        val facteurLimTemp = min(1.0, scoreTemp * 1.45) * min(1.0, facteurGel)
+        val facteurDessiccation = 0.35 + 0.65 * min(1.0, coeffAssechementAir * 1.15)
+        val facteurLimEau = min(1.0, scoreHydrique * 1.12) * facteurDessiccation
+        val facteurLimTemp = min(1.0, scoreTemp * 1.25) * min(1.0, facteurGel)
 
         val scoreFinal = 100.0 * facteurSaison * scoreBiotope * facteurLimEau * facteurLimTemp * (0.52 * scoreHydrique + 0.48 * scoreThermique)
         val scorePct = scoreFinal.roundToInt().coerceIn(0, 100)
 
-        val stades = calculerStadesMaturiteCarpophore(
+        val stadesBruts = calculerStadesMaturiteCarpophore(
             precipsEfficaces = fenetrePluie,
             dDebut = dDebut,
             delaiCentral = delaiCentralClamp,
@@ -663,6 +749,15 @@ object ModeleMycologique {
             coeffAssechementAir = coeffAssechementAir,
             facteurGel = facteurGel
         )
+        val stades = if (joursSansPluie >= 6 && pluie8jRecents < 4.0) {
+            val noteDiag = if (tSol < espece.tempSolOptMin) " • 📏 Petit gabarit (nanisme sec & froid)" else " • 📏 Petit gabarit (manque d'eau libre)"
+            stadesBruts.copy(
+                labelCourt = stadesBruts.labelCourt + " • 📏 Petit gabarit",
+                diagnostic = stadesBruts.diagnostic + noteDiag
+            )
+        } else {
+            stadesBruts
+        }
 
         return ScoreJour(
             echeance = echeanceLabel,
