@@ -18,6 +18,8 @@ data class SimulateurUiState(
     val filtreMode: String = "TOUS", // "TOUS", "FAVORABLE", "EN_POUSSE", "ADULTES"
     val ongletActif: Int = 0, // 0 = Prévisions, 1 = Carte & Biotope, 2 = Mes Coins
     val especeSelectionnee: ResultatEspece? = null,
+    val isScanning5km: Boolean = false,
+    val resultatScan5km: ResultatScan5km? = null,
     val spotsFavoris: List<SpotPredefini> = ModeleMycologique.SPOTS_FAVORIS_DEFAUT,
     val messageStatut: String? = null
 )
@@ -107,6 +109,48 @@ class MainScreenViewModel : ViewModel() {
 
     fun selectionnerEspeceDetail(espece: ResultatEspece?) {
         _uiState.update { it.copy(especeSelectionnee = espece) }
+    }
+
+    fun scannerZonesEspece5km(espece: EspeceChampignon) {
+        val r = _uiState.value.rapport
+        val jourIdx = _uiState.value.jourSelectionneIndex
+        _uiState.update {
+            it.copy(
+                isScanning5km = true,
+                especeSelectionnee = null,
+                messageStatut = "🎯 Scan 5 km en cours pour ${espece.nom}..."
+            )
+        }
+        viewModelScope.launch {
+            try {
+                val res = ApiEnvironnementMeteo.rechercherZonesOptimales5km(
+                    latCentre = r.latitude,
+                    lonCentre = r.longitude,
+                    espece = espece,
+                    decalageJour = jourIdx,
+                    rayonKm = 5.0,
+                    meteoReference = r.meteo
+                )
+                _uiState.update {
+                    it.copy(
+                        isScanning5km = false,
+                        resultatScan5km = res,
+                        messageStatut = "🎯 ${res.zonesOptimales.size} zones trouvées pour ${espece.nom} (max ${res.scoreMaxRayonPct}%)"
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isScanning5km = false,
+                        messageStatut = "Erreur lors du scan 5 km"
+                    )
+                }
+            }
+        }
+    }
+
+    fun effacerScan5km() {
+        _uiState.update { it.copy(resultatScan5km = null, messageStatut = null) }
     }
 
     fun ajouterSpotActuelAuxFavoris(nomPersonnalise: String) {

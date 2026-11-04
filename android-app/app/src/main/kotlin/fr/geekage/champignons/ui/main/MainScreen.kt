@@ -43,6 +43,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation3.runtime.NavKey
+import fr.geekage.champignons.data.ApiEnvironnementMeteo
 import fr.geekage.champignons.model.*
 import fr.geekage.champignons.ui.theme.SimulateurChampignonsTheme
 import java.util.Locale
@@ -102,7 +103,9 @@ fun MainScreen(
             viewModel.simulerPointGps(lat, lon, nom)
         },
         onSauvegarderSpot = viewModel::ajouterSpotActuelAuxFavoris,
-        onSelectEspece = viewModel::selectionnerEspeceDetail
+        onSelectEspece = viewModel::selectionnerEspeceDetail,
+        onScanner5km = viewModel::scannerZonesEspece5km,
+        onEffacerScan5km = viewModel::effacerScan5km
     )
 }
 
@@ -131,7 +134,9 @@ fun SimulateurChampignonsContent(
     onTabChange: (Int) -> Unit = {},
     onSimulerCoords: (Double, Double, String?) -> Unit = { _, _, _ -> },
     onSauvegarderSpot: (String) -> Unit = {},
-    onSelectEspece: (ResultatEspece?) -> Unit = {}
+    onSelectEspece: (ResultatEspece?) -> Unit = {},
+    onScanner5km: (EspeceChampignon) -> Unit = {},
+    onEffacerScan5km: () -> Unit = {}
 ) {
     var afficherDialogFavori by remember { mutableStateOf(false) }
 
@@ -230,14 +235,20 @@ fun SimulateurChampignonsContent(
                     onFiltreChange = onFiltreChange,
                     onSelectEspece = onSelectEspece,
                     onSimulerCoords = onSimulerCoords,
-                    onOuvrirCarte = { onTabChange(1) }
+                    onOuvrirCarte = { onTabChange(1) },
+                    onScanner5km = onScanner5km,
+                    onEffacerScan5km = onEffacerScan5km
                 )
                 1 -> OngletCarteEtBiotope(
                     rapport = state.rapport,
+                    resultatScan5km = state.resultatScan5km,
+                    isScanning5km = state.isScanning5km,
                     onSimulerCoords = { lat, lon, nom ->
                         onSimulerCoords(lat, lon, nom)
                     },
-                    onVoirPrevisions = { onTabChange(0) }
+                    onVoirPrevisions = { onTabChange(0) },
+                    onScanner5km = onScanner5km,
+                    onEffacerScan5km = onEffacerScan5km
                 )
                 2 -> OngletSpotsFavoris(
                     spots = state.spotsFavoris,
@@ -265,7 +276,8 @@ fun SimulateurChampignonsContent(
     state.especeSelectionnee?.let { esp ->
         DialogDetailEspece(
             especeResultat = esp,
-            onDismiss = { onSelectEspece(null) }
+            onDismiss = { onSelectEspece(null) },
+            onScanner5km = { onScanner5km(esp.espece) }
         )
     }
 }
@@ -278,11 +290,14 @@ private fun OngletPrevisions(
     onFiltreChange: (String) -> Unit,
     onSelectEspece: (ResultatEspece) -> Unit,
     onSimulerCoords: (Double, Double, String?) -> Unit,
-    onOuvrirCarte: () -> Unit
+    onOuvrirCarte: () -> Unit,
+    onScanner5km: (EspeceChampignon) -> Unit,
+    onEffacerScan5km: () -> Unit
 ) {
     val rapport = state.rapport
     val idxJour = state.jourSelectionneIndex.coerceIn(0, 10)
     var afficherCarteHaut by remember { mutableStateOf(true) }
+    var focusCoords by remember { mutableStateOf<Pair<Double, Double>?>(null) }
 
     val especesFiltrees = remember(rapport, state.rechercheTexte, state.filtreMode, idxJour) {
         rapport.especesProbables.filter { item ->
@@ -351,15 +366,53 @@ private fun OngletPrevisions(
                         CarteInteractiveWebView(
                             latitude = rapport.latitude,
                             longitude = rapport.longitude,
-                            hauteur = 215.dp,
+                            hauteur = if (state.resultatScan5km != null) 280.dp else 215.dp,
+                            resultatScan5km = state.resultatScan5km,
+                            focusSpot = focusCoords,
                             onPointSelected = { lat, lon ->
                                 onSimulerCoords(lat, lon, null)
                             }
                         )
                         Text(
-                            text = "Touchez un bois, une lisière ou une prairie sur la carte pour simuler ce point.",
+                            text = "Touchez un point sur la carte pour simuler, ou appuyez sur « 🎯 Zones 5 km » sur une espèce ci-dessous.",
                             fontSize = 11.sp,
                             color = Color(0xFF8AA392)
+                        )
+                    }
+
+                    if (state.isScanning5km) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 6.dp),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(18.dp),
+                                strokeWidth = 2.dp,
+                                color = Color(0xFF4ADE80)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = state.messageStatut ?: "Scan topographique & IGN BD Forêt (5 km)...",
+                                fontSize = 12.sp,
+                                color = Color(0xFF4ADE80)
+                            )
+                        }
+                    }
+
+                    state.resultatScan5km?.let { scan ->
+                        PanneauResultatsScan5km(
+                            scan = scan,
+                            onCentrerSpot = { lat, lon ->
+                                afficherCarteHaut = true
+                                focusCoords = lat to lon
+                            },
+                            onSimulerSpot = { lat, lon, nom ->
+                                onSimulerCoords(lat, lon, nom)
+                            },
+                            onEffacer = onEffacerScan5km
                         )
                     }
                 }
@@ -420,8 +473,133 @@ private fun OngletPrevisions(
             CarteEspeceMobile(
                 item = item,
                 jourIndex = idxJour,
-                onClick = { onSelectEspece(item) }
+                onClick = { onSelectEspece(item) },
+                onScanner5km = { onScanner5km(item.espece) }
             )
+        }
+    }
+}
+
+@Composable
+private fun PanneauResultatsScan5km(
+    scan: ResultatScan5km,
+    onCentrerSpot: (Double, Double) -> Unit,
+    onSimulerSpot: (Double, Double, String) -> Unit,
+    onEffacer: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(10.dp))
+            .background(Color(0xFF101D15))
+            .border(1.dp, Color(0xFF2D6A4F), RoundedCornerShape(10.dp))
+            .padding(10.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "🎯 Zones 5 km : ${scan.espece.nom} (${scan.echeance})",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF4ADE80)
+                )
+                Text(
+                    text = "${scan.zonesOptimales.size} meilleurs secteurs sur ${scan.nbPointsTestes} analysés (${scan.nbParcellesIgn} parcelles IGN)",
+                    fontSize = 11.sp,
+                    color = Color(0xFF94AD9C)
+                )
+            }
+            TextButton(
+                onClick = onEffacer,
+                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp)
+            ) {
+                Text("Effacer ✕", fontSize = 11.sp, color = Color(0xFFE76F51))
+            }
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            scan.zonesOptimales.take(12).forEach { z ->
+                val col = couleurPourScore(z.scorePct)
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFF182A1E)),
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier
+                        .width(235.dp)
+                        .border(1.dp, col.copy(alpha = 0.6f), RoundedCornerShape(10.dp))
+                        .clickable { onCentrerSpot(z.latitude, z.longitude) }
+                ) {
+                    Column(
+                        modifier = Modifier.padding(9.dp),
+                        verticalArrangement = Arrangement.spacedBy(3.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "#${z.rang} • ${z.distanceKm} km (${z.directionCardinale})",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFFE7F3EA)
+                            )
+                            Text(
+                                text = "${z.scorePct}%",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = col
+                            )
+                        }
+                        Text(
+                            text = z.libelleBiotope,
+                            fontSize = 11.sp,
+                            color = Color(0xFF4ADE80),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            text = "⛰️ ${z.altitudeM.toInt()}m • ${z.orientation.substringBefore(" (")} (${z.penteDeg}°) • pH ${z.phEstime}",
+                            fontSize = 10.sp,
+                            color = Color(0xFF94AD9C),
+                            maxLines = 1
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "${z.stadesCarpophore.icone} ${z.stadesCarpophore.labelCourt}",
+                                fontSize = 10.sp,
+                                color = Color(0xFFE7F3EA)
+                            )
+                            Text(
+                                text = "📍 Simuler →",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF4ADE80),
+                                modifier = Modifier.clickable {
+                                    onSimulerSpot(
+                                        z.latitude,
+                                        z.longitude,
+                                        "Spot #${z.rang} ${scan.espece.nom} (${z.distanceKm}km ${z.directionCardinale})"
+                                    )
+                                }
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -432,9 +610,14 @@ fun CarteInteractiveWebView(
     latitude: Double,
     longitude: Double,
     hauteur: Dp,
+    resultatScan5km: ResultatScan5km? = null,
+    focusSpot: Pair<Double, Double>? = null,
     onPointSelected: (Double, Double) -> Unit
 ) {
     val currentOnPointSelected by rememberUpdatedState(onPointSelected)
+    val jsonScan = remember(resultatScan5km) {
+        resultatScan5km?.let { ApiEnvironnementMeteo.convertirScan5kmEnJsonLeaflet(it) } ?: ""
+    }
 
     Box(
         modifier = Modifier
@@ -458,11 +641,18 @@ fun CarteInteractiveWebView(
                         loadWithOverviewMode = true
                         useWideViewPort = true
                         mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
-                        userAgentString = "SimulateurChampignons/1.0 (Android; Mobile)"
+                        userAgentString = "SimulateurChampignons/1.1 (Android; Mobile)"
                     }
-                    webViewClient = WebViewClient()
+                    webViewClient = object : WebViewClient() {
+                        override fun onPageFinished(view: WebView?, url: String?) {
+                            super.onPageFinished(view, url)
+                            if (jsonScan.isNotEmpty()) {
+                                val escaped = jsonScan.replace("\\", "\\\\").replace("'", "\\'")
+                                view?.evaluateJavascript("if(window.afficherZones5km){window.afficherZones5km('$escaped');}", null)
+                            }
+                        }
+                    }
 
-                    // Empêche le LazyColumn / Scroll parent de voler les gestes de glissement sur la carte
                     setOnTouchListener { v, event ->
                         when (event.action) {
                             MotionEvent.ACTION_DOWN, MotionEvent.ACTION_MOVE ->
@@ -485,7 +675,7 @@ fun CarteInteractiveWebView(
                         "AndroidBridge"
                     )
 
-                    tag = "$latitude,$longitude"
+                    tag = Triple("$latitude,$longitude", jsonScan.hashCode(), focusSpot)
                     loadDataWithBaseURL(
                         "https://simulateur-champignons.local/",
                         construireHtmlCarteLeaflet(latitude, longitude),
@@ -496,11 +686,25 @@ fun CarteInteractiveWebView(
                 }
             },
             update = { webView ->
-                val newTag = "$latitude,$longitude"
-                if (webView.tag != newTag) {
-                    webView.tag = newTag
+                val oldTriple = webView.tag as? Triple<*, *, *>
+                val newCoord = "$latitude,$longitude"
+                val newScanHash = jsonScan.hashCode()
+
+                if (oldTriple?.first != newCoord) {
                     webView.evaluateJavascript("if(window.centrerCarte){window.centrerCarte($latitude, $longitude);}", null)
                 }
+                if (oldTriple?.second != newScanHash) {
+                    if (jsonScan.isEmpty()) {
+                        webView.evaluateJavascript("if(window.effacerZones5km){window.effacerZones5km();}", null)
+                    } else {
+                        val escaped = jsonScan.replace("\\", "\\\\").replace("'", "\\'")
+                        webView.evaluateJavascript("if(window.afficherZones5km){window.afficherZones5km('$escaped');}", null)
+                    }
+                }
+                if (focusSpot != null && oldTriple?.third != focusSpot) {
+                    webView.evaluateJavascript("if(window.zoomerSpot5km){window.zoomerSpot5km(${focusSpot.first}, ${focusSpot.second});}", null)
+                }
+                webView.tag = Triple(newCoord, newScanHash, focusSpot)
             }
         )
     }
@@ -651,7 +855,8 @@ private fun FiltreChipItem(label: String, selected: Boolean, onClick: () -> Unit
 fun CarteEspeceMobile(
     item: ResultatEspece,
     jourIndex: Int,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onScanner5km: () -> Unit = {}
 ) {
     val scoreJour = item.courbeJaJ10.getOrNull(jourIndex) ?: item.courbeJaJ10.first()
     val stades = scoreJour.details.stadesCarpophore
@@ -684,6 +889,22 @@ fun CarteEspeceMobile(
                         fontStyle = FontStyle.Italic,
                         color = Color(0xFF8AA392)
                     )
+                    Surface(
+                        color = Color(0xFF1F3E2B),
+                        shape = RoundedCornerShape(6.dp),
+                        modifier = Modifier
+                            .padding(top = 4.dp)
+                            .border(1.dp, Color(0xFF4ADE80).copy(alpha = 0.55f), RoundedCornerShape(6.dp))
+                            .clickable { onScanner5km() }
+                    ) {
+                        Text(
+                            text = "🎯 Zones 5 km",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF4ADE80),
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                        )
+                    }
                 }
 
                 Surface(
@@ -826,11 +1047,16 @@ fun BarreStadesTricolore(stades: StadesCarpophore, hauteurDp: Int = 6) {
 @Composable
 private fun OngletCarteEtBiotope(
     rapport: RapportSimulation,
+    resultatScan5km: ResultatScan5km?,
+    isScanning5km: Boolean,
     onSimulerCoords: (Double, Double, String?) -> Unit,
-    onVoirPrevisions: () -> Unit
+    onVoirPrevisions: () -> Unit,
+    onScanner5km: (EspeceChampignon) -> Unit,
+    onEffacerScan5km: () -> Unit
 ) {
     var latInput by remember(rapport.latitude) { mutableStateOf(String.format(Locale.US, "%.4f", rapport.latitude)) }
     var lonInput by remember(rapport.longitude) { mutableStateOf(String.format(Locale.US, "%.4f", rapport.longitude)) }
+    var focusCoords by remember { mutableStateOf<Pair<Double, Double>?>(null) }
 
     Column(
         modifier = Modifier
@@ -859,11 +1085,65 @@ private fun OngletCarteEtBiotope(
         CarteInteractiveWebView(
             latitude = rapport.latitude,
             longitude = rapport.longitude,
-            hauteur = 340.dp,
+            hauteur = 360.dp,
+            resultatScan5km = resultatScan5km,
+            focusSpot = focusCoords,
             onPointSelected = { lat, lon ->
                 onSimulerCoords(lat, lon, null)
             }
         )
+
+        if (isScanning5km) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp, color = Color(0xFF4ADE80))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Scan 5 km en cours...", fontSize = 12.sp, color = Color(0xFF4ADE80))
+            }
+        }
+
+        resultatScan5km?.let { scan ->
+            PanneauResultatsScan5km(
+                scan = scan,
+                onCentrerSpot = { lat, lon -> focusCoords = lat to lon },
+                onSimulerSpot = { lat, lon, nom -> onSimulerCoords(lat, lon, nom) },
+                onEffacer = onEffacerScan5km
+            )
+        }
+
+        // Sélecteur rapide d'espèce pour scanner à 5 km depuis la grande carte
+        Card(
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF16241B)),
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(modifier = Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(
+                    text = "🎯 Scanner les meilleures zones dans un rayon de 5 km :",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF4ADE80)
+                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    rapport.especesProbables.take(15).forEach { item ->
+                        val estActive = resultatScan5km?.espece?.id == item.espece.id
+                        FilterChip(
+                            selected = estActive,
+                            onClick = { onScanner5km(item.espece) },
+                            label = { Text("🎯 ${item.espece.nom}", fontSize = 11.sp) }
+                        )
+                    }
+                }
+            }
+        }
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -975,6 +1255,15 @@ private fun construireHtmlCarteLeaflet(lat: Double, lon: Double): String {
             }).addTo(map);
 
             var marker = L.marker([$lat, $lon]).addTo(map);
+            var couche5km = L.layerGroup().addTo(map);
+
+            function couleurScore(s) {
+              if (s >= 75) return '#22c55e';
+              if (s >= 55) return '#84cc16';
+              if (s >= 35) return '#eab308';
+              if (s >= 15) return '#f97316';
+              return '#64748b';
+            }
 
             map.on('click', function(e) {
               marker.setLatLng(e.latlng);
@@ -987,6 +1276,68 @@ private fun construireHtmlCarteLeaflet(lat: Double, lon: Double): String {
               var ll = L.latLng(newLat, newLon);
               marker.setLatLng(ll);
               map.panTo(ll);
+            };
+
+            window.effacerZones5km = function() {
+              couche5km.clearLayers();
+            };
+
+            window.zoomerSpot5km = function(lat, lon) {
+              map.setView([lat, lon], 14);
+            };
+
+            window.afficherZones5km = function(jsonStr) {
+              try {
+                var data = JSON.parse(jsonStr);
+                couche5km.clearLayers();
+                var cercle = L.circle([data.centreLat, data.centreLon], {
+                  radius: data.rayonKm * 1000,
+                  color: '#4ade80',
+                  weight: 2,
+                  dashArray: '6, 6',
+                  fillColor: '#4ade80',
+                  fillOpacity: 0.03
+                }).addTo(couche5km);
+
+                var zones = data.zones || [];
+                for (var i = 0; i < zones.length; i++) {
+                  var z = zones[i];
+                  var c = couleurScore(z.score);
+                  var popupHtml = '<b>#' + z.rang + ' • ' + data.nomEspece + ' : ' + z.score + '%</b><br/>' +
+                    z.biotope + '<br/>' +
+                    '📍 ' + z.distKm + ' km (' + z.dir + ') • Alt. ' + z.alt + 'm<br/>' +
+                    '🧭 ' + z.orientation + ' (' + z.pente + '°)<br/>' +
+                    '🍄 ' + z.stade;
+
+                  if (z.poly && z.poly.length >= 3 && z.score >= 15) {
+                    L.polygon(z.poly, {
+                      color: c,
+                      weight: 2,
+                      fillColor: c,
+                      fillOpacity: 0.28
+                    }).bindPopup(popupHtml).addTo(couche5km);
+                  } else if (z.score >= 15) {
+                    L.circle([z.lat, z.lon], {
+                      radius: 210,
+                      color: c,
+                      weight: 2,
+                      fillColor: c,
+                      fillOpacity: 0.28
+                    }).addTo(couche5km);
+                  }
+
+                  var icone = L.divIcon({
+                    className: '',
+                    html: '<div style="background:' + c + ';color:#052e16;font-weight:800;font-size:10px;padding:2px 5px;border-radius:999px;border:1.5px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.5);white-space:nowrap;">#' + z.rang + ' • ' + z.score + '%</div>',
+                    iconSize: [60, 20],
+                    iconAnchor: [30, 10]
+                  });
+                  L.marker([z.lat, z.lon], { icon: icone }).bindPopup(popupHtml).addTo(couche5km);
+                }
+                map.fitBounds(cercle.getBounds(), { padding: [12, 12] });
+              } catch (err) {
+                console.error(err);
+              }
             };
 
             setTimeout(function() { map.invalidateSize(); }, 150);
@@ -1073,7 +1424,8 @@ private fun OngletSpotsFavoris(
 @Composable
 private fun DialogDetailEspece(
     especeResultat: ResultatEspece,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onScanner5km: () -> Unit = {}
 ) {
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -1107,6 +1459,21 @@ private fun DialogDetailEspece(
                     TextButton(onClick = onDismiss) {
                         Text("Fermer ✕", color = Color(0xFFE7F3EA))
                     }
+                }
+
+                Button(
+                    onClick = onScanner5km,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF22C55E)),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 6.dp)
+                ) {
+                    Text(
+                        text = "🎯 Voir les meilleures zones dans un rayon de 5 km",
+                        color = Color(0xFF052E16),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
 
                 HorizontalDivider(color = Color(0xFF23382A), modifier = Modifier.padding(vertical = 6.dp))

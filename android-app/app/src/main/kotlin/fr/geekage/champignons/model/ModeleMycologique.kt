@@ -159,6 +159,38 @@ data class SpotPredefini(
     val icone: String = "🌲"
 )
 
+data class ZoneOptimale5km(
+    val rang: Int,
+    val latitude: Double,
+    val longitude: Double,
+    val distanceKm: Double,
+    val capDeg: Int,
+    val directionCardinale: String,
+    val scorePct: Int,
+    val compatibiliteBiotopePct: Int,
+    val typeMilieu: String,
+    val libelleBiotope: String,
+    val altitudeM: Double,
+    val penteDeg: Double,
+    val orientation: String,
+    val phEstime: Double,
+    val stadesCarpophore: StadesCarpophore,
+    val polygoneCoords: List<Pair<Double, Double>> = emptyList()
+)
+
+data class ResultatScan5km(
+    val centreLat: Double,
+    val centreLon: Double,
+    val rayonKm: Double,
+    val echeance: String,
+    val decalageJour: Int,
+    val espece: EspeceChampignon,
+    val nbParcellesIgn: Int,
+    val nbPointsTestes: Int,
+    val scoreMaxRayonPct: Int,
+    val zonesOptimales: List<ZoneOptimale5km>
+)
+
 object ModeleMycologique {
 
     val SPOTS_FAVORIS_DEFAUT = listOf(

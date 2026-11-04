@@ -3,7 +3,11 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from modele_fructification import CATALOGUE_ESPECES, simuler_pousse_point_gps
+from modele_fructification import (
+    CATALOGUE_ESPECES,
+    simuler_pousse_point_gps,
+    rechercher_zones_optimales_5km,
+)
 
 app = FastAPI(
     title="Simulateur Bioclimatique et Édaphique de Fructification",
@@ -39,5 +43,31 @@ def api_simuler_point(
     """
     try:
         return simuler_pousse_point_gps(round(lat, 5), round(lon, 5))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.get("/api/zones-espece")
+def api_zones_espece_5km(
+    lat: float = Query(..., description="Latitude du centre", ge=-90.0, le=90.0),
+    lon: float = Query(..., description="Longitude du centre", ge=-180.0, le=180.0),
+    espece_id: str = Query(..., description="Identifiant de l'espèce de champignon"),
+    rayon_km: float = Query(5.0, description="Rayon de recherche en km", ge=1.0, le=10.0),
+    decalage_jour: int = Query(0, description="Échéance en jours (0=J, 1=J+1, ..., 10=J+10)", ge=0, le=10),
+):
+    """
+    Scanne un rayon de 5 km autour de (lat, lon) pour une espèce donnée et renvoie
+    les meilleures zones de récolte (forêts IGN, lisières, prairies, versants).
+    """
+    try:
+        return rechercher_zones_optimales_5km(
+            round(lat, 5),
+            round(lon, 5),
+            espece_id=espece_id,
+            rayon_km=rayon_km,
+            decalage_jour=decalage_jour,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc

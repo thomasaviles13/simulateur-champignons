@@ -483,6 +483,584 @@ object ApiEnvironnementMeteo {
             )
         }
 
+    private data class MntGrille(
+        val minLat: Double,
+        val maxLat: Double,
+        val minLon: Double,
+        val maxLon: Double,
+        val taille: Int,
+        val grilleZ: Array<DoubleArray>
+    )
+
+    private data class ParcelleIgn5km(
+        val formationVegetale: String,
+        val essence: String,
+        val poly: JSONArray,
+        val minLon: Double,
+        val minLat: Double,
+        val maxLon: Double,
+        val maxLat: Double
+    )
+
+    fun calculerDistanceEtCap(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Triple<Double, Int, String> {
+        val dyM = (lat2 - lat1) * 111132.0
+        val dxM = (lon2 - lon1) * 111320.0 * cos(Math.toRadians((lat1 + lat2) * 0.5))
+        val distKm = hypot(dxM, dyM) / 1000.0
+        if (distKm < 0.02) return Triple(0.0, 0, "Centre")
+        val capDeg = ((Math.toDegrees(atan2(dxM, dyM)).roundToInt() + 360) % 360)
+        val dirs = listOf("N", "NE", "E", "SE", "S", "SO", "O", "NO")
+        val idx = (((capDeg + 22.5) % 360.0) / 45.0).toInt().coerceIn(0, 7)
+        return Triple(round2(distKm), capDeg, dirs[idx])
+    }
+
+    private fun construireMntRayon(latCentre: Double, lonCentre: Double, rayonKm: Double = 5.0, taille: Int = 8): MntGrille {
+        val margeKm = rayonKm + 0.4
+        val dLat = margeKm / 111.132
+        val cosLat = max(0.2, cos(Math.toRadians(latCentre)))
+        val dLon = margeKm / (111.320 * cosLat)
+
+        val minLat = latCentre - dLat
+        val maxLat = latCentre + dLat
+        val minLon = lonCentre - dLon
+        val maxLon = lonCentre + dLon
+
+        val latsReq = mutableListOf<Double>()
+        val lonsReq = mutableListOf<Double>()
+        for (i in 0 until taille) {
+            val la = minLat + i * (maxLat - minLat) / (taille - 1)
+            for (j in 0 until taille) {
+                val lo = minLon + j * (maxLon - minLon) / (taille - 1)
+                latsReq.add(la)
+                lonsReq.add(lo)
+            }
+        }
+
+        val grilleZ = Array(taille) { DoubleArray(taille) { 300.0 } }
+        val latsStr = latsReq.joinToString(",") { String.format(Locale.US, "%.5f", it) }
+        val lonsStr = lonsReq.joinToString(",") { String.format(Locale.US, "%.5f", it) }
+        val resp = httpGet("https://api.open-meteo.com/v1/elevation?latitude=$latsStr&longitude=$lonsStr", 9000)
+        if (resp != null) {
+            try {
+                val arr = JSONObject(resp).optJSONArray("elevation")
+                if (arr != null && arr.length() == latsReq.size) {
+                    var k = 0
+                    for (i in 0 until taille) {
+                        for (j in 0 until taille) {
+                            val v = arr.optDouble(k, 300.0)
+                            grilleZ[i][j] = if (v.isNaN()) 300.0 else v
+                            k++
+                        }
+                    }
+                }
+            } catch (_: Exception) {}
+        }
+        return MntGrille(minLat, maxLat, minLon, maxLon, taille, grilleZ)
+    }
+
+    private fun interpolerZMnt(mnt: MntGrille, lat: Double, lon: Double): Double {
+        val n = mnt.taille
+        val u = (((lat - mnt.minLat) / max(1e-9, mnt.maxLat - mnt.minLat)) * (n - 1)).coerceIn(0.0, (n - 1) - 1e-6)
+        val v = (((lon - mnt.minLon) / max(1e-9, mnt.maxLon - mnt.minLon)) * (n - 1)).coerceIn(0.0, (n - 1) - 1e-6)
+        val i = u.toInt()
+        val j = v.toInt()
+        val du = u - i
+        val dv = v - j
+        val g = mnt.grilleZ
+        return (1 - du) * ((1 - dv) * g[i][j] + dv * g[i][j + 1]) + du * ((1 - dv) * g[i + 1][j] + dv * g[i + 1][j + 1])
+    }
+
+    private fun calculerTopographieSurMnt(mnt: MntGrille, lat: Double, lon: Double, pasM: Double = 90.0): ProfilTopographique {
+        val dLat = pasM / 111320.0
+        val cosLat = max(0.2, cos(Math.toRadians(lat)))
+        val dLon = pasM / (111320.0 * cosLat)
+
+        val zC = interpolerZMnt(mnt, lat, lon)
+        val zN = interpolerZMnt(mnt, lat + dLat, lon)
+        val zS = interpolerZMnt(mnt, lat - dLat, lon)
+        val zE = interpolerZMnt(mnt, lat, lon + dLon)
+        val zW = interpolerZMnt(mnt, lat, lon - dLon)
+
+        val dzDy = (zN - zS) / (2.0 * pasM)
+        val dzDx = (zE - zW) / (2.0 * pasM)
+        val gradient = hypot(dzDx, dzDy)
+        val penteDeg = Math.toDegrees(atan(gradient))
+        val pentePct = gradient * 100.0
+
+        if (penteDeg < 1.8) {
+            return ProfilTopographique(round1(zC), round1(penteDeg), round1(pentePct), null, "Terrain plat", 0.0, 1.0, 1.0)
+        }
+
+        val azimutDeg = (Math.toDegrees(atan2(-dzDx, -dzDy)) + 360.0) % 360.0
+        val facteurSud = -cos(Math.toRadians(azimutDeg))
+        val intensitePente = min(1.0, penteDeg / 20.0)
+        val deltaTempSolC = round2(facteurSud * intensitePente * 1.8)
+        val coeffRetHum = round2(max(0.72, min(1.18, 1.0 - (facteurSud * 0.12 * intensitePente) - max(0.0, (penteDeg - 12.0) * 0.01))))
+        val coeffInfilt = if (penteDeg <= 10.0) 1.0 else round2(max(0.55, 1.0 - (penteDeg - 10.0) * 0.015))
+
+        val orientation = when {
+            azimutDeg >= 337.5 || azimutDeg < 22.5 -> "Nord (Ubac frais)"
+            azimutDeg < 67.5 -> "Nord-Est (frais)"
+            azimutDeg < 112.5 -> "Est (matinal)"
+            azimutDeg < 157.5 -> "Sud-Est (Adret doux)"
+            azimutDeg < 202.5 -> "Sud (Adret chaud)"
+            azimutDeg < 247.5 -> "Sud-Ouest (Adret chaud)"
+            azimutDeg < 292.5 -> "Ouest (humide)"
+            else -> "Nord-Ouest (Ubac frais)"
+        }
+
+        return ProfilTopographique(round1(zC), round1(penteDeg), round1(pentePct), round1(azimutDeg), orientation, deltaTempSolC, coeffRetHum, coeffInfilt)
+    }
+
+    private fun recupererPolygonesForetRayon(latCentre: Double, lonCentre: Double, rayonKm: Double = 5.0): List<ParcelleIgn5km> {
+        val dLat = rayonKm / 111.132
+        val cosLat = max(0.2, cos(Math.toRadians(latCentre)))
+        val dLon = rayonKm / (111.320 * cosLat)
+
+        val minLat = String.format(Locale.US, "%.5f", latCentre - dLat)
+        val maxLat = String.format(Locale.US, "%.5f", latCentre + dLat)
+        val minLon = String.format(Locale.US, "%.5f", lonCentre - dLon)
+        val maxLon = String.format(Locale.US, "%.5f", lonCentre + dLon)
+
+        val url = "https://data.geopf.fr/wfs/ows?SERVICE=WFS&VERSION=2.0.0&REQUEST=GetFeature" +
+            "&TYPENAMES=LANDCOVER.FORESTINVENTORY.V2:formation_vegetale&SRSNAME=CRS:84" +
+            "&BBOX=$minLon,$minLat,$maxLon,$maxLat,CRS:84&OUTPUTFORMAT=application/json&COUNT=320"
+
+        val resp = httpGet(url, 12000) ?: return emptyList()
+        val parcelles = mutableListOf<ParcelleIgn5km>()
+        try {
+            val features = JSONObject(resp).optJSONArray("features") ?: JSONArray()
+            for (i in 0 until features.length()) {
+                val feat = features.getJSONObject(i)
+                val props = feat.optJSONObject("properties") ?: continue
+                val geom = feat.optJSONObject("geometry") ?: continue
+                val tfv = props.optString("tfv").ifEmpty { props.optString("libelle") }
+                val essence = props.optString("essence")
+                if (tfv.isEmpty() && essence.isEmpty()) continue
+
+                val gtype = geom.optString("type")
+                val coords = geom.optJSONArray("coordinates") ?: continue
+                val polys = mutableListOf<JSONArray>()
+                if (gtype == "Polygon") {
+                    polys.add(coords)
+                } else if (gtype == "MultiPolygon") {
+                    for (k in 0 until coords.length()) polys.add(coords.getJSONArray(k))
+                }
+
+                for (poly in polys) {
+                    if (poly.length() == 0) continue
+                    val ext = poly.getJSONArray(0)
+                    if (ext.length() < 3) continue
+                    var bMinLon = Double.POSITIVE_INFINITY
+                    var bMinLat = Double.POSITIVE_INFINITY
+                    var bMaxLon = Double.NEGATIVE_INFINITY
+                    var bMaxLat = Double.NEGATIVE_INFINITY
+                    for (m in 0 until ext.length()) {
+                        val pt = ext.getJSONArray(m)
+                        val lo = pt.optDouble(0)
+                        val la = pt.optDouble(1)
+                        if (lo < bMinLon) bMinLon = lo
+                        if (lo > bMaxLon) bMaxLon = lo
+                        if (la < bMinLat) bMinLat = la
+                        if (la > bMaxLat) bMaxLat = la
+                    }
+                    parcelles.add(ParcelleIgn5km(tfv, essence, poly, bMinLon, bMinLat, bMaxLon, bMaxLat))
+                }
+            }
+        } catch (_: Exception) {}
+        return parcelles
+    }
+
+    private fun trouverPointInterieurPolygone(poly: JSONArray, latCentre: Double, lonCentre: Double, rayonKm: Double): Pair<Double, Double>? {
+        if (poly.length() == 0) return null
+        val ext = poly.getJSONArray(0)
+        val n = ext.length()
+        if (n < 3) return null
+
+        val echelleX = 111.320 * cos(Math.toRadians(latCentre))
+        val echelleY = 111.132
+        var sumLon = 0.0
+        var sumLat = 0.0
+        var count = 0
+        for (i in 0 until n) {
+            val pt = ext.getJSONArray(i)
+            val lo = pt.optDouble(0)
+            val la = pt.optDouble(1)
+            val dSq = ((lo - lonCentre) * echelleX).pow(2) + ((la - latCentre) * echelleY).pow(2)
+            if (dSq <= rayonKm * rayonKm) {
+                sumLon += lo
+                sumLat += la
+                count++
+            }
+        }
+        if (count == 0) {
+            for (i in 0 until n) {
+                val pt = ext.getJSONArray(i)
+                sumLon += pt.optDouble(0)
+                sumLat += pt.optDouble(1)
+            }
+            count = n
+        }
+        val lonMoy = sumLon / count
+        val latMoy = sumLat / count
+
+        if (pointDansPolygone(lonMoy, latMoy, poly)) {
+            val (dKm, _, _) = calculerDistanceEtCap(latCentre, lonCentre, latMoy, lonMoy)
+            if (dKm <= rayonKm) return latMoy to lonMoy
+        }
+
+        val pas = max(1, n / 12)
+        for (i in 0 until n step pas) {
+            val pt = ext.getJSONArray(i)
+            val sx = pt.optDouble(0)
+            val sy = pt.optDouble(1)
+            for (alpha in listOf(0.15, 0.35, 0.5)) {
+                val tx = sx + alpha * (lonMoy - sx)
+                val ty = sy + alpha * (latMoy - sy)
+                if (pointDansPolygone(tx, ty, poly)) {
+                    val (dKm, _, _) = calculerDistanceEtCap(latCentre, lonCentre, ty, tx)
+                    if (dKm <= rayonKm) return ty to tx
+                }
+            }
+        }
+        return null
+    }
+
+    private fun simplifierAnneauLeaflet(anneau: JSONArray, maxPoints: Int = 34): List<Pair<Double, Double>> {
+        val n = anneau.length()
+        if (n < 3) return emptyList()
+        val res = mutableListOf<Pair<Double, Double>>()
+        val pas = max(1, n / maxPoints)
+        for (i in 0 until n - 1 step pas) {
+            val pt = anneau.getJSONArray(i)
+            res.add(pt.optDouble(1) to pt.optDouble(0))
+        }
+        if (res.isNotEmpty() && res.first() != res.last()) {
+            res.add(res.first())
+        }
+        return res
+    }
+
+    private fun qualifierPointDansParcelles(lat: Double, lon: Double, parcelles: List<ParcelleIgn5km>): Pair<ProfilForet, ParcelleIgn5km?> {
+        val margeLon = 35.0 / (111320.0 * max(0.2, cos(Math.toRadians(lat))))
+        val margeLat = 35.0 / 111132.0
+
+        val interieur = mutableListOf<PeuplementForestier>()
+        val lisiere = mutableListOf<PeuplementForestier>()
+        val vusInt = mutableSetOf<String>()
+        val vusLis = mutableSetOf<String>()
+        var distMin = Double.POSITIVE_INFINITY
+        var parcellePrincipale: ParcelleIgn5km? = null
+
+        for (p in parcelles) {
+            if (lon < p.minLon - margeLon || lon > p.maxLon + margeLon || lat < p.minLat - margeLat || lat > p.maxLat + margeLat) {
+                continue
+            }
+            val d = if (pointDansPolygone(lon, lat, p.poly)) {
+                0.0
+            } else {
+                var dm = Double.POSITIVE_INFINITY
+                for (k in 0 until p.poly.length()) {
+                    val dk = distancePointAnneauM(lon, lat, p.poly.getJSONArray(k))
+                    if (dk < dm) dm = dk
+                }
+                dm
+            }
+            if (d < distMin) {
+                distMin = d
+                parcellePrincipale = p
+            }
+            val cle = "${p.formationVegetale}|${p.essence}"
+            if (d <= 5.0) {
+                if (vusInt.add(cle)) interieur.add(PeuplementForestier(p.formationVegetale, p.essence, round1(d)))
+            } else if (d <= 25.0) {
+                if (vusLis.add(cle)) lisiere.add(PeuplementForestier(p.formationVegetale, p.essence, round1(d)))
+            }
+        }
+        val enBois = interieur.isNotEmpty()
+        val enLis = !enBois && lisiere.isNotEmpty()
+        return ProfilForet(
+            enZoneBoisee = enBois,
+            enLisiere = enLis,
+            distanceForetM = if (distMin.isFinite()) round1(distMin) else null,
+            peuplements = interieur,
+            peuplementsLisiere = if (enLis) lisiere else emptyList()
+        ) to (if (enBois) parcellePrincipale else null)
+    }
+
+    private fun adapterMeteoAltitude(meteo: SerieMeteo, deltaAltM: Double): SerieMeteo {
+        if (abs(deltaAltM) < 12.0) return meteo
+        val deltaT = round2(-0.0065 * deltaAltM)
+        return meteo.copy(
+            soilTemperature6cm = meteo.soilTemperature6cm.map { round2(it + deltaT) },
+            temperature2mMin = meteo.temperature2mMin.map { round2(it + deltaT) }
+        )
+    }
+
+    suspend fun rechercherZonesOptimales5km(
+        latCentre: Double,
+        lonCentre: Double,
+        espece: EspeceChampignon,
+        decalageJour: Int = 0,
+        rayonKm: Double = 5.0,
+        meteoReference: SerieMeteo? = null
+    ): ResultatScan5km = withContext(Dispatchers.IO) {
+        val defMeteo = async { meteoReference ?: recupererDonneesMeteo(latCentre, lonCentre) }
+        val defMnt = async { construireMntRayon(latCentre, lonCentre, rayonKm, 8) }
+        val defParcelles = async { recupererPolygonesForetRayon(latCentre, lonCentre, rayonKm) }
+
+        val meteoRef = defMeteo.await()
+        val mnt = defMnt.await()
+        val parcelles = defParcelles.await()
+
+        val topoCentre = calculerTopographieSurMnt(mnt, latCentre, lonCentre)
+        val altCentre = topoCentre.altitudeM
+        val idxCible = (meteoRef.indexAujourdHui + decalageJour.coerceIn(0, 10)).coerceAtMost(meteoRef.dates.size - 1)
+        val echeance = if (decalageJour <= 0) "J" else "J+$decalageJour"
+
+        data class CandidatZone(
+            val lat: Double,
+            val lon: Double,
+            val foret: ProfilForet,
+            val parcelle: ParcelleIgn5km?
+        )
+
+        val candidats = mutableListOf<CandidatZone>()
+
+        // 1. Parcelles forestières IGN réelles + leurs lisières
+        for (p in parcelles) {
+            val ptInt = trouverPointInterieurPolygone(p.poly, latCentre, lonCentre, rayonKm)
+            if (ptInt != null) {
+                val foretInt = ProfilForet(
+                    enZoneBoisee = true,
+                    enLisiere = false,
+                    distanceForetM = 0.0,
+                    peuplements = listOf(PeuplementForestier(p.formationVegetale, p.essence, 0.0))
+                )
+                candidats.add(CandidatZone(ptInt.first, ptInt.second, foretInt, p))
+            }
+            val ext = p.poly.getJSONArray(0)
+            if (ext.length() > 0) {
+                val p0 = ext.getJSONArray(0)
+                val sx = p0.optDouble(0)
+                val sy = p0.optDouble(1)
+                val refLat = ptInt?.first ?: latCentre
+                val refLon = ptInt?.second ?: lonCentre
+                val dy = sy - refLat
+                val dx = sx - refLon
+                val normM = hypot(dx * 111320.0 * cos(Math.toRadians(sy)), dy * 111132.0)
+                if (normM > 1.0) {
+                    val f15 = 16.0 / normM
+                    val latLis = sy + dy * f15
+                    val lonLis = sx + dx * f15
+                    val (dKm, _, _) = calculerDistanceEtCap(latCentre, lonCentre, latLis, lonLis)
+                    if (dKm <= rayonKm) {
+                        val (qual, _) = qualifierPointDansParcelles(latLis, lonLis, parcelles)
+                        if (!qual.enZoneBoisee) {
+                            val foretLis = if (qual.enLisiere) qual else ProfilForet(
+                                enZoneBoisee = false,
+                                enLisiere = true,
+                                distanceForetM = 15.0,
+                                peuplements = emptyList(),
+                                peuplementsLisiere = listOf(PeuplementForestier(p.formationVegetale, p.essence, 15.0))
+                            )
+                            candidats.add(CandidatZone(latLis, lonLis, foretLis, null))
+                        }
+                    }
+                }
+            }
+        }
+
+        // 2. Grille concentrique sur tout le disque de 5 km (capte prairies, clairières, vallons et versants)
+        val cosLat = max(0.2, cos(Math.toRadians(latCentre)))
+        val couronnes = listOf(
+            0.0 to 1,
+            0.75 to 8,
+            1.5 to 12,
+            2.3 to 16,
+            3.1 to 20,
+            3.9 to 24,
+            4.7 to 28
+        )
+        for ((rKm, nbAngles) in couronnes) {
+            if (rKm > rayonKm) continue
+            for (k in 0 until nbAngles) {
+                val angle = 2.0 * Math.PI * k / nbAngles
+                val latG = latCentre + (rKm * cos(angle)) / 111.132
+                val lonG = lonCentre + (rKm * sin(angle)) / (111.320 * cosLat)
+                val (qual, parc) = qualifierPointDansParcelles(latG, lonG, parcelles)
+                candidats.add(CandidatZone(latG, lonG, qual, parc))
+            }
+        }
+
+        // 3. Évaluation mycologique complète de chaque candidat
+        data class ZoneBrute(
+            val lat: Double,
+            val lon: Double,
+            val distKm: Double,
+            val capDeg: Int,
+            val dirCard: String,
+            val scorePct: Int,
+            val biotopePct: Int,
+            val typeMilieu: String,
+            val libelleBiotope: String,
+            val topo: ProfilTopographique,
+            val sol: ProfilSol,
+            val stades: StadesCarpophore,
+            val parcelle: ParcelleIgn5km?
+        )
+
+        val evaluees = mutableListOf<ZoneBrute>()
+        for (c in candidats) {
+            val (distKm, capDeg, dirCard) = calculerDistanceEtCap(latCentre, lonCentre, c.lat, c.lon)
+            if (distKm > rayonKm + 0.05) continue
+
+            val topoZ = calculerTopographieSurMnt(mnt, c.lat, c.lon)
+            val solZ = recupererDonneesSol(c.lat, c.lon, c.foret)
+            val microZ = ModeleMycologique.extraireParametresEdaphiquesEtCanopee(topoZ, solZ, c.foret)
+            val biotope = ModeleMycologique.evaluerBiotope(espece, topoZ, solZ, c.foret)
+            val meteoZ = adapterMeteoAltitude(meteoRef, topoZ.altitudeM - altCentre)
+
+            val resJour = ModeleMycologique.calculerScoreJour(
+                espece = espece,
+                meteo = meteoZ,
+                indexJour = idxCible,
+                echeanceLabel = echeance,
+                scoreBiotope = biotope,
+                topo = topoZ,
+                paramsEco = microZ
+            )
+
+            val typeMilieu = when {
+                c.foret.enZoneBoisee -> "foret"
+                c.foret.enLisiere -> "lisiere"
+                else -> "prairie"
+            }
+            val libelle = when {
+                c.foret.enZoneBoisee && c.foret.peuplements.isNotEmpty() -> {
+                    val p0 = c.foret.peuplements.first()
+                    if (p0.essence.isNotEmpty() && !p0.formationVegetale.contains(p0.essence, ignoreCase = true)) {
+                        "🌲 ${p0.formationVegetale} (${p0.essence})"
+                    } else {
+                        "🌲 ${p0.formationVegetale}"
+                    }
+                }
+                c.foret.enLisiere && c.foret.peuplementsLisiere.isNotEmpty() -> {
+                    val p0 = c.foret.peuplementsLisiere.first()
+                    "🌿 Prairie en lisière (${p0.essence.ifEmpty { p0.formationVegetale }})"
+                }
+                else -> "🌾 Prairie / Milieu ouvert"
+            }
+
+            evaluees.add(
+                ZoneBrute(
+                    lat = (c.lat * 100000.0).roundToInt() / 100000.0,
+                    lon = (c.lon * 100000.0).roundToInt() / 100000.0,
+                    distKm = distKm,
+                    capDeg = capDeg,
+                    dirCard = dirCard,
+                    scorePct = resJour.scorePct,
+                    biotopePct = (biotope * 100.0).roundToInt(),
+                    typeMilieu = typeMilieu,
+                    libelleBiotope = libelle,
+                    topo = topoZ,
+                    sol = solZ,
+                    stades = resJour.details.stadesCarpophore,
+                    parcelle = c.parcelle
+                )
+            )
+        }
+
+        evaluees.sortWith(
+            compareByDescending<ZoneBrute> { it.scorePct }
+                .thenByDescending { it.biotopePct }
+                .thenBy { it.distKm }
+        )
+
+        val retenues = mutableListOf<ZoneOptimale5km>()
+        for (z in evaluees) {
+            val tropProche = retenues.any { ex ->
+                val (dInter, _, _) = calculerDistanceEtCap(z.lat, z.lon, ex.latitude, ex.longitude)
+                dInter < 0.35 && z.typeMilieu == ex.typeMilieu
+            }
+            if (!tropProche) {
+                val polyCoords = if (z.parcelle != null && z.parcelle.poly.length() > 0) {
+                    simplifierAnneauLeaflet(z.parcelle.poly.getJSONArray(0), 32)
+                } else {
+                    emptyList()
+                }
+                retenues.add(
+                    ZoneOptimale5km(
+                        rang = retenues.size + 1,
+                        latitude = z.lat,
+                        longitude = z.lon,
+                        distanceKm = z.distKm,
+                        capDeg = z.capDeg,
+                        directionCardinale = z.dirCard,
+                        scorePct = z.scorePct,
+                        compatibiliteBiotopePct = z.biotopePct,
+                        typeMilieu = z.typeMilieu,
+                        libelleBiotope = z.libelleBiotope,
+                        altitudeM = z.topo.altitudeM,
+                        penteDeg = z.topo.penteDeg,
+                        orientation = z.topo.orientation,
+                        phEstime = z.sol.ph,
+                        stadesCarpophore = z.stades,
+                        polygoneCoords = polyCoords
+                    )
+                )
+                if (retenues.size >= 20) break
+            }
+        }
+
+        ResultatScan5km(
+            centreLat = latCentre,
+            centreLon = lonCentre,
+            rayonKm = rayonKm,
+            echeance = echeance,
+            decalageJour = decalageJour,
+            espece = espece,
+            nbParcellesIgn = parcelles.size,
+            nbPointsTestes = evaluees.size,
+            scoreMaxRayonPct = retenues.firstOrNull()?.scorePct ?: 0,
+            zonesOptimales = retenues
+        )
+    }
+
+    fun convertirScan5kmEnJsonLeaflet(scan: ResultatScan5km): String {
+        val root = JSONObject()
+        root.put("centreLat", scan.centreLat)
+        root.put("centreLon", scan.centreLon)
+        root.put("rayonKm", scan.rayonKm)
+        root.put("nomEspece", scan.espece.nom)
+        root.put("echeance", scan.echeance)
+        val arr = JSONArray()
+        for (z in scan.zonesOptimales) {
+            val o = JSONObject()
+            o.put("rang", z.rang)
+            o.put("lat", z.latitude)
+            o.put("lon", z.longitude)
+            o.put("distKm", z.distanceKm)
+            o.put("dir", z.directionCardinale)
+            o.put("score", z.scorePct)
+            o.put("biotope", z.libelleBiotope)
+            o.put("alt", z.altitudeM.toInt())
+            o.put("orientation", z.orientation)
+            o.put("pente", z.penteDeg)
+            o.put("stade", "${z.stadesCarpophore.icone} ${z.stadesCarpophore.labelCourt}")
+            val polyArr = JSONArray()
+            for ((la, lo) in z.polygoneCoords) {
+                val pt = JSONArray()
+                pt.put(la)
+                pt.put(lo)
+                polyArr.put(pt)
+            }
+            o.put("poly", polyArr)
+            arr.put(o)
+        }
+        root.put("zones", arr)
+        return root.toString()
+    }
+
     private fun round1(v: Double): Double = (v * 10.0).roundToInt() / 10.0
     private fun round2(v: Double): Double = (v * 100.0).roundToInt() / 100.0
     private fun round3(v: Double): Double = (v * 1000.0).roundToInt() / 1000.0

@@ -1,6 +1,20 @@
+import math
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from meteo import recuperer_donnees_meteo
-from environnement import recuperer_profil_environnemental
+from environnement import (
+    recuperer_profil_environnemental,
+    recuperer_donnees_sol,
+    calculer_distance_et_cap,
+    construire_mnt_rayon,
+    calculer_topographie_sur_mnt,
+    recuperer_polygones_foret_rayon,
+    qualifier_point_dans_parcelles,
+    estimer_sol_local_zone,
+    _trouver_point_interieur_polygone,
+    _simplifier_anneau_leaflet,
+    _point_dans_polygone,
+)
 
 
 # Catalogue élargi des espèces de champignons sauvages comestibles (42 espèces)
@@ -1606,6 +1620,300 @@ def simuler_pousse_point_gps(latitude, longitude, past_days=20, forecast_days=11
             "relative_humidity_2m": meteo.get("relative_humidity_2m", []),
         },
         "especes_probables": resultats_especes,
+    }
+
+
+def _adapter_meteo_altitude(meteo_ref, delta_alt_m):
+    """
+    Applique le gradient thermique adiabatique moyen (-0.65°C par +100 m d'altitude)
+    aux séries de température du sol et de l'air minimale pour une zone située à
+    `delta_alt_m` mètres au-dessus/en-dessous du point central.
+    """
+    if abs(delta_alt_m) < 12.0:
+        return meteo_ref
+    delta_t = round(-0.0065 * delta_alt_m, 2)
+    copie = dict(meteo_ref)
+    if "soil_temperature_0cm" in meteo_ref:
+        copie["soil_temperature_0cm"] = [
+            round(t + delta_t, 2) if t is not None else None
+            for t in meteo_ref["soil_temperature_0cm"]
+        ]
+    if "temperature_2m_min" in meteo_ref:
+        copie["temperature_2m_min"] = [
+            round(t + delta_t, 2) if t is not None else None
+            for t in meteo_ref["temperature_2m_min"]
+        ]
+    return copie
+
+
+def _formater_libelle_biotope_zone(foret_zone):
+    """Construit un libellé synthétique clair du biotope d'une zone."""
+    if foret_zone.get("en_zone_boisee") and foret_zone.get("peuplements"):
+        p0 = foret_zone["peuplements"][0]
+        tfv = p0.get("formation_vegetale") or "Boisement"
+        ess = p0.get("essence") or ""
+        if ess and ess.lower() not in tfv.lower():
+            return f"🌲 {tfv} ({ess})"
+        return f"🌲 {tfv}"
+    if foret_zone.get("en_lisiere") and foret_zone.get("peuplements_lisiere"):
+        p0 = foret_zone["peuplements_lisiere"][0]
+        ess = p0.get("essence") or p0.get("formation_vegetale") or "bois"
+        return f"🌿 Prairie en lisière ({ess})"
+    return "🌾 Prairie / Milieu ouvert (Hors forêt)"
+
+
+def rechercher_zones_optimales_5km(
+    latitude,
+    longitude,
+    espece_id,
+    rayon_km=5.0,
+    decalage_jour=0,
+    max_zones=24,
+):
+    """
+    Scanne un rayon de `rayon_km` (5 km par défaut) autour de (latitude, longitude)
+    pour identifier et cartographier les zones où la probabilité de récolter l'espèce
+    `espece_id` est la plus élevée au jour J+`decalage_jour` :
+    1. Charge en parallèle :
+       - Les séries météo 31j (J-20 à J+10)
+       - Le fond pédologique régional SoilGrids
+       - Le Modèle Numérique de Terrain (MNT 8x8 = 64 points) sur le rayon de 5 km
+       - Tous les polygones forestiers IGN BD Forêt V2 du rayon de 5 km
+    2. Échantillonne :
+       - Chaque polygone forestier IGN (intérieur + lisière à ~15 m)
+       - Une grille spatiale concentrique couvrant tout le disque de 5 km (prairies, clairières, vallons, versants)
+    3. Évalue le modèle mycologique complet (biotope, pH local, altitude, pente, exposition Adret/Ubac,
+       cinétique et stades de maturité des carpophores) sur chaque zone candidate.
+    """
+    espece = next((e for e in CATALOGUE_ESPECES if e["id"] == espece_id), None)
+    if not espece:
+        raise ValueError(f"Espèce inconnue : {espece_id}")
+
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        fut_meteo = pool.submit(recuperer_donnees_meteo, latitude, longitude, 20, 11)
+        fut_sol = pool.submit(recuperer_donnees_sol, latitude, longitude)
+        fut_mnt = pool.submit(construire_mnt_rayon, latitude, longitude, rayon_km, 8)
+        fut_parcelles = pool.submit(recuperer_polygones_foret_rayon, latitude, longitude, rayon_km)
+
+        meteo_ref = fut_meteo.result()
+        sol_ref = fut_sol.result()
+        mnt = fut_mnt.result()
+        parcelles = fut_parcelles.result()
+
+    if not meteo_ref or not meteo_ref.get("time"):
+        raise RuntimeError("Impossible de récupérer les données météorologiques pour le scan 5 km.")
+
+    dates = meteo_ref["time"]
+    idx_aujourd_hui = 20
+    decalage_jour = max(0, min(10, int(decalage_jour)))
+    idx_cible = min(len(dates) - 1, idx_aujourd_hui + decalage_jour)
+    date_cible = dates[idx_cible]
+
+    topo_centre = calculer_topographie_sur_mnt(mnt, latitude, longitude)
+    alt_centre = topo_centre.get("altitude_m") or 250.0
+
+    # --- Génération des zones candidates dans le disque de 5 km ---
+    candidats = []
+
+    # A. Échantillonnage des parcelles forestières IGN réelles et de leurs lisières
+    for idx_p, p in enumerate(parcelles):
+        pt_int = _trouver_point_interieur_polygone(p["poly"], latitude, longitude, rayon_km)
+        if pt_int:
+            lat_i, lon_i = pt_int
+            foret_int = {
+                "en_zone_boisee": True,
+                "en_lisiere": False,
+                "distance_foret_m": 0.0,
+                "peuplements": [{
+                    "formation_vegetale": p["formation_vegetale"],
+                    "essence": p["essence"],
+                    "code_tfv": p["code_tfv"],
+                    "distance_m": 0.0,
+                }],
+                "peuplements_lisiere": [],
+                "parcelle_principale": p,
+            }
+            candidats.append((lat_i, lon_i, foret_int, p))
+
+        # Point de lisière (~15 m à l'extérieur d'un sommet de la parcelle)
+        ext = p["poly"][0]
+        if ext:
+            sx, sy = ext[0][0], ext[0][1]
+            # Vecteur depuis le barycentre vers le sommet extérieur, prolongé de ~15 m
+            if pt_int:
+                dy = sy - pt_int[0]
+                dx = sx - pt_int[1]
+            else:
+                dy = sy - latitude
+                dx = sx - longitude
+            norm_m = math.sqrt((dx * 111320.0 * math.cos(math.radians(sy))) ** 2 + (dy * 111132.0) ** 2)
+            if norm_m > 1.0:
+                fact_15m = 16.0 / norm_m
+                lat_lis = round(sy + dy * fact_15m, 5)
+                lon_lis = round(sx + dx * fact_15m, 5)
+                dist_km_lis, _, _ = calculer_distance_et_cap(latitude, longitude, lat_lis, lon_lis)
+                if dist_km_lis <= rayon_km:
+                    qual_lis = qualifier_point_dans_parcelles(lat_lis, lon_lis, parcelles)
+                    if not qual_lis["en_zone_boisee"]:
+                        if not qual_lis["en_lisiere"]:
+                            qual_lis["en_lisiere"] = True
+                            qual_lis["distance_foret_m"] = 15.0
+                            qual_lis["peuplements_lisiere"] = [{
+                                "formation_vegetale": p["formation_vegetale"],
+                                "essence": p["essence"],
+                                "code_tfv": p["code_tfv"],
+                                "distance_m": 15.0,
+                            }]
+                        candidats.append((lat_lis, lon_lis, qual_lis, None))
+
+    # B. Grille spatiale concentrique sur tout le disque de 5 km (capte prairies, clairières, vallons et versants)
+    cos_lat = max(0.2, math.cos(math.radians(latitude)))
+    couronnes = [
+        (0.0, 1),
+        (0.75, 8),
+        (1.5, 12),
+        (2.3, 16),
+        (3.1, 20),
+        (3.9, 24),
+        (4.7, 28),
+    ]
+    for r_km, nb_angles in couronnes:
+        if r_km > rayon_km:
+            continue
+        for k in range(nb_angles):
+            angle_rad = 2.0 * math.pi * k / nb_angles
+            dlat = (r_km * math.cos(angle_rad)) / 111.132
+            dlon = (r_km * math.sin(angle_rad)) / (111.320 * cos_lat)
+            lat_g = round(latitude + dlat, 5)
+            lon_g = round(longitude + dlon, 5)
+            qual = qualifier_point_dans_parcelles(lat_g, lon_g, parcelles)
+            candidats.append((lat_g, lon_g, qual, qual.get("parcelle_principale") if qual["en_zone_boisee"] else None))
+
+    # --- Évaluation mycologique de chaque candidat ---
+    zones_evaluees = []
+    for lat_z, lon_z, foret_z, parcelle_poly in candidats:
+        dist_km, cap_deg, dir_card = calculer_distance_et_cap(latitude, longitude, lat_z, lon_z)
+        if dist_km > rayon_km + 0.05:
+            continue
+
+        topo_z = calculer_topographie_sur_mnt(mnt, lat_z, lon_z)
+        sol_z = estimer_sol_local_zone(sol_ref, foret_z, topo_z)
+        profil_z = {
+            "coordonnees": {"latitude": lat_z, "longitude": lon_z},
+            "altitude_m": topo_z["altitude_m"],
+            "topographie": topo_z,
+            "sol": sol_z,
+            "foret": foret_z,
+        }
+
+        score_biotope = evaluer_biotope(espece, profil_z)
+        delta_alt = (topo_z["altitude_m"] or alt_centre) - alt_centre
+        meteo_z = _adapter_meteo_altitude(meteo_ref, delta_alt)
+
+        res_cible = calculer_score_jour(
+            espece,
+            meteo_z,
+            idx_cible,
+            score_biotope,
+            topographie=topo_z,
+            profil_env=profil_z,
+        )
+
+        # Calcul rapide du score max sur les 4 jours autour/après la date cible
+        score_max_proche = res_cible["score_pct"]
+        meilleure_echeance = "J" if decalage_jour == 0 else f"J+{decalage_jour}"
+        for d_alt in range(max(0, decalage_jour), min(11, decalage_jour + 4)):
+            if d_alt == decalage_jour:
+                continue
+            r_alt = calculer_score_jour(
+                espece,
+                meteo_z,
+                idx_aujourd_hui + d_alt,
+                score_biotope,
+                topographie=topo_z,
+                profil_env=profil_z,
+            )
+            if r_alt["score_pct"] > score_max_proche:
+                score_max_proche = r_alt["score_pct"]
+                meilleure_echeance = "J" if d_alt == 0 else f"J+{d_alt}"
+
+        type_milieu = (
+            "foret"
+            if foret_z.get("en_zone_boisee")
+            else ("lisiere" if foret_z.get("en_lisiere") else "prairie")
+        )
+
+        zones_evaluees.append({
+            "latitude": lat_z,
+            "longitude": lon_z,
+            "distance_km": dist_km,
+            "cap_deg": cap_deg,
+            "direction_cardinale": dir_card,
+            "score_pct": res_cible["score_pct"],
+            "score_max_proche_pct": score_max_proche,
+            "meilleure_echeance": meilleure_echeance,
+            "compatibilite_biotope_pct": int(round(score_biotope * 100)),
+            "type_milieu": type_milieu,
+            "libelle_biotope": _formater_libelle_biotope_zone(foret_z),
+            "altitude_m": topo_z["altitude_m"],
+            "pente_deg": topo_z["pente_deg"],
+            "orientation": topo_z["orientation"],
+            "ph_estime": sol_z["ph"],
+            "type_sol": sol_z["type_sol"],
+            "details_jour": res_cible["details"],
+            "_parcelle": parcelle_poly,
+        })
+
+    # Tri décroissant par score au jour cible, puis score max proche, puis biotope, puis proximité
+    zones_evaluees.sort(
+        key=lambda z: (
+            z["score_pct"],
+            z["score_max_proche_pct"],
+            z["compatibilite_biotope_pct"],
+            -z["distance_km"],
+        ),
+        reverse=True,
+    )
+
+    # Dédoublonnage spatial : évite d'empiler 2 marqueurs à moins de 350 m l'un de l'autre
+    zones_retenues = []
+    for z in zones_evaluees:
+        trop_proche = False
+        for existante in zones_retenues:
+            d_inter, _, _ = calculer_distance_et_cap(
+                z["latitude"], z["longitude"], existante["latitude"], existante["longitude"]
+            )
+            if d_inter < 0.35 and z["type_milieu"] == existante["type_milieu"]:
+                trop_proche = True
+                break
+        if not trop_proche:
+            parcelle = z.pop("_parcelle", None)
+            if parcelle and parcelle.get("poly") and parcelle["poly"][0]:
+                z["polygone_coords"] = _simplifier_anneau_leaflet(parcelle["poly"][0], max_points=36)
+            else:
+                z["polygone_coords"] = None
+            z["rang"] = len(zones_retenues) + 1
+            zones_retenues.append(z)
+            if len(zones_retenues) >= max_zones:
+                break
+
+    return {
+        "centre": {"latitude": latitude, "longitude": longitude, "altitude_m": alt_centre},
+        "rayon_km": rayon_km,
+        "date_cible": date_cible,
+        "echeance": "J" if decalage_jour == 0 else f"J+{decalage_jour}",
+        "decalage_jour": decalage_jour,
+        "espece": {
+            "id": espece["id"],
+            "nom": espece["nom"],
+            "nom_scientifique": espece["nom_scientifique"],
+            "essences_hotes": espece["essences_hotes"],
+            "ph_optimal": espece["ph_optimal"],
+        },
+        "nb_parcelles_ign_analysees": len(parcelles),
+        "nb_points_testes": len(zones_evaluees),
+        "score_max_rayon_pct": zones_retenues[0]["score_pct"] if zones_retenues else 0,
+        "zones_optimales": zones_retenues,
     }
 
 
