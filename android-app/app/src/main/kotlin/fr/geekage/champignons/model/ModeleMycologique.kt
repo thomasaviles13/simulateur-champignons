@@ -34,7 +34,9 @@ data class EspeceChampignon(
     val essencesHotes: List<String>,
     val altitudeMax: Int,
     val typeTrophique: TypeTrophique = TypeTrophique.MYCORHIZIEN,
-    val estCryophileGel: Boolean = false
+    val estCryophileGel: Boolean = false,
+    val altitudeMin: Int = 0,
+    val ecoregions: List<String> = listOf("generaliste")
 )
 
 data class StadesCarpophore(
@@ -219,6 +221,21 @@ object ModeleMycologique {
         "pied_bleu"
     )
 
+    private val ESPECES_THERMOPHILES_SENSIBLES_FROID = setOf(
+        "amanite_rougissante",
+        "amanite_vaginee",
+        "amanite_cesars",
+        "cepe_ete",
+        "cepe_bronze",
+        "russule_charbonniere",
+        "russule_verdoyante",
+        "russule_doree",
+        "polypore_soufre",
+        "fistuline_hepatique",
+        "bolet_pied_rouge",
+        "meunier"
+    )
+
     val SPOTS_FAVORIS_DEFAUT = listOf(
         SpotPredefini("Châtaigneraie des Terres Froides", "Isère (38)", "Forêt de châtaigniers sur versant Nord frais (510 m)", 45.4105, 5.2400, "🌰"),
         SpotPredefini("Prairies d'Ornacieux-Balbins", "Isère (38)", "Prairies ouvertes propices aux Marasmes, Rosés et Coulemelles", 45.4021, 5.2231, "🌾"),
@@ -236,7 +253,7 @@ object ModeleMycologique {
         EspeceChampignon("cepe_bronze", "Cèpe bronzé (Tête de nègre)", "Boletus aereus", setOf(6, 7, 8, 9, 10), setOf(8, 9, 10), 5.0, 6.8, 14.0, 22.0, 10.0, 26.0, 35.0, 95.0, 8, 15, ChocThermique.BAISSE, listOf("chêne", "châtaignier", "hêtre", "feuillus"), 1200),
         EspeceChampignon("cepe_pins", "Cèpe des pins", "Boletus pinophilus", setOf(5, 6, 7, 8, 9, 10, 11), setOf(9, 10, 11), 4.0, 6.0, 9.0, 17.0, 5.0, 22.0, 40.0, 110.0, 7, 14, ChocThermique.BAISSE, listOf("pin", "sapin", "épicéa", "conifères"), 2000),
         EspeceChampignon("bolet_bai", "Bolet bai", "Imleria badia", setOf(8, 9, 10, 11), setOf(9, 10, 11), 4.2, 6.2, 8.0, 17.0, 4.0, 21.0, 35.0, 100.0, 5, 12, ChocThermique.BAISSE, listOf("pin", "épicéa", "sapin", "conifères", "chêne", "hêtre", "châtaignier", "feuillus"), 2000),
-        EspeceChampignon("bolet_pied_rouge", "Bolet à pied rouge", "Neoboletus erythropus", setOf(5, 6, 7, 8, 9, 10, 11), setOf(8, 9, 10, 11), 4.2, 6.2, 7.5, 18.0, 3.0, 23.0, 40.0, 110.0, 6, 13, ChocThermique.BAISSE, listOf("hêtre", "chêne", "châtaignier", "épicéa", "sapin", "feuillus", "conifères"), 2200),
+        EspeceChampignon("bolet_pied_rouge", "Bolet à pied rouge", "Neoboletus erythropus", setOf(5, 6, 7, 8, 9, 10, 11), setOf(8, 9, 10), 4.2, 6.2, 7.5, 18.0, 3.0, 23.0, 40.0, 110.0, 6, 13, ChocThermique.BAISSE, listOf("hêtre", "chêne", "châtaignier", "épicéa", "sapin", "feuillus", "conifères"), 2200),
         EspeceChampignon("bolet_rude", "Bolet rude (Bouleau)", "Leccinum scabrum", setOf(6, 7, 8, 9, 10, 11), setOf(8, 9, 10), 4.5, 6.5, 7.5, 17.0, 3.0, 22.0, 45.0, 120.0, 6, 12, ChocThermique.BAISSE, listOf("bouleau"), 1800),
         EspeceChampignon("bolet_orange", "Bolet orangé des chênes", "Leccinum aurantiacum", setOf(7, 8, 9, 10, 11), setOf(9, 10), 4.8, 6.8, 8.0, 18.0, 3.5, 22.0, 40.0, 110.0, 7, 14, ChocThermique.BAISSE, listOf("chêne", "peuplier", "tremble", "hêtre", "feuillus"), 1600),
         EspeceChampignon("nonnette_voilee", "Nonnette voilée (Bolet jaune)", "Suillus luteus", setOf(8, 9, 10, 11), setOf(9, 10, 11), 4.2, 6.2, 8.0, 16.0, 4.0, 20.0, 35.0, 100.0, 5, 11, ChocThermique.BAISSE, listOf("pin", "conifères"), 2000),
@@ -251,22 +268,22 @@ object ModeleMycologique {
         EspeceChampignon("pied_de_mouton_roussissant", "Pied-de-mouton roussissant", "Hydnum rufescens", setOf(9, 10, 11, 12), setOf(10, 11), 4.5, 6.5, 5.0, 13.0, 1.5, 17.0, 45.0, 125.0, 8, 15, ChocThermique.BAISSE, listOf("épicéa", "sapin", "pin", "hêtre", "chêne", "conifères", "feuillus"), 2000, estCryophileGel = true),
 
         // --- AMANITES COMESTIBLES ---
-        EspeceChampignon("amanite_rougissante", "Amanite rougissante (Golmotte)", "Amanita rubescens", setOf(6, 7, 8, 9, 10, 11), setOf(8, 9, 10, 11), 4.2, 6.5, 7.5, 18.0, 3.0, 23.0, 30.0, 105.0, 5, 11, ChocThermique.MODERE, listOf("chêne", "hêtre", "châtaignier", "pin", "épicéa", "sapin", "feuillus", "conifères"), 2000),
+        EspeceChampignon("amanite_rougissante", "Amanite rougissante (Golmotte)", "Amanita rubescens", setOf(6, 7, 8, 9, 10, 11), setOf(8, 9, 10), 4.2, 6.5, 7.5, 18.0, 3.0, 23.0, 30.0, 105.0, 5, 11, ChocThermique.MODERE, listOf("chêne", "hêtre", "châtaignier", "pin", "épicéa", "sapin", "feuillus", "conifères"), 2000),
         EspeceChampignon("amanite_cesars", "Amanite des Césars (Oronge)", "Amanita caesarea", setOf(7, 8, 9, 10), setOf(8, 9), 5.0, 6.8, 16.0, 24.0, 12.0, 28.0, 30.0, 85.0, 7, 14, ChocThermique.MODERE, listOf("chêne", "châtaignier", "feuillus"), 1000),
         EspeceChampignon("amanite_vaginee", "Amanite vaginée (Grisette)", "Amanita vaginata", setOf(6, 7, 8, 9, 10, 11), setOf(8, 9, 10), 4.5, 6.8, 8.5, 18.0, 4.0, 23.0, 35.0, 100.0, 5, 11, ChocThermique.MODERE, listOf("chêne", "hêtre", "bouleau", "châtaignier", "feuillus", "conifères"), 2000),
 
         // --- LACCAIRES, POLYPORES & FISTULINES ---
         EspeceChampignon("laccaire_amethyste", "Laccaire améthyste", "Laccaria amethystina", setOf(8, 9, 10, 11, 12), setOf(9, 10, 11), 4.5, 6.8, 6.0, 15.0, 2.0, 20.0, 40.0, 125.0, 5, 11, ChocThermique.BAISSE, listOf("hêtre", "chêne", "châtaignier", "charme", "feuillus", "conifères"), 1800),
         EspeceChampignon("laccaire_laque", "Laccaire laqué", "Laccaria laccata", setOf(6, 7, 8, 9, 10, 11, 12), setOf(9, 10, 11), 4.2, 7.0, 6.0, 16.0, 2.0, 21.0, 35.0, 120.0, 4, 10, ChocThermique.BAISSE, listOf("chêne", "hêtre", "bouleau", "pin", "épicéa", "feuillus", "conifères"), 2200),
-        EspeceChampignon("fistuline_hepatique", "Fistuline hépatique (Langue de bœuf)", "Fistulina hepatica", setOf(8, 9, 10, 11), setOf(9, 10, 11), 4.5, 6.5, 7.5, 18.0, 3.0, 22.0, 35.0, 105.0, 6, 13, ChocThermique.MODERE, listOf("chêne", "châtaignier", "feuillus"), 1400, TypeTrophique.LIGNICOLE),
-        EspeceChampignon("poule_des_bois", "Poule des bois (Maitake)", "Grifola frondosa", setOf(8, 9, 10, 11), setOf(9, 10, 11), 4.8, 6.5, 8.0, 18.0, 3.5, 22.0, 40.0, 110.0, 7, 14, ChocThermique.BAISSE, listOf("chêne", "châtaignier", "hêtre", "charme", "feuillus"), 1300, TypeTrophique.LIGNICOLE),
+        EspeceChampignon("fistuline_hepatique", "Fistuline hépatique (Langue de bœuf)", "Fistulina hepatica", setOf(8, 9, 10, 11), setOf(8, 9, 10), 4.5, 6.5, 7.5, 18.0, 3.0, 22.0, 35.0, 105.0, 6, 13, ChocThermique.MODERE, listOf("chêne", "châtaignier", "feuillus"), 1400, TypeTrophique.LIGNICOLE),
+        EspeceChampignon("poule_des_bois", "Poule des bois (Maitake)", "Grifola frondosa", setOf(8, 9, 10, 11), setOf(9, 10), 4.8, 6.5, 8.0, 18.0, 3.5, 22.0, 40.0, 110.0, 7, 14, ChocThermique.BAISSE, listOf("chêne", "châtaignier", "hêtre", "charme", "feuillus"), 1300, TypeTrophique.LIGNICOLE),
         EspeceChampignon("polypore_soufre", "Polypore soufré", "Laetiporus sulphureus", setOf(5, 6, 7, 8, 9, 10), setOf(5, 6, 9), 5.0, 7.0, 12.0, 21.0, 8.0, 25.0, 35.0, 95.0, 5, 11, ChocThermique.MODERE, listOf("chêne", "robinier", "saule", "peuplier", "châtaignier", "feuillus"), 1500, TypeTrophique.LIGNICOLE),
         EspeceChampignon("sparassis_crepu", "Sparassis crépu (Morille des pins)", "Sparassis crispa", setOf(8, 9, 10, 11), setOf(9, 10, 11), 4.2, 6.2, 7.0, 15.0, 3.0, 19.0, 45.0, 115.0, 7, 14, ChocThermique.BAISSE, listOf("pin", "sapin", "épicéa", "douglas", "conifères"), 1800, TypeTrophique.LIGNICOLE),
 
         // --- LACTAIRES & RUSSULES ---
         EspeceChampignon("lactaire_delicieux", "Lactaire délicieux (Catalan)", "Lactarius deliciosus", setOf(9, 10, 11, 12), setOf(10, 11), 5.0, 7.5, 8.0, 16.0, 3.0, 20.0, 40.0, 110.0, 6, 13, ChocThermique.BAISSE, listOf("pin", "conifères"), 1800),
         EspeceChampignon("lactaire_sanguin", "Lactaire sanguin", "Lactarius sanguifluus", setOf(9, 10, 11, 12), setOf(10, 11), 6.2, 8.0, 9.0, 17.0, 4.0, 21.0, 35.0, 100.0, 6, 13, ChocThermique.BAISSE, listOf("pin", "conifères"), 1600),
-        EspeceChampignon("russule_charbonniere", "Russule charbonnière", "Russula cyanoxantha", setOf(6, 7, 8, 9, 10, 11), setOf(8, 9, 10, 11), 4.5, 6.8, 7.5, 18.0, 3.0, 23.0, 35.0, 105.0, 5, 11, ChocThermique.MODERE, listOf("hêtre", "chêne", "châtaignier", "charme", "feuillus"), 1800),
+        EspeceChampignon("russule_charbonniere", "Russule charbonnière", "Russula cyanoxantha", setOf(6, 7, 8, 9, 10, 11), setOf(8, 9, 10), 4.5, 6.8, 7.5, 18.0, 3.0, 23.0, 35.0, 105.0, 5, 11, ChocThermique.MODERE, listOf("hêtre", "chêne", "châtaignier", "charme", "feuillus"), 1800),
         EspeceChampignon("russule_verdoyante", "Russule verdoyante (Palomet)", "Russula virescens", setOf(6, 7, 8, 9, 10), setOf(7, 8, 9), 4.8, 6.5, 13.0, 21.0, 9.0, 25.0, 35.0, 95.0, 6, 12, ChocThermique.MODERE, listOf("chêne", "hêtre", "châtaignier", "feuillus"), 1400),
         EspeceChampignon("russule_doree", "Russule dorée", "Russula aurea", setOf(6, 7, 8, 9, 10), setOf(7, 8, 9), 5.0, 7.2, 12.0, 20.0, 8.0, 24.0, 35.0, 95.0, 6, 12, ChocThermique.MODERE, listOf("chêne", "hêtre", "feuillus", "épicéa"), 1600),
 
@@ -275,7 +292,7 @@ object ModeleMycologique {
         EspeceChampignon("tricholome_terreux", "Tricholome terreux (Petit gris)", "Tricholoma terreum", setOf(9, 10, 11, 12), setOf(10, 11, 12), 6.0, 7.8, 4.0, 13.0, 1.0, 17.0, 35.0, 100.0, 6, 13, ChocThermique.BAISSE, listOf("pin", "épicéa", "sapin", "conifères"), 1800, estCryophileGel = true),
         EspeceChampignon("mousseron_st_georges", "Mousseron de la Saint-Georges", "Calocybe gambosa", setOf(4, 5, 6), setOf(4, 5), 6.2, 7.8, 9.0, 16.0, 5.0, 20.0, 35.0, 90.0, 5, 11, ChocThermique.HAUSSE, listOf("prairie", "lisière", "frêne", "noisetier", "aubépine"), 1600, TypeTrophique.SAPROPHYTE),
         EspeceChampignon("tete_de_moine", "Tête de moine (Clitocybe géotrope)", "Infundibulicybe geotropa", setOf(9, 10, 11, 12), setOf(10, 11), 6.3, 8.0, 5.0, 14.0, 1.5, 18.0, 40.0, 110.0, 7, 14, ChocThermique.BAISSE, listOf("prairie", "lisière", "hêtre", "chêne", "frêne", "sapin"), 1700, TypeTrophique.SAPROPHYTE, estCryophileGel = true),
-        EspeceChampignon("meunier", "Meunier (Clitopile petite prune)", "Clitopilus prunulus", setOf(7, 8, 9, 10, 11), setOf(9, 10, 11), 4.5, 6.5, 7.5, 17.0, 3.0, 22.0, 40.0, 110.0, 6, 12, ChocThermique.BAISSE, listOf("chêne", "hêtre", "châtaignier", "épicéa", "feuillus", "conifères"), 1800),
+        EspeceChampignon("meunier", "Meunier (Clitopile petite prune)", "Clitopilus prunulus", setOf(7, 8, 9, 10, 11), setOf(8, 9, 10), 4.5, 6.5, 7.5, 17.0, 3.0, 22.0, 40.0, 110.0, 6, 12, ChocThermique.BAISSE, listOf("chêne", "hêtre", "châtaignier", "épicéa", "feuillus", "conifères"), 1800),
 
         // --- PLEUROTES, LÉPIOTES, AGARICS, COPRINS & MARASMES ---
         EspeceChampignon("pleurote_huitre", "Pleurote en huître", "Pleurotus ostreatus", setOf(10, 11, 12, 1, 2), setOf(11, 12, 1), 5.2, 7.5, 2.5, 10.0, 0.0, 14.0, 30.0, 95.0, 4, 10, ChocThermique.BAISSE, listOf("hêtre", "peuplier", "saule", "frêne", "charme", "noisetier"), 1500, TypeTrophique.LIGNICOLE, estCryophileGel = true),
@@ -288,7 +305,45 @@ object ModeleMycologique {
 
         // --- MORILLES (PRINTEMPS) ---
         EspeceChampignon("morille_commune", "Morille commune", "Morchella esculenta", setOf(3, 4, 5), setOf(4, 5), 6.2, 8.0, 8.0, 15.0, 5.0, 19.0, 30.0, 85.0, 6, 12, ChocThermique.HAUSSE, listOf("frêne", "orme", "peuplier", "noisetier", "charme", "feuillus", "sapin"), 1800, TypeTrophique.SAPROPHYTE),
-        EspeceChampignon("morille_conique", "Morille conique (Morille noire)", "Morchella elata", setOf(3, 4, 5, 6), setOf(4, 5), 5.2, 7.5, 7.0, 14.0, 4.0, 18.0, 35.0, 95.0, 6, 13, ChocThermique.HAUSSE, listOf("sapin", "épicéa", "pin", "conifères", "frêne"), 2200, TypeTrophique.SAPROPHYTE)
+        EspeceChampignon("morille_conique", "Morille conique (Morille noire)", "Morchella elata", setOf(3, 4, 5, 6), setOf(4, 5), 5.2, 7.5, 7.0, 14.0, 4.0, 18.0, 35.0, 95.0, 6, 13, ChocThermique.HAUSSE, listOf("sapin", "épicéa", "pin", "conifères", "frêne"), 2200, TypeTrophique.SAPROPHYTE),
+
+        // --- ESPÈCES CONTEXTUELLES ÉTENDUES (PRINTEMPS, HIVER, MONTAGNE, MIDI) ---
+EspeceChampignon("morille_ronde", "Morille ronde (Morille blonde)", "Morchella rotunda", setOf(3, 4, 5), setOf(4, 5), 6.5, 8.2, 8.5, 16.0, 5.0, 20.0, 30.0, 85.0, 6, 12, ChocThermique.HAUSSE, listOf("frêne", "orme", "pommier", "peuplier", "noisetier", "lisière", "verger"), 1800, typeTrophique = TypeTrophique.SAPROPHYTE, ecoregions = listOf("generaliste", "continental", "montagne")),
+        EspeceChampignon("morille_semi_libre", "Morillon semi-libre", "Mitrophora semilibera", setOf(3, 4, 5), setOf(4, 5), 6.2, 7.8, 8.0, 15.0, 4.5, 19.0, 30.0, 85.0, 5, 11, ChocThermique.HAUSSE, listOf("frêne", "peuplier", "noisetier", "saule", "aubépine", "lisière"), 1600, typeTrophique = TypeTrophique.SAPROPHYTE, ecoregions = listOf("generaliste", "continental")),
+        EspeceChampignon("pezize_veinee", "Pézize veinée (Oreille de cochon)", "Disciotis venosa", setOf(3, 4, 5), setOf(4, 5), 6.5, 8.2, 7.5, 15.0, 4.0, 19.0, 30.0, 80.0, 5, 10, ChocThermique.HAUSSE, listOf("frêne", "hêtre", "peuplier", "orme", "prairie", "lisière"), 1600, typeTrophique = TypeTrophique.SAPROPHYTE, ecoregions = listOf("generaliste", "continental", "montagne")),
+        EspeceChampignon("hygrophore_mars", "Hygrophore de mars (Marzœul)", "Hygrophorus marzuolus", setOf(2, 3, 4, 5), setOf(3, 4), 4.5, 6.8, 3.0, 10.0, 0.0, 14.0, 35.0, 100.0, 7, 15, ChocThermique.HAUSSE, listOf("sapin", "épicéa", "hêtre", "pin", "conifères"), 2000, estCryophileGel = true, altitudeMin = 500, ecoregions = listOf("montagne")),
+        EspeceChampignon("polypore_ecailleux", "Polypore écailleux", "Cerioporus squamosus", setOf(4, 5, 6, 9, 10), setOf(4, 5), 5.5, 7.5, 10.0, 19.0, 6.0, 24.0, 30.0, 90.0, 4, 9, ChocThermique.MODERE, listOf("frêne", "érable", "hêtre", "saule", "peuplier", "orme", "noyer"), 1600, typeTrophique = TypeTrophique.LIGNICOLE, ecoregions = listOf("generaliste", "continental")),
+        EspeceChampignon("flammuline_pied_veloute", "Flammuline à pied velouté (Collybie)", "Flammulina velutipes", setOf(10, 11, 12, 1, 2, 3), setOf(11, 12, 1, 2), 5.0, 7.8, 1.0, 8.0, -3.0, 13.0, 25.0, 85.0, 4, 10, ChocThermique.BAISSE, listOf("saule", "peuplier", "orme", "frêne", "sureau", "hêtre", "érable"), 1800, typeTrophique = TypeTrophique.LIGNICOLE, estCryophileGel = true, ecoregions = listOf("generaliste", "continental", "montagne")),
+        EspeceChampignon("oreille_de_judas", "Oreille-de-Judas", "Auricularia auricula-judae", setOf(9, 10, 11, 12, 1, 2, 3, 4), setOf(11, 12, 1, 2), 5.5, 7.8, 3.0, 12.0, -2.0, 18.0, 30.0, 95.0, 4, 10, ChocThermique.BAISSE, listOf("sureau", "frêne", "érable", "saule", "hêtre", "orme", "robinier"), 1800, typeTrophique = TypeTrophique.LIGNICOLE, estCryophileGel = true, ecoregions = listOf("generaliste", "continental", "atlantique")),
+        EspeceChampignon("hygrophore_des_neiges", "Hygrophore blanc des neiges", "Cuphophyllus virgineus", setOf(10, 11, 12, 1), setOf(11, 12), 5.0, 7.5, 3.0, 11.0, -1.0, 16.0, 35.0, 100.0, 5, 11, ChocThermique.BAISSE, listOf("prairie", "pelouse", "lisière"), 2000, typeTrophique = TypeTrophique.SAPROPHYTE, estCryophileGel = true, ecoregions = listOf("generaliste", "montagne", "continental")),
+        EspeceChampignon("tricholome_pretentieux", "Tricholome prétentieux (Charbonnier)", "Tricholoma portentosum", setOf(10, 11, 12), setOf(10, 11, 12), 4.2, 6.5, 3.5, 11.0, -1.0, 15.0, 35.0, 100.0, 6, 12, ChocThermique.BAISSE, listOf("pin", "épicéa", "sapin", "hêtre", "conifères"), 1900, estCryophileGel = true, ecoregions = listOf("montagne", "continental", "atlantique")),
+        EspeceChampignon("hygrophore_limace", "Hygrophore limace (Hygrophore d'or)", "Hygrophorus hypothejus", setOf(10, 11, 12), setOf(11, 12), 4.0, 6.2, 2.5, 9.5, -2.0, 14.0, 35.0, 100.0, 5, 11, ChocThermique.BAISSE, listOf("pin", "conifères"), 2000, estCryophileGel = true, ecoregions = listOf("montagne", "atlantique", "continental")),
+        EspeceChampignon("pleurote_panicaut", "Pleurote du panicaut (Argouane)", "Pleurotus eryngii", setOf(4, 5, 10, 11, 12), setOf(4, 5, 10, 11), 6.5, 8.5, 10.0, 18.0, 4.0, 23.0, 30.0, 85.0, 5, 11, ChocThermique.MODERE, listOf("prairie", "pelouse", "garrigue", "causses"), 1400, typeTrophique = TypeTrophique.SAPROPHYTE, ecoregions = listOf("mediterraneen", "generaliste")),
+        EspeceChampignon("chanterelle_subpruineuse", "Chanterelle pruineuse (Chanterelle du Midi)", "Cantharellus subpruinosus", setOf(5, 6, 9, 10, 11), setOf(5, 6, 10), 5.2, 7.5, 11.0, 20.0, 6.0, 25.0, 40.0, 115.0, 8, 16, ChocThermique.MODERE, listOf("chêne", "châtaignier", "hêtre", "charme", "feuillus"), 1200, ecoregions = listOf("mediterraneen", "generaliste")),
+        EspeceChampignon("bolet_appendicule", "Bolet appendiculé", "Butyriboletus appendiculatus", setOf(6, 7, 8, 9, 10), setOf(7, 8, 9), 6.0, 7.8, 13.0, 21.0, 8.0, 26.0, 35.0, 95.0, 6, 12, ChocThermique.MODERE, listOf("chêne", "hêtre", "châtaignier", "feuillus"), 1300, ecoregions = listOf("mediterraneen", "generaliste")),
+        EspeceChampignon("bolet_regius", "Cèpe royal (Bolet royal)", "Butyriboletus regius", setOf(6, 7, 8, 9), setOf(7, 8), 5.5, 7.5, 15.0, 23.0, 10.0, 27.0, 35.0, 95.0, 6, 13, ChocThermique.MODERE, listOf("chêne", "châtaignier", "hêtre", "feuillus"), 1200, ecoregions = listOf("mediterraneen", "generaliste")),
+        EspeceChampignon("bolet_depoli", "Bolet dépoli", "Hemileccinum depilatum", setOf(6, 7, 8, 9, 10), setOf(7, 8, 9), 6.2, 7.8, 13.0, 21.0, 8.0, 25.0, 35.0, 95.0, 6, 12, ChocThermique.MODERE, listOf("chêne", "charme", "hêtre", "feuillus"), 1300, ecoregions = listOf("mediterraneen", "generaliste")),
+        EspeceChampignon("lactaire_quieticolor", "Lactaire gris-orangé (Catalan de plaine)", "Lactarius quieticolor", setOf(9, 10, 11, 12), setOf(10, 11), 5.0, 7.5, 8.0, 16.0, 3.5, 20.0, 35.0, 100.0, 6, 13, ChocThermique.BAISSE, listOf("pin", "conifères"), 1500, ecoregions = listOf("mediterraneen", "atlantique")),
+        EspeceChampignon("sarcodon_imbrique", "Hydne imbriqué (Écailleux des sapins)", "Sarcodon imbricatus", setOf(8, 9, 10, 11), setOf(9, 10), 4.0, 6.2, 6.0, 13.5, 2.0, 17.0, 45.0, 120.0, 8, 16, ChocThermique.BAISSE, listOf("épicéa", "sapin", "pin", "conifères"), 2200, altitudeMin = 600, ecoregions = listOf("montagne")),
+        EspeceChampignon("lactaire_epicea", "Lactaire de l'épicéa", "Lactarius deterrimus", setOf(8, 9, 10, 11), setOf(9, 10), 4.5, 7.2, 6.5, 14.0, 2.0, 18.0, 40.0, 115.0, 6, 13, ChocThermique.BAISSE, listOf("épicéa", "conifères"), 2200, altitudeMin = 500, ecoregions = listOf("montagne")),
+        EspeceChampignon("lactaire_saumon", "Lactaire saumon (Lactaire du sapin)", "Lactarius salmonicolor", setOf(8, 9, 10, 11), setOf(9, 10, 11), 5.0, 7.5, 6.5, 14.5, 2.0, 18.0, 40.0, 115.0, 6, 13, ChocThermique.BAISSE, listOf("sapin", "conifères"), 1900, altitudeMin = 400, ecoregions = listOf("montagne")),
+        EspeceChampignon("gomphide_luisant", "Gomphide luisant (Clou de girofle)", "Chroogomphus rutilus", setOf(8, 9, 10, 11), setOf(9, 10), 4.5, 7.5, 6.5, 14.5, 2.0, 18.0, 35.0, 105.0, 6, 12, ChocThermique.BAISSE, listOf("pin", "conifères"), 2000, ecoregions = listOf("montagne", "generaliste")),
+        EspeceChampignon("hygrophore_pudibond", "Hygrophore pudibond", "Hygrophorus erubescens", setOf(8, 9, 10), setOf(9, 10), 6.0, 7.8, 6.5, 13.5, 2.0, 17.0, 40.0, 110.0, 7, 14, ChocThermique.BAISSE, listOf("épicéa", "sapin", "conifères"), 2000, altitudeMin = 600, ecoregions = listOf("montagne")),
+        EspeceChampignon("bolet_granule", "Bolet granulé (Pissacan)", "Suillus granulatus", setOf(5, 6, 7, 8, 9, 10, 11), setOf(6, 7, 9, 10), 5.0, 7.8, 9.0, 18.0, 4.0, 23.0, 35.0, 100.0, 5, 11, ChocThermique.BAISSE, listOf("pin", "conifères"), 2000, ecoregions = listOf("mediterraneen", "atlantique", "montagne", "generaliste")),
+        EspeceChampignon("suillus_grevillei", "Bolet du mélèze (Bolet élégant)", "Suillus grevillei", setOf(7, 8, 9, 10, 11), setOf(8, 9, 10), 4.5, 7.2, 7.5, 16.0, 3.0, 20.0, 40.0, 110.0, 5, 11, ChocThermique.BAISSE, listOf("mélèze", "conifères"), 2300, altitudeMin = 400, ecoregions = listOf("montagne")),
+        EspeceChampignon("bolet_pruineux", "Bolet pruineux", "Xerocomellus pruinatus", setOf(8, 9, 10, 11, 12), setOf(9, 10, 11), 4.5, 6.8, 6.0, 15.0, 2.0, 19.0, 35.0, 105.0, 5, 11, ChocThermique.BAISSE, listOf("hêtre", "chêne", "épicéa", "sapin", "feuillus", "conifères"), 2000, ecoregions = listOf("generaliste", "montagne", "continental")),
+        EspeceChampignon("cortinaire_remarquable", "Cortinaire remarquable (Gros pied)", "Cortinarius praestans", setOf(8, 9, 10), setOf(9, 10), 6.5, 8.0, 8.5, 16.5, 4.0, 21.0, 40.0, 115.0, 7, 14, ChocThermique.BAISSE, listOf("hêtre", "chêne", "charme", "feuillus"), 1400, ecoregions = listOf("generaliste", "continental")),
+        EspeceChampignon("lepiote_mamelonnee", "Lépiote mamelonnée", "Macrolepiota mastoidea", setOf(8, 9, 10, 11), setOf(9, 10, 11), 5.0, 7.5, 7.0, 16.5, 2.5, 21.0, 30.0, 95.0, 5, 11, ChocThermique.MODERE, listOf("chêne", "hêtre", "châtaignier", "feuillus", "pin", "lisière", "prairie"), 1600, typeTrophique = TypeTrophique.SAPROPHYTE, ecoregions = listOf("generaliste", "atlantique", "mediterraneen")),
+        EspeceChampignon("clitocybe_nebuleux", "Clitocybe nébuleux (Gris de sapin)", "Lepista nebularis", setOf(10, 11, 12), setOf(10, 11), 4.5, 7.2, 4.0, 12.5, 0.5, 16.0, 35.0, 105.0, 6, 12, ChocThermique.BAISSE, listOf("hêtre", "chêne", "épicéa", "sapin", "feuillus", "conifères"), 1800, typeTrophique = TypeTrophique.SAPROPHYTE, estCryophileGel = true, ecoregions = listOf("generaliste", "montagne", "continental")),
+        EspeceChampignon("clitocybe_anis", "Clitocybe odorant (Odeur d'anis)", "Clitocybe odora", setOf(8, 9, 10, 11), setOf(9, 10), 5.0, 7.5, 7.0, 16.0, 2.5, 20.0, 35.0, 100.0, 5, 11, ChocThermique.BAISSE, listOf("hêtre", "chêne", "conifères", "feuillus"), 1800, typeTrophique = TypeTrophique.SAPROPHYTE, ecoregions = listOf("generaliste", "continental")),
+        EspeceChampignon("tricholome_colombette", "Tricholome colombette (Jument blanche)", "Tricholoma columbetta", setOf(8, 9, 10, 11), setOf(9, 10), 4.2, 6.2, 7.5, 16.5, 3.0, 20.0, 35.0, 105.0, 6, 12, ChocThermique.BAISSE, listOf("chêne", "hêtre", "châtaignier", "bouleau", "feuillus"), 1500, ecoregions = listOf("generaliste", "atlantique")),
+        EspeceChampignon("russule_violine", "Russule belette (Russule jolie)", "Russula mustelina", setOf(7, 8, 9, 10), setOf(8, 9), 4.2, 6.0, 8.0, 16.0, 3.5, 20.0, 40.0, 110.0, 6, 12, ChocThermique.BAISSE, listOf("épicéa", "sapin", "hêtre", "conifères"), 2200, altitudeMin = 600, ecoregions = listOf("montagne")),
+        EspeceChampignon("russule_vesca", "Russule comestible (Russule pudique)", "Russula vesca", setOf(6, 7, 8, 9, 10), setOf(6, 7, 9), 4.5, 6.8, 9.0, 18.0, 4.5, 23.0, 35.0, 100.0, 5, 11, ChocThermique.MODERE, listOf("chêne", "hêtre", "châtaignier", "pin", "feuillus", "conifères"), 1700, ecoregions = listOf("generaliste", "continental", "atlantique")),
+        EspeceChampignon("russule_integra", "Russule entière (Russule des sapins)", "Russula integra", setOf(7, 8, 9, 10, 11), setOf(8, 9, 10), 4.5, 7.2, 7.0, 15.5, 2.5, 19.0, 40.0, 110.0, 6, 12, ChocThermique.BAISSE, listOf("épicéa", "sapin", "pin", "conifères"), 2200, altitudeMin = 500, ecoregions = listOf("montagne")),
+        EspeceChampignon("tricholome_scalpturatum", "Tricholome gravé (Petit gris jaunissant)", "Tricholoma scalpturatum", setOf(9, 10, 11, 12), setOf(10, 11), 5.5, 7.8, 5.0, 13.0, 1.0, 17.0, 35.0, 100.0, 5, 11, ChocThermique.BAISSE, listOf("chêne", "bouleau", "peuplier", "tilleul", "lisière", "parcs"), 1600, ecoregions = listOf("generaliste", "continental", "atlantique")),
+        EspeceChampignon("chanterelle_cineree", "Chanterelle cendrée", "Craterellus cinereus", setOf(8, 9, 10, 11), setOf(9, 10, 11), 5.0, 7.5, 7.0, 15.0, 3.0, 19.0, 50.0, 130.0, 7, 15, ChocThermique.BAISSE, listOf("hêtre", "chêne", "charme", "feuillus"), 1600, ecoregions = listOf("generaliste", "continental")),
+        EspeceChampignon("vesse_de_loup_geante", "Vesse-de-loup géante", "Calvatia gigantea", setOf(6, 7, 8, 9, 10, 11), setOf(8, 9, 10), 5.5, 7.8, 8.5, 18.0, 4.0, 23.0, 30.0, 90.0, 4, 9, ChocThermique.MODERE, listOf("prairie", "verger", "lisière"), 1600, typeTrophique = TypeTrophique.SAPROPHYTE, ecoregions = listOf("generaliste", "continental", "atlantique")),
+        EspeceChampignon("bolet_chataignier", "Bolet châtain", "Gyroporus castaneus", setOf(6, 7, 8, 9, 10), setOf(7, 8, 9), 4.5, 6.5, 13.0, 21.0, 8.0, 25.0, 30.0, 95.0, 5, 11, ChocThermique.MODERE, listOf("chêne", "châtaignier", "hêtre", "feuillus"), 1400, ecoregions = listOf("generaliste", "atlantique", "mediterraneen")),
     )
 
     fun scoreIntervalle(valeur: Double?, optMin: Double, optMax: Double, limMin: Double, limMax: Double): Double {
@@ -314,10 +369,13 @@ object ModeleMycologique {
 
     private fun persistanceVolee(espece: EspeceChampignon): Int {
         return when (espece.id) {
-            "coprin_chevelu", "rose_des_pres" -> 3
+            "coprin_chevelu", "rose_des_pres", "amanite_rougissante", "amanite_vaginee",
+            "meunier", "marasme_oreades", "agaric_bois", "morille_ronde", "morille_semi_libre", "pezize_veinee" -> 3
             "girolle", "trompette_mort", "chanterelle_tube", "chanterelle_jaunissante",
             "pied_de_mouton", "pied_de_mouton_roussissant", "poule_des_bois",
-            "fistuline_hepatique", "polypore_soufre", "sparassis_crepu", "pleurote_huitre" -> 8
+            "fistuline_hepatique", "polypore_soufre", "sparassis_crepu", "pleurote_huitre",
+            "polypore_ecailleux", "flammuline_pied_veloute", "oreille_de_judas", "hydne_herisson",
+            "sarcodon_imbrique", "chanterelle_cineree", "chanterelle_subpruineuse" -> 8
             else -> 6
         }
     }
@@ -704,6 +762,13 @@ object ModeleMycologique {
                 tminSousBois < -5.0 -> 0.25
                 else -> 1.0
             }
+        } else if (espece.id in ESPECES_THERMOPHILES_SENSIBLES_FROID) {
+            when {
+                tminSousBois <= 0.0 -> 0.08
+                tminSousBois <= 2.0 -> 0.22
+                tminSousBois <= 4.5 -> 0.55
+                else -> 1.0
+            }
         } else {
             when {
                 tminSousBois <= -3.0 -> 0.08
@@ -782,6 +847,84 @@ object ModeleMycologique {
         )
     }
 
+    fun selectionnerCatalogueContextuel(
+        latitude: Double,
+        longitude: Double,
+        mois: Int,
+        altitude: Double = 300.0,
+        essences: List<String> = emptyList(),
+        nbEspeces: Int = 44
+    ): List<EspeceChampignon> {
+        val essencesBasse = essences.map { it.lowercase() }
+        val estMontagne = altitude >= 700.0
+        val estMedit = (latitude <= 44.2 && longitude >= 2.5) || (latitude <= 43.6)
+        val estAtlantique = (longitude <= -0.3 && latitude in 43.4..48.5)
+        val estContinental = (latitude >= 47.0 && longitude >= 4.5 && !estMontagne)
+
+        val scores = CATALOGUE_ESPECES.map { esp ->
+            // 1. Saison
+            val scSaison = when {
+                mois in esp.moisOptimaux -> 50.0
+                mois in esp.moisActifs -> 35.0
+                esp.moisActifs.any { m -> ((m - mois) % 12 + 12) % 12 in setOf(1, 11) } -> 15.0
+                else -> 0.0
+            }
+
+            // 2. Altitude
+            val altMin = esp.altitudeMin
+            val altMax = esp.altitudeMax
+            val scAlt = when {
+                altitude in altMin.toDouble()..altMax.toDouble() -> 25.0
+                altitude < altMin -> max(0.0, 25.0 - (altMin - altitude) * 0.06)
+                else -> max(0.0, 25.0 - (altitude - altMax) * 0.06)
+            }
+
+            // 3. Écorégion
+            val tags = esp.ecoregions
+            var scEco = 15.0
+            if (estMontagne && "montagne" in tags) {
+                scEco = 25.0
+            } else if (estMedit && "mediterraneen" in tags) {
+                scEco = 25.0
+            } else if (estAtlantique && "atlantique" in tags) {
+                scEco = 25.0
+            } else if (estContinental && "continental" in tags) {
+                scEco = 22.0
+            } else if ("generaliste" in tags) {
+                scEco = 18.0
+            }
+
+            if (!estMontagne && altitude < 450.0 && tags == listOf("montagne")) {
+                scEco -= 18.0
+            }
+            if (latitude > 46.5 && tags == listOf("mediterraneen")) {
+                scEco -= 22.0
+            }
+
+            // 4. Hôtes / Habitats
+            val hotes = esp.essencesHotes.map { it.lowercase() }
+            val scHote = if (essencesBasse.isNotEmpty()) {
+                if (hotes.any { h -> essencesBasse.any { e -> e.contains(h) || h.contains(e) } }) {
+                    20.0
+                } else if ("prairie" in hotes || "lisière" in hotes) {
+                    14.0
+                } else {
+                    5.0
+                }
+            } else {
+                15.0
+            }
+
+            val total = scSaison + scAlt + scEco + scHote
+            Pair(total, esp)
+        }
+
+        return scores.sortedWith(
+            compareByDescending<Pair<Double, EspeceChampignon>> { it.first }
+                .thenBy { it.second.nom }
+        ).take(nbEspeces).map { it.second }
+    }
+
     fun executerSimulationComplete(
         latitude: Double,
         longitude: Double,
@@ -794,10 +937,22 @@ object ModeleMycologique {
         val microclimat = extraireParametresEdaphiquesEtCanopee(topo, sol, foret)
         val idxJ = meteo.indexAujourdHui
         val indicesSimulation = (idxJ until min(meteo.dates.size, idxJ + 11)).toList()
-        val moisPeriode = indicesSimulation.mapNotNull { meteo.dates[it].substring(5, 7).toIntOrNull() }.toSet()
+        val moisJ = meteo.dates.getOrNull(idxJ)?.substring(5, 7)?.toIntOrNull() ?: 10
 
-        val resultats = CATALOGUE_ESPECES
-            .filter { esp -> esp.moisActifs.intersect(moisPeriode).isNotEmpty() }
+        val essencesLocales = (foret.peuplements.map { it.essence } + foret.peuplements.map { it.formationVegetale } +
+            foret.peuplementsLisiere.map { it.essence } + foret.peuplementsLisiere.map { it.formationVegetale })
+            .filter { it.isNotBlank() }
+
+        val catalogueActif = selectionnerCatalogueContextuel(
+            latitude = latitude,
+            longitude = longitude,
+            mois = moisJ,
+            altitude = topo.altitudeM,
+            essences = essencesLocales,
+            nbEspeces = 44
+        )
+
+        val resultats = catalogueActif
             .map { esp ->
                 val biotope = evaluerBiotope(esp, topo, sol, foret)
                 val courbe = indicesSimulation.mapIndexed { k, idx ->

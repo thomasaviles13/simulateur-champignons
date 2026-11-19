@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Simulateur Bioclimatique & Édaphique de Pousse de Champignons</title>
+  <link rel="icon" type="image/png" href="img/logo.png" />
   <link
     rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -353,9 +354,12 @@
 </head>
 <body>
   <header>
-    <div>
-      <h1>🍄 Simulateur Bioclimatique & Édaphique de Pousse de Champignons</h1>
-      <p>Modélisation glissante sur 20 jours d'historique + prévisions de J à J+10 • SoilGrids + IGN BD Forêt + Open-Meteo</p>
+    <div style="display: flex; align-items: center; gap: 14px;">
+      <img src="img/logo.png" alt="Logo Simulateur" style="width: 52px; height: 52px; border-radius: 12px; box-shadow: 0 0 15px rgba(233,196,106,0.35); flex-shrink: 0;" />
+      <div>
+        <h1>🍄 Simulateur Bioclimatique & Édaphique de Pousse de Champignons</h1>
+        <p>Modélisation glissante sur 20 jours d'historique + prévisions de J à J+10 • SoilGrids + IGN BD Forêt + Open-Meteo</p>
+      </div>
     </div>
     <div class="quick-spots">
       <button class="btn" onclick="chargerSpot(50.2215, 3.7580)">🌲 Forêt de Mormal (59)</button>

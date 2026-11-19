@@ -100,7 +100,7 @@ CATALOGUE_ESPECES = [
         "nom": "Bolet à pied rouge",
         "nom_scientifique": "Neoboletus erythropus",
         "mois_actifs": [5, 6, 7, 8, 9, 10, 11],
-        "mois_optimaux": [8, 9, 10, 11],
+        "mois_optimaux": [8, 9, 10],
         "ph_optimal": (4.2, 6.2),
         "temp_sol_optimale": (7.5, 18.0),
         "temp_sol_limites": (3.0, 23.0),
@@ -269,7 +269,7 @@ CATALOGUE_ESPECES = [
         "nom": "Amanite rougissante (Golmotte)",
         "nom_scientifique": "Amanita rubescens",
         "mois_actifs": [6, 7, 8, 9, 10, 11],
-        "mois_optimaux": [8, 9, 10, 11],
+        "mois_optimaux": [8, 9, 10],
         "ph_optimal": (4.2, 6.5),
         "temp_sol_optimale": (7.5, 18.0),
         "temp_sol_limites": (3.0, 23.0),
@@ -346,7 +346,7 @@ CATALOGUE_ESPECES = [
         "nom": "Fistuline hépatique (Langue de bœuf)",
         "nom_scientifique": "Fistulina hepatica",
         "mois_actifs": [8, 9, 10, 11],
-        "mois_optimaux": [9, 10, 11],
+        "mois_optimaux": [8, 9, 10],
         "ph_optimal": (4.5, 6.5),
         "temp_sol_optimale": (7.5, 18.0),
         "temp_sol_limites": (3.0, 22.0),
@@ -361,7 +361,7 @@ CATALOGUE_ESPECES = [
         "nom": "Poule des bois (Maitake)",
         "nom_scientifique": "Grifola frondosa",
         "mois_actifs": [8, 9, 10, 11],
-        "mois_optimaux": [9, 10, 11],
+        "mois_optimaux": [9, 10],
         "ph_optimal": (4.8, 6.5),
         "temp_sol_optimale": (8.0, 18.0),
         "temp_sol_limites": (3.5, 22.0),
@@ -438,7 +438,7 @@ CATALOGUE_ESPECES = [
         "nom": "Russule charbonnière",
         "nom_scientifique": "Russula cyanoxantha",
         "mois_actifs": [6, 7, 8, 9, 10, 11],
-        "mois_optimaux": [8, 9, 10, 11],
+        "mois_optimaux": [8, 9, 10],
         "ph_optimal": (4.5, 6.8),
         "temp_sol_optimale": (7.5, 18.0),
         "temp_sol_limites": (3.0, 23.0),
@@ -545,7 +545,7 @@ CATALOGUE_ESPECES = [
         "nom": "Meunier (Clitopile petite prune)",
         "nom_scientifique": "Clitopilus prunulus",
         "mois_actifs": [7, 8, 9, 10, 11],
-        "mois_optimaux": [9, 10, 11],
+        "mois_optimaux": [8, 9, 10],
         "ph_optimal": (4.5, 6.5),
         "temp_sol_optimale": (7.5, 17.0),
         "temp_sol_limites": (3.0, 22.0),
@@ -694,6 +694,611 @@ CATALOGUE_ESPECES = [
         "essences_hotes": ["sapin", "épicéa", "pin", "conifères", "frêne"],
         "altitude_max": 2200,
     },
+
+    # --- ESPÈCES CONTEXTUELLES ÉTENDUES (PRINTEMPS, HIVER, MONTAGNE, MIDI) ---
+    {
+        "id": "morille_ronde",
+        "nom": "Morille ronde (Morille blonde)",
+        "nom_scientifique": "Morchella rotunda",
+        "mois_actifs": [3, 4, 5],
+        "mois_optimaux": [4, 5],
+        "ph_optimal": (6.5, 8.2),
+        "temp_sol_optimale": (8.5, 16.0),
+        "temp_sol_limites": (5.0, 20.0),
+        "pluie_20j_optimale_mm": (30.0, 85.0),
+        "delai_maturation_jours": (6, 12),
+        "choc_thermique": "hausse",
+        "essences_hotes": ['frêne', 'orme', 'pommier', 'peuplier', 'noisetier', 'lisière', 'verger'],
+        "altitude_max": 1800,
+        "ecoregions": ['generaliste', 'continental', 'montagne'],
+        "type_trophique": "saprophyte",
+    },
+    {
+        "id": "morille_semi_libre",
+        "nom": "Morillon semi-libre",
+        "nom_scientifique": "Mitrophora semilibera",
+        "mois_actifs": [3, 4, 5],
+        "mois_optimaux": [4, 5],
+        "ph_optimal": (6.2, 7.8),
+        "temp_sol_optimale": (8.0, 15.0),
+        "temp_sol_limites": (4.5, 19.0),
+        "pluie_20j_optimale_mm": (30.0, 85.0),
+        "delai_maturation_jours": (5, 11),
+        "choc_thermique": "hausse",
+        "essences_hotes": ['frêne', 'peuplier', 'noisetier', 'saule', 'aubépine', 'lisière'],
+        "altitude_max": 1600,
+        "ecoregions": ['generaliste', 'continental'],
+        "type_trophique": "saprophyte",
+    },
+    {
+        "id": "pezize_veinee",
+        "nom": "Pézize veinée (Oreille de cochon)",
+        "nom_scientifique": "Disciotis venosa",
+        "mois_actifs": [3, 4, 5],
+        "mois_optimaux": [4, 5],
+        "ph_optimal": (6.5, 8.2),
+        "temp_sol_optimale": (7.5, 15.0),
+        "temp_sol_limites": (4.0, 19.0),
+        "pluie_20j_optimale_mm": (30.0, 80.0),
+        "delai_maturation_jours": (5, 10),
+        "choc_thermique": "hausse",
+        "essences_hotes": ['frêne', 'hêtre', 'peuplier', 'orme', 'prairie', 'lisière'],
+        "altitude_max": 1600,
+        "ecoregions": ['generaliste', 'continental', 'montagne'],
+        "type_trophique": "saprophyte",
+    },
+    {
+        "id": "hygrophore_mars",
+        "nom": "Hygrophore de mars (Marzœul)",
+        "nom_scientifique": "Hygrophorus marzuolus",
+        "mois_actifs": [2, 3, 4, 5],
+        "mois_optimaux": [3, 4],
+        "ph_optimal": (4.5, 6.8),
+        "temp_sol_optimale": (3.0, 10.0),
+        "temp_sol_limites": (0.0, 14.0),
+        "pluie_20j_optimale_mm": (35.0, 100.0),
+        "delai_maturation_jours": (7, 15),
+        "choc_thermique": "hausse",
+        "essences_hotes": ['sapin', 'épicéa', 'hêtre', 'pin', 'conifères'],
+        "altitude_min": 500,
+        "altitude_max": 2000,
+        "ecoregions": ['montagne'],
+        "cryophile": True,
+    },
+    {
+        "id": "polypore_ecailleux",
+        "nom": "Polypore écailleux",
+        "nom_scientifique": "Cerioporus squamosus",
+        "mois_actifs": [4, 5, 6, 9, 10],
+        "mois_optimaux": [4, 5],
+        "ph_optimal": (5.5, 7.5),
+        "temp_sol_optimale": (10.0, 19.0),
+        "temp_sol_limites": (6.0, 24.0),
+        "pluie_20j_optimale_mm": (30.0, 90.0),
+        "delai_maturation_jours": (4, 9),
+        "choc_thermique": "modere",
+        "essences_hotes": ['frêne', 'érable', 'hêtre', 'saule', 'peuplier', 'orme', 'noyer'],
+        "altitude_max": 1600,
+        "ecoregions": ['generaliste', 'continental'],
+        "type_trophique": "lignicole",
+    },
+    {
+        "id": "flammuline_pied_veloute",
+        "nom": "Flammuline à pied velouté (Collybie)",
+        "nom_scientifique": "Flammulina velutipes",
+        "mois_actifs": [10, 11, 12, 1, 2, 3],
+        "mois_optimaux": [11, 12, 1, 2],
+        "ph_optimal": (5.0, 7.8),
+        "temp_sol_optimale": (1.0, 8.0),
+        "temp_sol_limites": (-3.0, 13.0),
+        "pluie_20j_optimale_mm": (25.0, 85.0),
+        "delai_maturation_jours": (4, 10),
+        "choc_thermique": "baisse",
+        "essences_hotes": ['saule', 'peuplier', 'orme', 'frêne', 'sureau', 'hêtre', 'érable'],
+        "altitude_max": 1800,
+        "ecoregions": ['generaliste', 'continental', 'montagne'],
+        "type_trophique": "lignicole",
+        "cryophile": True,
+    },
+    {
+        "id": "oreille_de_judas",
+        "nom": "Oreille-de-Judas",
+        "nom_scientifique": "Auricularia auricula-judae",
+        "mois_actifs": [9, 10, 11, 12, 1, 2, 3, 4],
+        "mois_optimaux": [11, 12, 1, 2],
+        "ph_optimal": (5.5, 7.8),
+        "temp_sol_optimale": (3.0, 12.0),
+        "temp_sol_limites": (-2.0, 18.0),
+        "pluie_20j_optimale_mm": (30.0, 95.0),
+        "delai_maturation_jours": (4, 10),
+        "choc_thermique": "baisse",
+        "essences_hotes": ['sureau', 'frêne', 'érable', 'saule', 'hêtre', 'orme', 'robinier'],
+        "altitude_max": 1800,
+        "ecoregions": ['generaliste', 'continental', 'atlantique'],
+        "type_trophique": "lignicole",
+        "cryophile": True,
+    },
+    {
+        "id": "hygrophore_des_neiges",
+        "nom": "Hygrophore blanc des neiges",
+        "nom_scientifique": "Cuphophyllus virgineus",
+        "mois_actifs": [10, 11, 12, 1],
+        "mois_optimaux": [11, 12],
+        "ph_optimal": (5.0, 7.5),
+        "temp_sol_optimale": (3.0, 11.0),
+        "temp_sol_limites": (-1.0, 16.0),
+        "pluie_20j_optimale_mm": (35.0, 100.0),
+        "delai_maturation_jours": (5, 11),
+        "choc_thermique": "baisse",
+        "essences_hotes": ['prairie', 'pelouse', 'lisière'],
+        "altitude_max": 2000,
+        "ecoregions": ['generaliste', 'montagne', 'continental'],
+        "type_trophique": "saprophyte",
+        "cryophile": True,
+    },
+    {
+        "id": "tricholome_pretentieux",
+        "nom": "Tricholome prétentieux (Charbonnier)",
+        "nom_scientifique": "Tricholoma portentosum",
+        "mois_actifs": [10, 11, 12],
+        "mois_optimaux": [10, 11, 12],
+        "ph_optimal": (4.2, 6.5),
+        "temp_sol_optimale": (3.5, 11.0),
+        "temp_sol_limites": (-1.0, 15.0),
+        "pluie_20j_optimale_mm": (35.0, 100.0),
+        "delai_maturation_jours": (6, 12),
+        "choc_thermique": "baisse",
+        "essences_hotes": ['pin', 'épicéa', 'sapin', 'hêtre', 'conifères'],
+        "altitude_max": 1900,
+        "ecoregions": ['montagne', 'continental', 'atlantique'],
+        "cryophile": True,
+    },
+    {
+        "id": "hygrophore_limace",
+        "nom": "Hygrophore limace (Hygrophore d'or)",
+        "nom_scientifique": "Hygrophorus hypothejus",
+        "mois_actifs": [10, 11, 12],
+        "mois_optimaux": [11, 12],
+        "ph_optimal": (4.0, 6.2),
+        "temp_sol_optimale": (2.5, 9.5),
+        "temp_sol_limites": (-2.0, 14.0),
+        "pluie_20j_optimale_mm": (35.0, 100.0),
+        "delai_maturation_jours": (5, 11),
+        "choc_thermique": "baisse",
+        "essences_hotes": ['pin', 'conifères'],
+        "altitude_max": 2000,
+        "ecoregions": ['montagne', 'atlantique', 'continental'],
+        "cryophile": True,
+    },
+    {
+        "id": "pleurote_panicaut",
+        "nom": "Pleurote du panicaut (Argouane)",
+        "nom_scientifique": "Pleurotus eryngii",
+        "mois_actifs": [4, 5, 10, 11, 12],
+        "mois_optimaux": [4, 5, 10, 11],
+        "ph_optimal": (6.5, 8.5),
+        "temp_sol_optimale": (10.0, 18.0),
+        "temp_sol_limites": (4.0, 23.0),
+        "pluie_20j_optimale_mm": (30.0, 85.0),
+        "delai_maturation_jours": (5, 11),
+        "choc_thermique": "modere",
+        "essences_hotes": ['prairie', 'pelouse', 'garrigue', 'causses'],
+        "altitude_max": 1400,
+        "ecoregions": ['mediterraneen', 'generaliste'],
+        "type_trophique": "saprophyte",
+    },
+    {
+        "id": "chanterelle_subpruineuse",
+        "nom": "Chanterelle pruineuse (Chanterelle du Midi)",
+        "nom_scientifique": "Cantharellus subpruinosus",
+        "mois_actifs": [5, 6, 9, 10, 11],
+        "mois_optimaux": [5, 6, 10],
+        "ph_optimal": (5.2, 7.5),
+        "temp_sol_optimale": (11.0, 20.0),
+        "temp_sol_limites": (6.0, 25.0),
+        "pluie_20j_optimale_mm": (40.0, 115.0),
+        "delai_maturation_jours": (8, 16),
+        "choc_thermique": "modere",
+        "essences_hotes": ['chêne', 'châtaignier', 'hêtre', 'charme', 'feuillus'],
+        "altitude_max": 1200,
+        "ecoregions": ['mediterraneen', 'generaliste'],
+    },
+    {
+        "id": "bolet_appendicule",
+        "nom": "Bolet appendiculé",
+        "nom_scientifique": "Butyriboletus appendiculatus",
+        "mois_actifs": [6, 7, 8, 9, 10],
+        "mois_optimaux": [7, 8, 9],
+        "ph_optimal": (6.0, 7.8),
+        "temp_sol_optimale": (13.0, 21.0),
+        "temp_sol_limites": (8.0, 26.0),
+        "pluie_20j_optimale_mm": (35.0, 95.0),
+        "delai_maturation_jours": (6, 12),
+        "choc_thermique": "modere",
+        "essences_hotes": ['chêne', 'hêtre', 'châtaignier', 'feuillus'],
+        "altitude_max": 1300,
+        "ecoregions": ['mediterraneen', 'generaliste'],
+    },
+    {
+        "id": "bolet_regius",
+        "nom": "Cèpe royal (Bolet royal)",
+        "nom_scientifique": "Butyriboletus regius",
+        "mois_actifs": [6, 7, 8, 9],
+        "mois_optimaux": [7, 8],
+        "ph_optimal": (5.5, 7.5),
+        "temp_sol_optimale": (15.0, 23.0),
+        "temp_sol_limites": (10.0, 27.0),
+        "pluie_20j_optimale_mm": (35.0, 95.0),
+        "delai_maturation_jours": (6, 13),
+        "choc_thermique": "modere",
+        "essences_hotes": ['chêne', 'châtaignier', 'hêtre', 'feuillus'],
+        "altitude_max": 1200,
+        "ecoregions": ['mediterraneen', 'generaliste'],
+    },
+    {
+        "id": "bolet_depoli",
+        "nom": "Bolet dépoli",
+        "nom_scientifique": "Hemileccinum depilatum",
+        "mois_actifs": [6, 7, 8, 9, 10],
+        "mois_optimaux": [7, 8, 9],
+        "ph_optimal": (6.2, 7.8),
+        "temp_sol_optimale": (13.0, 21.0),
+        "temp_sol_limites": (8.0, 25.0),
+        "pluie_20j_optimale_mm": (35.0, 95.0),
+        "delai_maturation_jours": (6, 12),
+        "choc_thermique": "modere",
+        "essences_hotes": ['chêne', 'charme', 'hêtre', 'feuillus'],
+        "altitude_max": 1300,
+        "ecoregions": ['mediterraneen', 'generaliste'],
+    },
+    {
+        "id": "lactaire_quieticolor",
+        "nom": "Lactaire gris-orangé (Catalan de plaine)",
+        "nom_scientifique": "Lactarius quieticolor",
+        "mois_actifs": [9, 10, 11, 12],
+        "mois_optimaux": [10, 11],
+        "ph_optimal": (5.0, 7.5),
+        "temp_sol_optimale": (8.0, 16.0),
+        "temp_sol_limites": (3.5, 20.0),
+        "pluie_20j_optimale_mm": (35.0, 100.0),
+        "delai_maturation_jours": (6, 13),
+        "choc_thermique": "baisse",
+        "essences_hotes": ['pin', 'conifères'],
+        "altitude_max": 1500,
+        "ecoregions": ['mediterraneen', 'atlantique'],
+    },
+    {
+        "id": "sarcodon_imbrique",
+        "nom": "Hydne imbriqué (Écailleux des sapins)",
+        "nom_scientifique": "Sarcodon imbricatus",
+        "mois_actifs": [8, 9, 10, 11],
+        "mois_optimaux": [9, 10],
+        "ph_optimal": (4.0, 6.2),
+        "temp_sol_optimale": (6.0, 13.5),
+        "temp_sol_limites": (2.0, 17.0),
+        "pluie_20j_optimale_mm": (45.0, 120.0),
+        "delai_maturation_jours": (8, 16),
+        "choc_thermique": "baisse",
+        "essences_hotes": ['épicéa', 'sapin', 'pin', 'conifères'],
+        "altitude_min": 600,
+        "altitude_max": 2200,
+        "ecoregions": ['montagne'],
+    },
+    {
+        "id": "lactaire_epicea",
+        "nom": "Lactaire de l'épicéa",
+        "nom_scientifique": "Lactarius deterrimus",
+        "mois_actifs": [8, 9, 10, 11],
+        "mois_optimaux": [9, 10],
+        "ph_optimal": (4.5, 7.2),
+        "temp_sol_optimale": (6.5, 14.0),
+        "temp_sol_limites": (2.0, 18.0),
+        "pluie_20j_optimale_mm": (40.0, 115.0),
+        "delai_maturation_jours": (6, 13),
+        "choc_thermique": "baisse",
+        "essences_hotes": ['épicéa', 'conifères'],
+        "altitude_min": 500,
+        "altitude_max": 2200,
+        "ecoregions": ['montagne'],
+    },
+    {
+        "id": "lactaire_saumon",
+        "nom": "Lactaire saumon (Lactaire du sapin)",
+        "nom_scientifique": "Lactarius salmonicolor",
+        "mois_actifs": [8, 9, 10, 11],
+        "mois_optimaux": [9, 10, 11],
+        "ph_optimal": (5.0, 7.5),
+        "temp_sol_optimale": (6.5, 14.5),
+        "temp_sol_limites": (2.0, 18.0),
+        "pluie_20j_optimale_mm": (40.0, 115.0),
+        "delai_maturation_jours": (6, 13),
+        "choc_thermique": "baisse",
+        "essences_hotes": ['sapin', 'conifères'],
+        "altitude_min": 400,
+        "altitude_max": 1900,
+        "ecoregions": ['montagne'],
+    },
+    {
+        "id": "gomphide_luisant",
+        "nom": "Gomphide luisant (Clou de girofle)",
+        "nom_scientifique": "Chroogomphus rutilus",
+        "mois_actifs": [8, 9, 10, 11],
+        "mois_optimaux": [9, 10],
+        "ph_optimal": (4.5, 7.5),
+        "temp_sol_optimale": (6.5, 14.5),
+        "temp_sol_limites": (2.0, 18.0),
+        "pluie_20j_optimale_mm": (35.0, 105.0),
+        "delai_maturation_jours": (6, 12),
+        "choc_thermique": "baisse",
+        "essences_hotes": ['pin', 'conifères'],
+        "altitude_max": 2000,
+        "ecoregions": ['montagne', 'generaliste'],
+    },
+    {
+        "id": "hygrophore_pudibond",
+        "nom": "Hygrophore pudibond",
+        "nom_scientifique": "Hygrophorus erubescens",
+        "mois_actifs": [8, 9, 10],
+        "mois_optimaux": [9, 10],
+        "ph_optimal": (6.0, 7.8),
+        "temp_sol_optimale": (6.5, 13.5),
+        "temp_sol_limites": (2.0, 17.0),
+        "pluie_20j_optimale_mm": (40.0, 110.0),
+        "delai_maturation_jours": (7, 14),
+        "choc_thermique": "baisse",
+        "essences_hotes": ['épicéa', 'sapin', 'conifères'],
+        "altitude_min": 600,
+        "altitude_max": 2000,
+        "ecoregions": ['montagne'],
+    },
+    {
+        "id": "bolet_granule",
+        "nom": "Bolet granulé (Pissacan)",
+        "nom_scientifique": "Suillus granulatus",
+        "mois_actifs": [5, 6, 7, 8, 9, 10, 11],
+        "mois_optimaux": [6, 7, 9, 10],
+        "ph_optimal": (5.0, 7.8),
+        "temp_sol_optimale": (9.0, 18.0),
+        "temp_sol_limites": (4.0, 23.0),
+        "pluie_20j_optimale_mm": (35.0, 100.0),
+        "delai_maturation_jours": (5, 11),
+        "choc_thermique": "baisse",
+        "essences_hotes": ['pin', 'conifères'],
+        "altitude_max": 2000,
+        "ecoregions": ['mediterraneen', 'atlantique', 'montagne', 'generaliste'],
+    },
+    {
+        "id": "suillus_grevillei",
+        "nom": "Bolet du mélèze (Bolet élégant)",
+        "nom_scientifique": "Suillus grevillei",
+        "mois_actifs": [7, 8, 9, 10, 11],
+        "mois_optimaux": [8, 9, 10],
+        "ph_optimal": (4.5, 7.2),
+        "temp_sol_optimale": (7.5, 16.0),
+        "temp_sol_limites": (3.0, 20.0),
+        "pluie_20j_optimale_mm": (40.0, 110.0),
+        "delai_maturation_jours": (5, 11),
+        "choc_thermique": "baisse",
+        "essences_hotes": ['mélèze', 'conifères'],
+        "altitude_min": 400,
+        "altitude_max": 2300,
+        "ecoregions": ['montagne'],
+    },
+    {
+        "id": "bolet_pruineux",
+        "nom": "Bolet pruineux",
+        "nom_scientifique": "Xerocomellus pruinatus",
+        "mois_actifs": [8, 9, 10, 11, 12],
+        "mois_optimaux": [9, 10, 11],
+        "ph_optimal": (4.5, 6.8),
+        "temp_sol_optimale": (6.0, 15.0),
+        "temp_sol_limites": (2.0, 19.0),
+        "pluie_20j_optimale_mm": (35.0, 105.0),
+        "delai_maturation_jours": (5, 11),
+        "choc_thermique": "baisse",
+        "essences_hotes": ['hêtre', 'chêne', 'épicéa', 'sapin', 'feuillus', 'conifères'],
+        "altitude_max": 2000,
+        "ecoregions": ['generaliste', 'montagne', 'continental'],
+    },
+    {
+        "id": "cortinaire_remarquable",
+        "nom": "Cortinaire remarquable (Gros pied)",
+        "nom_scientifique": "Cortinarius praestans",
+        "mois_actifs": [8, 9, 10],
+        "mois_optimaux": [9, 10],
+        "ph_optimal": (6.5, 8.0),
+        "temp_sol_optimale": (8.5, 16.5),
+        "temp_sol_limites": (4.0, 21.0),
+        "pluie_20j_optimale_mm": (40.0, 115.0),
+        "delai_maturation_jours": (7, 14),
+        "choc_thermique": "baisse",
+        "essences_hotes": ['hêtre', 'chêne', 'charme', 'feuillus'],
+        "altitude_max": 1400,
+        "ecoregions": ['generaliste', 'continental'],
+    },
+    {
+        "id": "lepiote_mamelonnee",
+        "nom": "Lépiote mamelonnée",
+        "nom_scientifique": "Macrolepiota mastoidea",
+        "mois_actifs": [8, 9, 10, 11],
+        "mois_optimaux": [9, 10, 11],
+        "ph_optimal": (5.0, 7.5),
+        "temp_sol_optimale": (7.0, 16.5),
+        "temp_sol_limites": (2.5, 21.0),
+        "pluie_20j_optimale_mm": (30.0, 95.0),
+        "delai_maturation_jours": (5, 11),
+        "choc_thermique": "modere",
+        "essences_hotes": ['chêne', 'hêtre', 'châtaignier', 'feuillus', 'pin', 'lisière', 'prairie'],
+        "altitude_max": 1600,
+        "ecoregions": ['generaliste', 'atlantique', 'mediterraneen'],
+        "type_trophique": "saprophyte",
+    },
+    {
+        "id": "clitocybe_nebuleux",
+        "nom": "Clitocybe nébuleux (Gris de sapin)",
+        "nom_scientifique": "Lepista nebularis",
+        "mois_actifs": [10, 11, 12],
+        "mois_optimaux": [10, 11],
+        "ph_optimal": (4.5, 7.2),
+        "temp_sol_optimale": (4.0, 12.5),
+        "temp_sol_limites": (0.5, 16.0),
+        "pluie_20j_optimale_mm": (35.0, 105.0),
+        "delai_maturation_jours": (6, 12),
+        "choc_thermique": "baisse",
+        "essences_hotes": ['hêtre', 'chêne', 'épicéa', 'sapin', 'feuillus', 'conifères'],
+        "altitude_max": 1800,
+        "ecoregions": ['generaliste', 'montagne', 'continental'],
+        "type_trophique": "saprophyte",
+        "cryophile": True,
+    },
+    {
+        "id": "clitocybe_anis",
+        "nom": "Clitocybe odorant (Odeur d'anis)",
+        "nom_scientifique": "Clitocybe odora",
+        "mois_actifs": [8, 9, 10, 11],
+        "mois_optimaux": [9, 10],
+        "ph_optimal": (5.0, 7.5),
+        "temp_sol_optimale": (7.0, 16.0),
+        "temp_sol_limites": (2.5, 20.0),
+        "pluie_20j_optimale_mm": (35.0, 100.0),
+        "delai_maturation_jours": (5, 11),
+        "choc_thermique": "baisse",
+        "essences_hotes": ['hêtre', 'chêne', 'conifères', 'feuillus'],
+        "altitude_max": 1800,
+        "ecoregions": ['generaliste', 'continental'],
+        "type_trophique": "saprophyte",
+    },
+    {
+        "id": "tricholome_colombette",
+        "nom": "Tricholome colombette (Jument blanche)",
+        "nom_scientifique": "Tricholoma columbetta",
+        "mois_actifs": [8, 9, 10, 11],
+        "mois_optimaux": [9, 10],
+        "ph_optimal": (4.2, 6.2),
+        "temp_sol_optimale": (7.5, 16.5),
+        "temp_sol_limites": (3.0, 20.0),
+        "pluie_20j_optimale_mm": (35.0, 105.0),
+        "delai_maturation_jours": (6, 12),
+        "choc_thermique": "baisse",
+        "essences_hotes": ['chêne', 'hêtre', 'châtaignier', 'bouleau', 'feuillus'],
+        "altitude_max": 1500,
+        "ecoregions": ['generaliste', 'atlantique'],
+    },
+    {
+        "id": "russule_violine",
+        "nom": "Russule belette (Russule jolie)",
+        "nom_scientifique": "Russula mustelina",
+        "mois_actifs": [7, 8, 9, 10],
+        "mois_optimaux": [8, 9],
+        "ph_optimal": (4.2, 6.0),
+        "temp_sol_optimale": (8.0, 16.0),
+        "temp_sol_limites": (3.5, 20.0),
+        "pluie_20j_optimale_mm": (40.0, 110.0),
+        "delai_maturation_jours": (6, 12),
+        "choc_thermique": "baisse",
+        "essences_hotes": ['épicéa', 'sapin', 'hêtre', 'conifères'],
+        "altitude_min": 600,
+        "altitude_max": 2200,
+        "ecoregions": ['montagne'],
+    },
+    {
+        "id": "russule_vesca",
+        "nom": "Russule comestible (Russule pudique)",
+        "nom_scientifique": "Russula vesca",
+        "mois_actifs": [6, 7, 8, 9, 10],
+        "mois_optimaux": [6, 7, 9],
+        "ph_optimal": (4.5, 6.8),
+        "temp_sol_optimale": (9.0, 18.0),
+        "temp_sol_limites": (4.5, 23.0),
+        "pluie_20j_optimale_mm": (35.0, 100.0),
+        "delai_maturation_jours": (5, 11),
+        "choc_thermique": "modere",
+        "essences_hotes": ['chêne', 'hêtre', 'châtaignier', 'pin', 'feuillus', 'conifères'],
+        "altitude_max": 1700,
+        "ecoregions": ['generaliste', 'continental', 'atlantique'],
+    },
+    {
+        "id": "russule_integra",
+        "nom": "Russule entière (Russule des sapins)",
+        "nom_scientifique": "Russula integra",
+        "mois_actifs": [7, 8, 9, 10, 11],
+        "mois_optimaux": [8, 9, 10],
+        "ph_optimal": (4.5, 7.2),
+        "temp_sol_optimale": (7.0, 15.5),
+        "temp_sol_limites": (2.5, 19.0),
+        "pluie_20j_optimale_mm": (40.0, 110.0),
+        "delai_maturation_jours": (6, 12),
+        "choc_thermique": "baisse",
+        "essences_hotes": ['épicéa', 'sapin', 'pin', 'conifères'],
+        "altitude_min": 500,
+        "altitude_max": 2200,
+        "ecoregions": ['montagne'],
+    },
+    {
+        "id": "tricholome_scalpturatum",
+        "nom": "Tricholome gravé (Petit gris jaunissant)",
+        "nom_scientifique": "Tricholoma scalpturatum",
+        "mois_actifs": [9, 10, 11, 12],
+        "mois_optimaux": [10, 11],
+        "ph_optimal": (5.5, 7.8),
+        "temp_sol_optimale": (5.0, 13.0),
+        "temp_sol_limites": (1.0, 17.0),
+        "pluie_20j_optimale_mm": (35.0, 100.0),
+        "delai_maturation_jours": (5, 11),
+        "choc_thermique": "baisse",
+        "essences_hotes": ['chêne', 'bouleau', 'peuplier', 'tilleul', 'lisière', 'parcs'],
+        "altitude_max": 1600,
+        "ecoregions": ['generaliste', 'continental', 'atlantique'],
+    },
+    {
+        "id": "chanterelle_cineree",
+        "nom": "Chanterelle cendrée",
+        "nom_scientifique": "Craterellus cinereus",
+        "mois_actifs": [8, 9, 10, 11],
+        "mois_optimaux": [9, 10, 11],
+        "ph_optimal": (5.0, 7.5),
+        "temp_sol_optimale": (7.0, 15.0),
+        "temp_sol_limites": (3.0, 19.0),
+        "pluie_20j_optimale_mm": (50.0, 130.0),
+        "delai_maturation_jours": (7, 15),
+        "choc_thermique": "baisse",
+        "essences_hotes": ['hêtre', 'chêne', 'charme', 'feuillus'],
+        "altitude_max": 1600,
+        "ecoregions": ['generaliste', 'continental'],
+    },
+    {
+        "id": "vesse_de_loup_geante",
+        "nom": "Vesse-de-loup géante",
+        "nom_scientifique": "Calvatia gigantea",
+        "mois_actifs": [6, 7, 8, 9, 10, 11],
+        "mois_optimaux": [8, 9, 10],
+        "ph_optimal": (5.5, 7.8),
+        "temp_sol_optimale": (8.5, 18.0),
+        "temp_sol_limites": (4.0, 23.0),
+        "pluie_20j_optimale_mm": (30.0, 90.0),
+        "delai_maturation_jours": (4, 9),
+        "choc_thermique": "modere",
+        "essences_hotes": ['prairie', 'verger', 'lisière'],
+        "altitude_max": 1600,
+        "ecoregions": ['generaliste', 'continental', 'atlantique'],
+        "type_trophique": "saprophyte",
+    },
+    {
+        "id": "bolet_chataignier",
+        "nom": "Bolet châtain",
+        "nom_scientifique": "Gyroporus castaneus",
+        "mois_actifs": [6, 7, 8, 9, 10],
+        "mois_optimaux": [7, 8, 9],
+        "ph_optimal": (4.5, 6.5),
+        "temp_sol_optimale": (13.0, 21.0),
+        "temp_sol_limites": (8.0, 25.0),
+        "pluie_20j_optimale_mm": (30.0, 95.0),
+        "delai_maturation_jours": (5, 11),
+        "choc_thermique": "modere",
+        "essences_hotes": ['chêne', 'châtaignier', 'hêtre', 'feuillus'],
+        "altitude_max": 1400,
+        "ecoregions": ['generaliste', 'atlantique', 'mediterraneen'],
+    },
 ]
 
 
@@ -727,6 +1332,11 @@ ESPECES_LIGNICOLES = {
     "sparassis_crepu",
     "pleurote_huitre",
     "pholiote_peuplier",
+    "polypore_ecailleux",
+    "flammuline_pied_veloute",
+    "oreille_de_judas",
+    "lentin_chene",
+    "hydne_herisson",
 }
 
 ESPECES_SAPROPHYTES = {
@@ -740,14 +1350,24 @@ ESPECES_SAPROPHYTES = {
     "marasme_oreades",
     "morille_commune",
     "morille_conique",
+    "morille_ronde",
+    "morille_semi_libre",
+    "pezize_veinee",
+    "hygrophore_des_neiges",
+    "pleurote_panicaut",
+    "vesse_de_loup_geante",
+    "clitocybe_nebuleux",
+    "clitocybe_anis",
+    "agaric_forets",
+    "lepiote_excoriee",
 }
 
 
 def _type_trophique_espece(espece):
     esp_id = espece["id"]
-    if esp_id in ESPECES_LIGNICOLES:
+    if espece.get("type_trophique") == "lignicole" or esp_id in ESPECES_LIGNICOLES:
         return "lignicole"
-    if esp_id in ESPECES_SAPROPHYTES:
+    if espece.get("type_trophique") == "saprophyte" or esp_id in ESPECES_SAPROPHYTES:
         return "saprophyte"
     return "mycorhizien"
 
@@ -892,7 +1512,18 @@ def _persistance_volee_carpophore(espece):
     sur pied en forêt (tant qu'il ne gèle pas et que le sol ne sèche pas).
     """
     esp_id = espece["id"]
-    if esp_id in ("coprin_chevelu", "rose_des_pres"):
+    if esp_id in (
+        "coprin_chevelu",
+        "rose_des_pres",
+        "amanite_rougissante",
+        "amanite_vaginee",
+        "meunier",
+        "marasme_oreades",
+        "agaric_bois",
+        "morille_ronde",
+        "morille_semi_libre",
+        "pezize_veinee",
+    ):
         return 3
     if esp_id in (
         "girolle",
@@ -906,9 +1537,16 @@ def _persistance_volee_carpophore(espece):
         "polypore_soufre",
         "sparassis_crepu",
         "pleurote_huitre",
+        "polypore_ecailleux",
+        "flammuline_pied_veloute",
+        "oreille_de_judas",
+        "hydne_herisson",
+        "sarcodon_imbrique",
+        "chanterelle_cineree",
+        "chanterelle_subpruineuse",
     ):
         return 8
-    # Cèpes, Bolets, Coulemelles, Amanites, Russules, Lactaires, Tricholomes, Laccaire, Marasme
+    # Cèpes, Bolets, Coulemelles, Russules, Lactaires, Tricholomes, Laccaire
     return 6
 
 
@@ -951,6 +1589,29 @@ ESPECES_CRYOPHILES_GEL = {
     "tricholome_terreux",
     "tete_de_moine",
     "pied_de_mouton_roussissant",
+    "hygrophore_mars",
+    "flammuline_pied_veloute",
+    "oreille_de_judas",
+    "hygrophore_des_neiges",
+    "tricholome_pretentieux",
+    "hygrophore_limace",
+    "clitocybe_nebuleux",
+}
+
+# Espèces estivales et de début d'automne frileuses (arrêt net si nuits froides <= 2.0°C ou gelées blanches)
+ESPECES_THERMOPHILES_SENSIBLES_FROID = {
+    "amanite_rougissante",
+    "amanite_vaginee",
+    "amanite_cesars",
+    "cepe_ete",
+    "cepe_bronze",
+    "russule_charbonniere",
+    "russule_verdoyante",
+    "russule_doree",
+    "polypore_soufre",
+    "fistuline_hepatique",
+    "bolet_pied_rouge",
+    "meunier",
 }
 
 
@@ -1551,9 +2212,16 @@ def calculer_score_jour(espece, meteo, index_jour, score_biotope, topographie=No
             facteur_gel = 1.12  # Gelée blanche stimulante pour Pied bleu, Chanterelle en tube, Pleurote...
         elif tmin_sous_bois < -5.0:
             facteur_gel = 0.25  # Gel profond bloquant
+    elif espece["id"] in ESPECES_THERMOPHILES_SENSIBLES_FROID:
+        if tmin_sous_bois <= 0.0:
+            facteur_gel = 0.08  # Arrêt létal pour espèces estivales
+        elif tmin_sous_bois <= 2.0:
+            facteur_gel = 0.22  # Blocage net sous 2°C (Golmotte, Russule charbonnière, Meunier...)
+        elif tmin_sous_bois <= 4.5:
+            facteur_gel = 0.55  # Ralentissement fort
     else:
         if tmin_sous_bois <= -3.0:
-            facteur_gel = 0.08  # Gel fort létal pour les carpophores de Cèpes, Girolles, Amanites, Coulemelles
+            facteur_gel = 0.08  # Gel fort létal pour les carpophores de Cèpes, Girolles, Coulemelles
         elif tmin_sous_bois <= -1.0:
             facteur_gel = 0.42  # Gelée sous bois abîmant les carpophores non cryophiles
 
@@ -1644,12 +2312,98 @@ def calculer_score_jour(espece, meteo, index_jour, score_biotope, topographie=No
     }
 
 
+def selectionner_catalogue_contextuel(
+    latitude: float,
+    longitude: float,
+    mois: int,
+    altitude: float = 300.0,
+    essences: list = None,
+    nb_especes: int = 44,
+):
+    """
+    Sélectionne dynamiquement les `nb_especes` (44 par défaut) les plus adaptées
+    au contexte géographique, altitudinal, saisonnier et écologique du point d'intérêt,
+    parmi le Catalogue Maître de 80 espèces :
+    1. Saisonnalité (50 pts mois optimal, 35 pts mois actif, 15 pts mois immédiatement adjacent).
+    2. Altitude et étage de végétation (25 pts dans l'optimum, avec pénalité linéaire hors étage).
+    3. Écorégion biogéographique (Méditerranée, Atlantique, Montagne, Continental, Généraliste).
+    4. Adéquation avec le biotope forestier et les essences hôtes locales (jusqu'à 20 pts).
+    """
+    essences = [e.lower() for e in (essences or [])]
+    est_montagne = altitude >= 700.0
+    est_medit = (latitude <= 44.2 and longitude >= 2.5) or (latitude <= 43.6)
+    est_atlantique = (longitude <= -0.3 and 43.4 <= latitude <= 48.5)
+    est_continental = (latitude >= 47.0 and longitude >= 4.5 and not est_montagne)
+
+    scores = []
+    for esp in CATALOGUE_ESPECES:
+        # 1. Saison
+        m_opt = esp.get("mois_optimaux", [])
+        m_act = esp.get("mois_actifs", [])
+        if mois in m_opt:
+            sc_saison = 50.0
+        elif mois in m_act:
+            sc_saison = 35.0
+        elif any((m - mois) % 12 in (1, 11) for m in m_act):
+            sc_saison = 15.0
+        else:
+            sc_saison = 0.0
+
+        # 2. Altitude
+        alt_min = esp.get("altitude_min", 0)
+        alt_max = esp.get("altitude_max", 2500)
+        if alt_min <= altitude <= alt_max:
+            sc_alt = 25.0
+        elif altitude < alt_min:
+            sc_alt = max(0.0, 25.0 - (alt_min - altitude) * 0.06)
+        else:
+            sc_alt = max(0.0, 25.0 - (altitude - alt_max) * 0.06)
+
+        # 3. Écorégion
+        tags = esp.get("ecoregions", ["generaliste"])
+        sc_eco = 15.0
+        if est_montagne and "montagne" in tags:
+            sc_eco = 25.0
+        elif est_medit and "mediterraneen" in tags:
+            sc_eco = 25.0
+        elif est_atlantique and "atlantique" in tags:
+            sc_eco = 25.0
+        elif est_continental and "continental" in tags:
+            sc_eco = 22.0
+        elif "generaliste" in tags:
+            sc_eco = 18.0
+
+        # Malus si exclusion géographique flagrante
+        if not est_montagne and altitude < 450 and tags == ["montagne"]:
+            sc_eco -= 18.0
+        if latitude > 46.5 and tags == ["mediterraneen"]:
+            sc_eco -= 22.0
+
+        # 4. Hôtes / Habitats
+        hotes = [h.lower() for h in esp.get("essences_hotes", [])]
+        if essences:
+            if any(h in e or e in h for h in hotes for e in essences):
+                sc_hote = 20.0
+            elif "prairie" in hotes or "lisière" in hotes:
+                sc_hote = 14.0
+            else:
+                sc_hote = 5.0
+        else:
+            sc_hote = 15.0
+
+        total = sc_saison + sc_alt + sc_eco + sc_hote
+        scores.append((total, esp))
+
+    scores.sort(key=lambda x: (x[0], x[1]["nom"]), reverse=True)
+    return [esp for _, esp in scores[:nb_especes]]
+
+
 def simuler_pousse_point_gps(latitude, longitude, past_days=20, forecast_days=11):
     """
     Exécute la simulation complète pour un point GPS :
     1. Récupère le profil environnemental (altitude, sol SoilGrids, essences IGN BD Forêt)
     2. Récupère la météo sur J-20 à J+10 (31 jours au total)
-    3. Sélectionne toutes les espèces comestibles susceptibles de pousser aux dates J..J+10
+    3. Sélectionne les 44 espèces adaptées au contexte géographique, saisonnier et écologique
     4. Calcule les scores journaliers pour J, J+1, J+2, ..., J+10 (11 jours)
     """
     profil_env = recuperer_profil_environnemental(latitude, longitude)
@@ -1664,17 +2418,38 @@ def simuler_pousse_point_gps(latitude, longitude, past_days=20, forecast_days=11
     idx_aujourd_hui = past_days
     nb_jours_total = len(dates)
 
-    # Mois couverts entre J et J+10
-    mois_periode = {
-        int(dates[i].split("-")[1]) for i in range(idx_aujourd_hui, nb_jours_total)
-    }
+    # Mois principal (au jour J)
+    mois_j = int(dates[idx_aujourd_hui].split("-")[1])
+    altitude = (
+        profil_env.get("altitude_m")
+        or (profil_env.get("topographie") or {}).get("altitude_m")
+        or 300.0
+    )
+
+    essences_observees = []
+    foret = profil_env.get("foret") or {}
+    for p in foret.get("peuplements", []):
+        if p.get("essence"):
+            essences_observees.append(p["essence"])
+        if p.get("formation_vegetale"):
+            essences_observees.append(p["formation_vegetale"])
+    for p in foret.get("peuplements_lisiere", []):
+        if p.get("essence"):
+            essences_observees.append(p["essence"])
+        if p.get("formation_vegetale"):
+            essences_observees.append(p["formation_vegetale"])
+
+    catalogue_actif = selectionner_catalogue_contextuel(
+        latitude,
+        longitude,
+        mois_j,
+        altitude=altitude,
+        essences=essences_observees,
+        nb_especes=44,
+    )
 
     resultats_especes = []
-    for espece in CATALOGUE_ESPECES:
-        # Garde les espèces actives pendant au moins un des mois de la période J..J+10
-        if not ( set(espece["mois_actifs"]) & mois_periode ):
-            continue
-
+    for espece in catalogue_actif:
         score_biotope = evaluer_biotope(espece, profil_env)
         previsions_11j = []
 
