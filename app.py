@@ -17,7 +17,11 @@ app = FastAPI(
 
 STATIC_DIR = Path(__file__).parent / "static"
 STATIC_DIR.mkdir(exist_ok=True)
+IMG_DIR = STATIC_DIR / "img"
+IMG_DIR.mkdir(exist_ok=True)
+
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+app.mount("/img", StaticFiles(directory=str(IMG_DIR)), name="img")
 
 
 @app.get("/")
@@ -26,9 +30,21 @@ def afficher_interface():
     return FileResponse(str(STATIC_DIR / "index.html"))
 
 
+@app.get("/manifest.json")
+def get_manifest():
+    """Manifest PWA pour l'installation sur mobile (Android & iPhone)."""
+    return FileResponse(str(STATIC_DIR / "manifest.json"), media_type="application/manifest+json")
+
+
+@app.get("/favicon.png")
+def get_favicon():
+    """Favicon de l'application."""
+    return FileResponse(str(STATIC_DIR / "favicon.png"))
+
+
 @app.get("/api/especes")
 def lister_catalogue_especes():
-    """Renvoie la totalité du catalogue des 42 espèces comestibles."""
+    """Renvoie la totalité du catalogue maître des 80 espèces comestibles."""
     return {"total": len(CATALOGUE_ESPECES), "especes": CATALOGUE_ESPECES}
 
 

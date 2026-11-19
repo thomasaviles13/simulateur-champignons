@@ -1,0 +1,22 @@
+{
+  "name": "Simulateur Champignons",
+  "short_name": "Champignons",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#101712",
+  "theme_color": "#101712",
+  "description": "Simulateur bioclimatique et édaphique de fructification de champignons sauvages en France.",
+  "icons": [
+    {
+      "src": "/img/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "64x64",
+      "type": "image/png"
+    }
+  ]
+}
