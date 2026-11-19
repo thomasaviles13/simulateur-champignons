@@ -3,8 +3,10 @@ package fr.geekage.champignons.ui.main
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.LocationManager
+import android.net.Uri
 import android.view.MotionEvent
 import android.view.ViewGroup
 import android.webkit.JavascriptInterface
@@ -141,6 +143,7 @@ fun SimulateurChampignonsContent(
     onScanner5km: (EspeceChampignon) -> Unit = {},
     onEffacerScan5km: () -> Unit = {}
 ) {
+    val context = LocalContext.current
     var afficherDialogFavori by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -186,21 +189,41 @@ fun SimulateurChampignonsContent(
                     }
                     FilledTonalButton(
                         onClick = onGpsClick,
-                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
                         colors = ButtonDefaults.filledTonalButtonColors(
                             containerColor = Color(0xFF1E3F29),
                             contentColor = Color(0xFF4ADE80)
                         ),
-                        modifier = Modifier.padding(end = 6.dp)
+                        modifier = Modifier.padding(end = 4.dp)
                     ) {
-                        Text("📍 GPS", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text("📍 GPS", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
+                    FilledTonalButton(
+                        onClick = {
+                            val spot = state.rapport
+                            val url = "https://simulateur-champignons.onrender.com/?lat=${String.format(java.util.Locale.US, "%.4f", spot.latitude)}&lon=${String.format(java.util.Locale.US, "%.4f", spot.longitude)}&nom=${Uri.encode(spot.nomSpot)}"
+                            val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(Intent.EXTRA_SUBJECT, "🍄 Situation Mycologique - ${spot.nomSpot}")
+                                putExtra(Intent.EXTRA_TEXT, "Regarde les prévisions de pousse des champignons à ${spot.nomSpot} :\n$url")
+                            }
+                            context.startActivity(Intent.createChooser(sendIntent, "Partager la situation de ce lieu"))
+                        },
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                        colors = ButtonDefaults.filledTonalButtonColors(
+                            containerColor = Color(0xFF382A15),
+                            contentColor = Color(0xFFFDE68A)
+                        ),
+                        modifier = Modifier.padding(end = 4.dp)
+                    ) {
+                        Text("🔗 Partager", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                     }
                     OutlinedButton(
                         onClick = { afficherDialogFavori = true },
-                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-                        modifier = Modifier.padding(end = 8.dp)
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                        modifier = Modifier.padding(end = 6.dp)
                     ) {
-                        Text("⭐+", fontSize = 12.sp)
+                        Text("⭐+", fontSize = 11.sp)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(

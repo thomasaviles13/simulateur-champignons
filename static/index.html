@@ -808,6 +808,354 @@
       color: var(--muted);
       cursor: pointer;
     }
+
+    /* BANDEAU SITUATION DU LIEU ACTIF & PERMALIEN */
+    .location-hero-bar {
+      max-width: 1400px;
+      margin: 0.9rem auto 0;
+      padding: 0.75rem 1.25rem;
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(15, 23, 42, 0.8) 100%);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      border-radius: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+    }
+
+    .location-badge-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.95rem;
+    }
+
+    .location-dot-pulse {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 10px #10b981;
+      animation: pulse-dot 2s infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes pulse-dot {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+      70% { transform: scale(1.15); box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+
+    .location-title-label {
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .location-name-active {
+      font-weight: 800;
+      color: #ffffff;
+      font-size: 1.05rem;
+      letter-spacing: -0.01em;
+    }
+
+    .location-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .btn-location-action {
+      font-family: inherit;
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 0.5rem 0.95rem;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(15, 23, 42, 0.85);
+      color: #e2e8f0;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s ease;
+    }
+
+    .btn-location-action:hover {
+      border-color: var(--accent);
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+
+    .btn-location-action.btn-share-accent {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(217, 119, 6, 0.25) 100%);
+      border-color: rgba(245, 158, 11, 0.45);
+      color: #fde68a;
+    }
+
+    .btn-location-action.btn-share-accent:hover {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.3) 0%, rgba(217, 119, 6, 0.4) 100%);
+      border-color: #f59e0b;
+      color: #ffffff;
+      box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+    }
+
+    /* MODAL D'ACCUEIL & CHOIX DU LIEU */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: rgba(4, 7, 13, 0.82);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.25rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    .modal-backdrop.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-card {
+      background: rgba(13, 19, 29, 0.95);
+      border: 1px solid rgba(16, 185, 129, 0.45);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.75), 0 0 35px rgba(16, 185, 129, 0.2);
+      border-radius: 24px;
+      width: 100%;
+      max-width: 580px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 1.75rem;
+      transform: translateY(20px) scale(0.97);
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .modal-backdrop.open .modal-card {
+      transform: translateY(0) scale(1);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+      margin-bottom: 1.35rem;
+    }
+
+    .modal-title {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #ffffff;
+      margin: 0;
+      letter-spacing: -0.02em;
+    }
+
+    .modal-desc {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin: 0.3rem 0 0;
+      line-height: 1.45;
+    }
+
+    .modal-close-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #cbd5e1;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+      transition: all 0.15s ease;
+      flex-shrink: 0;
+    }
+
+    .modal-close-btn:hover {
+      background: rgba(239, 68, 68, 0.25);
+      border-color: #ef4444;
+      color: #fff;
+    }
+
+    .btn-modal-gps {
+      width: 100%;
+      background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+      color: #ffffff;
+      border: 1px solid rgba(110, 231, 183, 0.45);
+      padding: 1rem 1.25rem;
+      border-radius: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35);
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+
+    .btn-modal-gps:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px rgba(16, 185, 129, 0.5);
+    }
+
+    .modal-separator {
+      display: flex;
+      align-items: center;
+      text-align: center;
+      margin: 1.25rem 0;
+      color: var(--muted);
+      font-size: 0.74rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+    }
+
+    .modal-separator::before,
+    .modal-separator::after {
+      content: '';
+      flex: 1;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .modal-separator span {
+      padding: 0 0.85rem;
+    }
+
+    .modal-search-field {
+      position: relative;
+    }
+
+    .input-modal-ville {
+      width: 100%;
+      background: rgba(9, 13, 19, 0.9);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      color: #ffffff;
+      padding: 0.85rem 1rem 0.85rem 2.6rem;
+      font-size: 0.92rem;
+      font-family: inherit;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .input-modal-ville:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+    }
+
+    .modal-search-icon {
+      position: absolute;
+      left: 0.9rem;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 1rem;
+      color: var(--muted);
+      pointer-events: none;
+    }
+
+    .modal-dropdown {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      right: 0;
+      z-index: 10000;
+    }
+
+    .box-dernier-lieu {
+      margin-top: 1rem;
+      padding: 0.75rem 1rem;
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      border-radius: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .box-dernier-lieu:hover {
+      background: rgba(245, 158, 11, 0.18);
+      border-color: #f59e0b;
+    }
+
+    .modal-quick-section {
+      margin-top: 1.25rem;
+    }
+
+    .modal-quick-title {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.6rem;
+    }
+
+    .modal-quick-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+    }
+
+    .btn-map-link {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      font-size: 0.82rem;
+      cursor: pointer;
+      font-family: inherit;
+      transition: color 0.15s ease;
+    }
+
+    .btn-map-link:hover {
+      color: #34d399;
+      text-decoration: underline;
+    }
+
+    /* TOAST NOTIFICATION */
+    .toast-notif {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(30px);
+      background: rgba(15, 23, 42, 0.95);
+      color: #ffffff;
+      border: 1px solid var(--accent);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(16, 185, 129, 0.3);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      padding: 0.8rem 1.4rem;
+      border-radius: 999px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      z-index: 100000;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      white-space: nowrap;
+    }
+
+    .toast-notif.visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+      pointer-events: auto;
+    }
+
   </style>
 </head>
 <body>
@@ -845,6 +1193,24 @@
       </button>
     </div>
   </header>
+
+  <!-- BANDEAU SITUATION DU LIEU ACTIF & PERMALIEN D'ADRESSE -->
+  <div class="location-hero-bar">
+    <div class="location-badge-wrap">
+      <span class="location-dot-pulse"></span>
+      <span class="location-title-label">Situation actuelle :</span>
+      <span class="location-name-active" id="label-lieu-actif">Chargement de votre lieu...</span>
+    </div>
+    <div class="location-actions">
+      <button class="btn-location-action" onclick="ouvrirModalLieu()" title="Changer de lieu de cueillette">
+        ✏️ Changer de lieu
+      </button>
+      <button class="btn-location-action btn-share-accent" onclick="partagerLienLieu()" title="Partager l'adresse directe de ce lieu à vos amis">
+        🔗 Partager ce coin
+      </button>
+    </div>
+  </div>
+
 
   <!-- NAVIGATION PAR ONGLETS GRAND PUBLIC & SPOTS FAVORIS -->
   <div class="tab-bar-container">
@@ -1141,10 +1507,21 @@
       coucheZones5km = L.layerGroup().addTo(map);
       marker = L.marker([45.4105, 5.2400]).addTo(map);
 
-      map.on("click", (e) => {
+      map.on("click", async (e) => {
         const lat = parseFloat(e.latlng.lat.toFixed(4));
         const lon = parseFloat(e.latlng.lng.toFixed(4));
-        chargerSpot(lat, lon);
+        let nom = null;
+        try {
+          const resp = await fetch(`https://api-adresse.data.gouv.fr/reverse/?lon=${lon}&lat=${lat}`);
+          if (resp.ok) {
+            const data = await resp.json();
+            if (data.features && data.features.length > 0) {
+              const p = data.features[0].properties;
+              nom = `${p.city || p.label}${p.postcode ? ' (' + p.postcode.substring(0, 2) + ')' : ''}`;
+            }
+          }
+        } catch (err) {}
+        chargerSpot(lat, lon, nom);
       });
     }
 
@@ -1186,6 +1563,179 @@
       afficherTableauEspeces();
     }
 
+
+    let lieuActuelLabel = "";
+    let timerRechercheModal = null;
+
+    /* OUVERTURE & FERMETURE DU MODAL DE CHOIX DE LIEU */
+    function ouvrirModalLieu() {
+      const modal = document.getElementById('modal-choix-lieu');
+      if (!modal) return;
+      
+      // Vérifier si un dernier lieu existe dans le localStorage
+      try {
+        const raw = localStorage.getItem('simulateur_dernier_lieu');
+        if (raw) {
+          const dernier = JSON.parse(raw);
+          const box = document.getElementById('box-dernier-lieu');
+          if (box && dernier && dernier.lat && dernier.lon) {
+            const nomAff = dernier.nom || `${dernier.lat}, ${dernier.lon}`;
+            box.innerHTML = `
+              <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.85rem;">
+                <span>🕒</span>
+                <div>
+                  <div style="font-size:0.75rem;color:var(--muted);text-transform:uppercase;">Dernier lieu consulté :</div>
+                  <strong style="color:#ffffff;">${nomAff}</strong>
+                </div>
+              </div>
+              <span style="color:#f59e0b;font-weight:700;font-size:0.82rem;">Charger ➔</span>
+            `;
+            box.onclick = () => selectionnerLieuModal(dernier.lat, dernier.lon, dernier.nom);
+            box.style.display = 'flex';
+          }
+        }
+      } catch (e) {}
+
+      modal.classList.add('open');
+      const input = document.getElementById('input-modal-ville');
+      if (input) setTimeout(() => input.focus(), 200);
+    }
+
+    function fermerModalLieu() {
+      const modal = document.getElementById('modal-choix-lieu');
+      if (modal) modal.classList.remove('open');
+      const drop = document.getElementById('suggestions-modal-ville');
+      if (drop) drop.style.display = 'none';
+    }
+
+    /* GÉOLOCALISATION DEPUIS LE MODAL */
+    function geolocaliserDepuisModal() {
+      if (!navigator.geolocation) {
+        alert("La géolocalisation n'est pas supportée par votre navigateur.");
+        return;
+      }
+      const modal = document.getElementById('modal-choix-lieu');
+      const card = modal ? modal.querySelector('.modal-card') : null;
+      const btnGps = modal ? modal.querySelector('.btn-modal-gps') : null;
+      if (btnGps) btnGps.innerHTML = '<span style="font-size:1.3rem;">⏳</span><div><strong>Recherche de votre position GPS...</strong><small>Patientez quelques secondes...</small></div>';
+
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          const lat = parseFloat(pos.coords.latitude.toFixed(4));
+          const lon = parseFloat(pos.coords.longitude.toFixed(4));
+          let nom = `Ma position GPS (${lat}, ${lon})`;
+          try {
+            const resp = await fetch(`https://api-adresse.data.gouv.fr/reverse/?lon=${lon}&lat=${lat}`);
+            if (resp.ok) {
+              const data = await resp.json();
+              if (data.features && data.features.length > 0) {
+                const p = data.features[0].properties;
+                nom = `${p.city || p.label}${p.postcode ? ' (' + p.postcode.substring(0, 2) + ')' : ''}`;
+              }
+            }
+          } catch (e) {}
+          fermerModalLieu();
+          chargerSpot(lat, lon, nom);
+        },
+        (err) => {
+          if (btnGps) btnGps.innerHTML = '<span style="font-size:1.3rem;">📍</span><div><strong>Autour de moi (Localisation automatique)</strong><small>Utilise le GPS de votre smartphone ou navigateur</small></div>';
+          alert("Impossible de récupérer votre position GPS : " + err.message);
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    }
+
+    /* RECHERCHE DE COMMUNE DANS LE MODAL */
+    function rechercherCommuneModal(query) {
+      clearTimeout(timerRechercheModal);
+      const dropdown = document.getElementById('suggestions-modal-ville');
+      if (!query || query.trim().length < 2) {
+        dropdown.style.display = 'none';
+        return;
+      }
+      timerRechercheModal = setTimeout(async () => {
+        try {
+          const resp = await fetch("https://api-adresse.data.gouv.fr/search/?q=" + encodeURIComponent(query) + "&type=municipality&limit=5");
+          if (!resp.ok) return;
+          const data = await resp.json();
+          if (!data.features || data.features.length === 0) {
+            dropdown.style.display = 'none';
+            return;
+          }
+          dropdown.innerHTML = data.features.map(f => {
+            const label = f.properties.label;
+            const dep = f.properties.context || '';
+            const coords = f.geometry.coordinates; // [lon, lat]
+            const escapedLabel = label.replace(/'/g, "\\'");
+            return `<div class="suggestion-item" onclick="selectionnerLieuModal(${coords[1]}, ${coords[0]}, '${escapedLabel}')">
+              📍 <strong>${label}</strong> <span style="font-size:0.75rem;color:var(--muted);">(${dep})</span>
+            </div>`;
+          }).join('');
+          dropdown.style.display = 'block';
+        } catch (e) {
+          dropdown.style.display = 'none';
+        }
+      }, 250);
+    }
+
+    function selectionnerLieuModal(lat, lon, label) {
+      fermerModalLieu();
+      chargerSpot(lat, lon, label);
+    }
+
+    /* SYNCHRONISATION DE L'ADRESSE URL DU SITE (PERMALIEN PARTAGEABLE) */
+    function synchroniserUrlLieu(lat, lon, nom) {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        params.set('lat', parseFloat(lat).toFixed(4));
+        params.set('lon', parseFloat(lon).toFixed(4));
+        if (nom && !nom.startsWith('Point GPS')) {
+          params.set('nom', nom);
+        } else {
+          params.delete('nom');
+        }
+        const newUrl = `${window.location.pathname}?${params.toString()}`;
+        window.history.replaceState({ lat, lon, nom }, '', newUrl);
+      } catch (e) {}
+    }
+
+    /* PARTAGE DE L'ADRESSE DU COIN DIRECT */
+    async function partagerLienLieu() {
+      const url = window.location.href;
+      const nom = lieuActuelLabel || "ce coin de forêt";
+      const shareData = {
+        title: `🍄 Situation Mycologique - ${nom}`,
+        text: `Regarde les prévisions de pousse des champignons à ${nom} :`,
+        url: url
+      };
+
+      if (navigator.share) {
+        try {
+          await navigator.share(shareData);
+          return;
+        } catch (e) {}
+      }
+
+      try {
+        await navigator.clipboard.writeText(url);
+        afficherToast('📋 Lien copié ! En envoyant cette adresse, vos amis verront directement ce coin.');
+      } catch (err) {
+        prompt('Copiez cette adresse pour la partager à vos amis :', url);
+      }
+    }
+
+    /* TOAST DE NOTIFICATION FLOTTANT */
+    function afficherToast(message) {
+      const toast = document.getElementById('toast-notif');
+      if (!toast) return;
+      toast.innerHTML = message;
+      toast.classList.add('visible');
+      clearTimeout(toast._timer);
+      toast._timer = setTimeout(() => {
+        toast.classList.remove('visible');
+      }, 3500);
+    }
+
     /* RECHERCHE DE COMMUNE DATA.GOUV.FR */
     let timerRechercheVille = null;
     function rechercherCommuneGouv(query) {
@@ -1220,13 +1770,14 @@
       }, 250);
     }
 
+    
     function selectionnerVille(lat, lon, label) {
       document.getElementById('input-ville').value = label;
       document.getElementById('suggestions-ville').style.display = 'none';
-      chargerSpot(lat, lon);
+      chargerSpot(lat, lon, label);
     }
 
-    /* GÉOLOCALISATION HTML5 EN 1 CLIC */
+    /* GÉOLOCALISATION HTML5 EN 1 CLIC DEPUIS LE HEADER */
     function geolocaliserUtilisateur() {
       const btn = document.getElementById('btn-geoloc');
       if (!navigator.geolocation) {
@@ -1235,12 +1786,23 @@
       }
       btn.textContent = '⏳ Localisation...';
       navigator.geolocation.getCurrentPosition(
-        (pos) => {
+        async (pos) => {
           btn.textContent = '📍 Autour de moi';
           const lat = parseFloat(pos.coords.latitude.toFixed(4));
           const lon = parseFloat(pos.coords.longitude.toFixed(4));
-          document.getElementById('input-ville').value = `Ma position (${lat}, ${lon})`;
-          chargerSpot(lat, lon);
+          let nom = `Ma position GPS (${lat}, ${lon})`;
+          try {
+            const resp = await fetch(`https://api-adresse.data.gouv.fr/reverse/?lon=${lon}&lat=${lat}`);
+            if (resp.ok) {
+              const data = await resp.json();
+              if (data.features && data.features.length > 0) {
+                const p = data.features[0].properties;
+                nom = `${p.city || p.label}${p.postcode ? ' (' + p.postcode.substring(0, 2) + ')' : ''}`;
+              }
+            }
+          } catch (e) {}
+          document.getElementById('input-ville').value = nom;
+          chargerSpot(lat, lon, nom);
         },
         (err) => {
           btn.textContent = '📍 Autour de moi';
@@ -1258,13 +1820,55 @@
       return "s-none";
     }
 
-    function chargerSpot(lat, lon) {
+    function chargerSpot(lat, lon, label = null) {
+      lat = parseFloat(lat);
+      lon = parseFloat(lon);
       document.getElementById("input-lat").value = lat;
       document.getElementById("input-lon").value = lon;
-      marker.setLatLng([lat, lon]);
-      map.panTo([lat, lon]);
+      if (marker) marker.setLatLng([lat, lon]);
+      if (map) map.panTo([lat, lon]);
+
+      if (label) {
+        lieuActuelLabel = label;
+        const lbl = document.getElementById("label-lieu-actif");
+        if (lbl) lbl.textContent = lieuActuelLabel;
+        const inp = document.getElementById("input-ville");
+        if (inp) inp.value = lieuActuelLabel;
+        synchroniserUrlLieu(lat, lon, lieuActuelLabel);
+      } else {
+        lieuActuelLabel = `Point GPS (${lat.toFixed(4)}, ${lon.toFixed(4)})`;
+        const lbl = document.getElementById("label-lieu-actif");
+        if (lbl) lbl.textContent = lieuActuelLabel;
+        synchroniserUrlLieu(lat, lon, null);
+        // Rétrogéocodage asynchrone pour afficher le nom de la commune
+        fetch(`https://api-adresse.data.gouv.fr/reverse/?lon=${lon}&lat=${lat}`)
+          .then(r => r.json())
+          .then(d => {
+            if (d.features && d.features.length > 0) {
+              const p = d.features[0].properties;
+              lieuActuelLabel = `${p.city || p.label}${p.postcode ? ' (' + p.postcode.substring(0, 2) + ')' : ''}`;
+              if (lbl) lbl.textContent = lieuActuelLabel;
+              const inp = document.getElementById("input-ville");
+              if (inp) inp.value = lieuActuelLabel;
+              synchroniserUrlLieu(lat, lon, lieuActuelLabel);
+            }
+          })
+          .catch(() => {});
+      }
+
+      // Sauvegarde dans le localStorage
+      try {
+        localStorage.setItem("simulateur_dernier_lieu", JSON.stringify({
+          lat: lat,
+          lon: lon,
+          nom: lieuActuelLabel,
+          timestamp: Date.now()
+        }));
+      } catch (e) {}
+
       executerSimulation(lat, lon);
     }
+
 
     function lancerDepuisInputs() {
       const lat = parseFloat(document.getElementById("input-lat").value);
@@ -1743,8 +2347,106 @@
 
     window.addEventListener("DOMContentLoaded", () => {
       initialiserCarte();
-      executerSimulation(45.4105, 5.2400);
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const pLat = parseFloat(urlParams.get("lat"));
+      const pLon = parseFloat(urlParams.get("lon"));
+      const pNom = urlParams.get("nom") || urlParams.get("ville") || null;
+
+      if (!isNaN(pLat) && !isNaN(pLon)) {
+        // 1. L'ADRESSE DU SITE RENVOIE DIRECTEMENT SUR LA SITUATION D'UN ENDROIT
+        chargerSpot(pLat, pLon, pNom);
+      } else if (pNom) {
+        // 2. L'adresse a une ville passée en paramètre (?ville=Fontainebleau)
+        fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(pNom)}&type=municipality&limit=1`)
+          .then(r => r.json())
+          .then(data => {
+            if (data.features && data.features.length > 0) {
+              const f = data.features[0];
+              chargerSpot(f.geometry.coordinates[1], f.geometry.coordinates[0], f.properties.label);
+            } else {
+              ouvrirModalLieu();
+            }
+          })
+          .catch(() => ouvrirModalLieu());
+      } else {
+        // 3. ARRIVÉE SANS LIEU : DEMANDE DIRECTE ET IMMÉDIATE DU LIEU DÉCIDÉ PAR L'UTILISATEUR
+        ouvrirModalLieu();
+      }
     });
   </script>
+
+  <!-- MODAL D'ACCUEIL & CHOIX DIRECT DU LIEU (RECOMMANDATION ERGONOMES) -->
+  <div id="modal-choix-lieu" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div style="display:flex;align-items:center;gap:0.75rem;">
+          <img src="/img/logo.png" alt="Logo" class="logo-img" style="width:44px;height:44px;" />
+          <div>
+            <h3 class="modal-title">🍄 Où partez-vous aux champignons ?</h3>
+            <p class="modal-desc">Indiquez votre lieu pour afficher les prévisions de pousse et les champignons prêts à être cueillis :</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" onclick="fermerModalLieu()" title="Fermer">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- 1. Bouton GPS 1-Clic -->
+        <button class="btn-modal-gps" onclick="geolocaliserDepuisModal()">
+          <span style="font-size:1.4rem;">📍</span>
+          <div style="text-align:left;">
+            <div style="font-size:0.96rem;font-weight:700;">Autour de moi (Localisation automatique)</div>
+            <div style="font-size:0.78rem;color:rgba(255,255,255,0.8);font-weight:normal;">Utilise le GPS de votre smartphone ou navigateur</div>
+          </div>
+        </button>
+
+        <div class="modal-separator">
+          <span>OU CHERCHEZ UNE COMMUNE</span>
+        </div>
+
+        <!-- 2. Recherche avec autocomplétion data.gouv.fr -->
+        <div class="modal-search-field">
+          <span class="modal-search-icon">🔍</span>
+          <input
+            type="text"
+            id="input-modal-ville"
+            class="input-modal-ville"
+            placeholder="Tapez une commune, code postal ou forêt (ex: Fontainebleau, Morvan...)"
+            autocomplete="off"
+            oninput="rechercherCommuneModal(this.value)"
+          />
+          <div id="suggestions-modal-ville" class="suggestions-dropdown modal-dropdown"></div>
+        </div>
+
+        <!-- 3. Raccourci Dernier lieu visité si présent -->
+        <div id="box-dernier-lieu" class="box-dernier-lieu" style="display:none;"></div>
+
+        <!-- 4. Raccourcis de coins forestiers populaires -->
+        <div class="modal-quick-section">
+          <div class="modal-quick-title">🌿 Coins et massifs forestiers populaires :</div>
+          <div class="modal-quick-chips">
+            <button class="btn-spot-chip" onclick="selectionnerLieuModal(48.4047, 2.6989, 'Fontainebleau (77)')">🌳 Fontainebleau (77)</button>
+            <button class="btn-spot-chip" onclick="selectionnerLieuModal(47.2833, 4.0833, 'Morvan (58)')">🌲 Morvan (58)</button>
+            <button class="btn-spot-chip" onclick="selectionnerLieuModal(45.4105, 5.2400, 'Terres Froides (38)')">🌰 Terres Froides (38)</button>
+            <button class="btn-spot-chip" onclick="selectionnerLieuModal(50.2215, 3.7580, 'Forêt de Mormal (59)')">🌲 Mormal (59)</button>
+            <button class="btn-spot-chip" onclick="selectionnerLieuModal(44.1325, -0.8211, 'Landes (40)')">🌲 Landes (40)</button>
+            <button class="btn-spot-chip" onclick="selectionnerLieuModal(45.7719, 2.9614, 'Massif Central (63)')">⛰️ Massif Central (63)</button>
+            <button class="btn-spot-chip" onclick="selectionnerLieuModal(48.0167, -2.1833, 'Brocéliande (35)')">🧙 Brocéliande (35)</button>
+          </div>
+        </div>
+
+        <!-- 5. Lien vers la carte -->
+        <div style="text-align:center;margin-top:1.15rem;padding-top:0.85rem;border-top:1px solid rgba(255,255,255,0.08);">
+          <button class="btn-map-link" onclick="fermerModalLieu(); changerOngletWeb(1);">
+            🗺️ Préférer pointer directement sur la carte de France ➔
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION FLOTTANT -->
+  <div id="toast-notif" class="toast-notif"></div>
+
 </body>
 </html>
