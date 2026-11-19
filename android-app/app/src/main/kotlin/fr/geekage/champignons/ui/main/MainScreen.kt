@@ -150,10 +150,10 @@ fun SimulateurChampignonsContent(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Image(
-                            painter = painterResource(id = R.mipmap.ic_launcher_round),
+                            painter = painterResource(id = R.drawable.logo_app),
                             contentDescription = "Logo",
                             modifier = Modifier
-                                .size(32.dp)
+                                .size(34.dp)
                                 .clip(RoundedCornerShape(8.dp))
                         )
                         Spacer(modifier = Modifier.width(10.dp))
