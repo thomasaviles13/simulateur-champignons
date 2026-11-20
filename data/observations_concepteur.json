@@ -1,0 +1,18 @@
+[
+  {
+    "id": "obs_1795174088640_8df1e0",
+    "date": "2026-11-20",
+    "lat": 43.273,
+    "lon": 5.6213,
+    "espece_id": "hydnum_repandum",
+    "nom_espece": "Pied-de-mouton",
+    "abondance": "abondante",
+    "quantite_kg": 1.8,
+    "stade": "adulte",
+    "score_predit": 45.0,
+    "commentaire": "Belle poussée en ligne sous pins et chênes pubescents sur sol calcaire !",
+    "biotope_observe": "",
+    "horodatage_iso": "2026-11-20T12:28:08.641183",
+    "auteur": "Concepteur"
+  }
+]

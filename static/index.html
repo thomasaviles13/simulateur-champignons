@@ -1032,6 +1032,153 @@
       border-radius: 999px;
       font-weight: 700;
     }
+
+    /* ======================================================== */
+    /* AUTOROUTE CONCEPTEUR : NOTATION CUEILLETTE & CALIBRAGE IA*/
+    /* ======================================================== */
+    .btn-autoroute {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      color: #ffffff;
+      border: 1px solid rgba(245, 158, 11, 0.5);
+      box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+      font-weight: 800;
+      cursor: pointer;
+      padding: 0.52rem 0.95rem;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.85rem;
+      transition: all 0.2s ease;
+      font-family: inherit;
+      white-space: nowrap;
+    }
+    .btn-autoroute:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(245, 158, 11, 0.55);
+      background: linear-gradient(135deg, #fbbf24 0%, #b45309 100%);
+    }
+
+    .btn-card-log {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      padding: 0.32rem 0.65rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-family: inherit;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    .btn-card-log:hover {
+      background: rgba(245, 158, 11, 0.3);
+      border-color: rgba(245, 158, 11, 0.6);
+      transform: scale(1.03);
+    }
+
+    .calib-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.72rem;
+      font-weight: 800;
+      padding: 0.15rem 0.5rem;
+      border-radius: 999px;
+      background: rgba(245, 158, 11, 0.2);
+      color: #fde68a;
+      border: 1px solid rgba(245, 158, 11, 0.4);
+    }
+
+    /* Modal autoroute */
+    .modal-autoroute {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.82);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      z-index: 100000;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .modal-autoroute.visible { display: flex; }
+    .modal-autoroute-content {
+      background: #0d1522;
+      border: 1px solid rgba(245, 158, 11, 0.45);
+      border-radius: 20px;
+      max-width: 640px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 1.6rem;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.85), 0 0 35px rgba(245, 158, 11, 0.15);
+    }
+
+    .autoroute-touch-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(115px, 1fr));
+      gap: 0.5rem;
+      margin: 0.5rem 0;
+    }
+    .autoroute-touch-btn {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.65rem 0.5rem;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      text-align: center;
+      font-weight: 600;
+      transition: all 0.15s ease;
+      font-family: inherit;
+    }
+    .autoroute-touch-btn:hover {
+      background: rgba(255, 255, 255, 0.09);
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+    .autoroute-touch-btn.active {
+      background: rgba(245, 158, 11, 0.25);
+      border-color: #f59e0b;
+      color: #fef3c7;
+      box-shadow: 0 0 12px rgba(245, 158, 11, 0.3);
+      font-weight: 700;
+    }
+
+    .autoroute-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 0.85rem;
+      margin-bottom: 1.5rem;
+    }
+    .autoroute-kpi-card {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.1rem;
+      text-align: center;
+    }
+    .autoroute-kpi-val {
+      font-size: 1.7rem;
+      font-weight: 800;
+      color: #f59e0b;
+      margin-bottom: 0.25rem;
+    }
+    .autoroute-kpi-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #ffffff;
+    }
+    .autoroute-kpi-sub {
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-top: 0.2rem;
+    }
   </style>
 </head>
 <body>
@@ -1056,6 +1203,11 @@
 
     <!-- BOUTONS D'ACTION DIRECTS -->
     <div class="header-actions-wrap">
+      <!-- AUTOROUTE DU CONCEPTEUR -->
+      <button class="btn-autoroute" id="btn-autoroute-cueillette" onclick="ouvrirAutorouteCueillette()" title="Autoroute Concepteur : Noter une récolte réelle en 1 clic et recalibrer le modèle IA">
+        ⚡ Noter une cueillette
+      </button>
+
       <button class="btn-geoloc-main" id="btn-geoloc-top" onclick="geolocaliserUtilisateur()" title="Me localiser automatiquement via GPS">
         📍 Me localiser (GPS)
       </button>
@@ -1168,6 +1320,9 @@
       </button>
       <button class="tab-btn" id="tab-btn-2" onclick="changerOngletWeb(2)">
         🌲 Météo & Sol du Sous-bois
+      </button>
+      <button class="tab-btn" id="tab-btn-3" onclick="changerOngletWeb(3)">
+        🔬 Cockpit Concepteur & Modèle IA
       </button>
     </div>
   </div>
@@ -1414,6 +1569,103 @@
       </div>
     </div>
 
+    <!-- ========================================== -->
+    <!-- ONGLET 3 : COCKPIT CONCEPTEUR & MODÈLE IA -->
+    <!-- ========================================== -->
+    <div class="view-tab-content" id="view-tab-3">
+      <div style="background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:1.6rem;backdrop-filter:blur(16px);">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;margin-bottom:1.5rem;">
+          <div>
+            <div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;">
+              <h2 style="font-size:1.35rem;font-weight:800;color:#ffffff;margin:0;">🔬 Cockpit Concepteur : Calibrage Continu du Modèle</h2>
+              <span class="calib-pill">⚡ Auto-apprentissage Actif</span>
+            </div>
+            <p style="font-size:0.85rem;color:var(--muted);margin-top:0.35rem;max-width:700px;line-height:1.45;">
+              Vos cueillettes réelles constituent l'autorité suprême de vérité terrain. Chaque déclaration affine automatiquement les pondérations bioclimatiques des espèces et ajuste la sensibilité du modèle.
+            </p>
+          </div>
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+            <button class="btn-autoroute" onclick="ouvrirAutorouteCueillette()">
+              ⚡ Noter une cueillette
+            </button>
+            <button class="btn" onclick="exporterObservations('csv')" title="Télécharger l'historique complet en CSV">
+              📥 Export CSV
+            </button>
+            <button class="btn" onclick="exporterObservations('json')" title="Télécharger en format JSON">
+              📥 JSON
+            </button>
+            <button class="btn" onclick="actualiserCockpitConcepteur()" title="Recharger les statistiques du modèle">
+              🔄 Actualiser
+            </button>
+          </div>
+        </div>
+
+        <!-- KPI DU MODÈLE ET STATS DE TERRAIN -->
+        <div class="autoroute-kpi-grid">
+          <div class="autoroute-kpi-card">
+            <div class="autoroute-kpi-val" id="kpi-taux-concordance">--%</div>
+            <div class="autoroute-kpi-label">Concordance Prédictive</div>
+            <div class="autoroute-kpi-sub">Vérité terrain confirmée</div>
+          </div>
+          <div class="autoroute-kpi-card">
+            <div class="autoroute-kpi-val" id="kpi-total-obs">0</div>
+            <div class="autoroute-kpi-label">Observations Enregistrées</div>
+            <div class="autoroute-kpi-sub">Sorties réelles documentées</div>
+          </div>
+          <div class="autoroute-kpi-card">
+            <div class="autoroute-kpi-val" id="kpi-especes-calibrees">0</div>
+            <div class="autoroute-kpi-label">Espèces Auto-Calibrées</div>
+            <div class="autoroute-kpi-sub">Coefficients actifs appliqués</div>
+          </div>
+          <div class="autoroute-kpi-card">
+            <div class="autoroute-kpi-val" id="kpi-taux-recolte">--%</div>
+            <div class="autoroute-kpi-label">Taux Récolte Positive</div>
+            <div class="autoroute-kpi-sub">Paniers moyens à massifs</div>
+          </div>
+        </div>
+
+        <!-- SECTION COEFFICIENTS DE CALIBRATION ACTIFS -->
+        <div style="margin-top:1.5rem;">
+          <h3 style="font-size:1.05rem;font-weight:800;color:#f8fafc;margin-bottom:0.75rem;display:flex;align-items:center;gap:0.5rem;">
+            <span>⚖️ Facteurs d'Étalonnage Actifs par Espèce</span>
+            <small style="font-size:0.75rem;font-weight:normal;color:var(--muted);">(Ajustent directement les prédictions J à J+10)</small>
+          </h3>
+          <div style="overflow-x:auto;border:1px solid var(--border);border-radius:12px;">
+            <table class="table-expert" style="margin:0;">
+              <thead>
+                <tr>
+                  <th style="text-align:left;">Espèce</th>
+                  <th>Observations</th>
+                  <th>Facteur appliqué</th>
+                  <th>Impact prédiction</th>
+                  <th>Succès confirmés</th>
+                  <th>Faux positifs</th>
+                  <th>Découvertes inattendues</th>
+                  <th>Dernière observation</th>
+                </tr>
+              </thead>
+              <tbody id="table-calibrations-body">
+                <tr><td colspan="8" style="text-align:center;padding:1.5rem;color:var(--muted);">Chargement des calibrations en cours...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- SECTION HISTORIQUE DE TOUTES LES CUEILLETTES -->
+        <div style="margin-top:2rem;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;flex-wrap:wrap;gap:0.5rem;">
+            <h3 style="font-size:1.05rem;font-weight:800;color:#f8fafc;margin:0;">
+              📋 Carnet Historique de vos Sorties
+            </h3>
+            <span style="font-size:0.78rem;color:var(--muted);" id="compteur-historique-obs">0 observation</span>
+          </div>
+          <div id="liste-observations-container" style="display:flex;flex-direction:column;gap:0.65rem;">
+            <!-- Rempli dynamiquement -->
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <!-- MODAL DE GESTION DES COINS & MASSIFS HORS-LIGNE -->
@@ -1431,6 +1683,132 @@
       </p>
       <div id="liste-coins-offline-body" style="display:flex;flex-direction:column;gap:0.75rem;">
         <!-- Rempli dynamiquement -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL AUTOROUTE CONCEPTEUR : NOTATION CUEILLETTE RAPIDE -->
+  <!-- ======================================================== -->
+  <div id="modal-autoroute-cueillette" class="modal-autoroute" onclick="if(event.target === this) fermerAutorouteCueillette()">
+    <div class="modal-autoroute-content">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+        <div>
+          <h3 style="font-size:1.25rem;color:#ffffff;font-weight:800;display:flex;align-items:center;gap:0.5rem;margin:0;">
+            <span>⚡ L'Autoroute du Concepteur</span>
+            <span class="calib-pill">Calibrage Modèle IA</span>
+          </h3>
+          <p style="font-size:0.78rem;color:var(--muted);margin-top:0.2rem;">
+            Enregistrez votre cueillette terrain en 3 clics pour adapter les prédictions en direct.
+          </p>
+        </div>
+        <button class="btn" onclick="fermerAutorouteCueillette()" style="padding:0.25rem 0.6rem;font-size:0.9rem;">✕</button>
+      </div>
+
+      <!-- FORMULAIRE RAPIDE -->
+      <div style="display:flex;flex-direction:column;gap:1rem;">
+        <!-- SPOT ET DATE -->
+        <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;padding:0.85rem;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4rem;flex-wrap:wrap;gap:0.4rem;">
+            <span style="font-size:0.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;">📍 Emplacement & Date</span>
+            <button class="btn" onclick="recupererGpsPourAutoroute()" style="padding:0.2rem 0.5rem;font-size:0.75rem;">
+              📍 Ma position GPS exacte
+            </button>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.5rem;">
+            <div>
+              <label style="font-size:0.7rem;color:var(--muted);display:block;margin-bottom:0.2rem;">Latitude</label>
+              <input type="number" id="autoroute-lat" step="0.00001" style="width:100%;background:#090d13;border:1px solid var(--border);color:#fff;padding:0.45rem;border-radius:8px;font-family:inherit;font-size:0.85rem;" />
+            </div>
+            <div>
+              <label style="font-size:0.7rem;color:var(--muted);display:block;margin-bottom:0.2rem;">Longitude</label>
+              <input type="number" id="autoroute-lon" step="0.00001" style="width:100%;background:#090d13;border:1px solid var(--border);color:#fff;padding:0.45rem;border-radius:8px;font-family:inherit;font-size:0.85rem;" />
+            </div>
+            <div>
+              <label style="font-size:0.7rem;color:var(--muted);display:block;margin-bottom:0.2rem;">Date de sortie</label>
+              <input type="date" id="autoroute-date" style="width:100%;background:#090d13;border:1px solid var(--border);color:#fff;padding:0.45rem;border-radius:8px;font-family:inherit;font-size:0.85rem;" />
+            </div>
+          </div>
+          <div id="autoroute-nom-spot" style="font-size:0.75rem;color:#34d399;margin-top:0.35rem;font-weight:600;"></div>
+        </div>
+
+        <!-- ESPÈCE ET SCORE PRÉDIT -->
+        <div>
+          <label style="font-size:0.8rem;font-weight:700;color:#ffffff;display:block;margin-bottom:0.35rem;">
+            🍄 Espèce récoltée ou recherchée :
+          </label>
+          <select id="autoroute-select-espece" onchange="auChangementEspeceAutoroute()" style="width:100%;background:#090d13;border:1px solid rgba(245,158,11,0.4);color:#ffffff;padding:0.6rem;border-radius:10px;font-family:inherit;font-size:0.95rem;font-weight:600;">
+            <!-- Rempli avec les 80 espèces -->
+          </select>
+          <div id="autoroute-info-prediction" style="margin-top:0.35rem;font-size:0.78rem;color:var(--muted);display:flex;justify-content:space-between;align-items:center;">
+            <span>Prédiction du modèle sur ce point : <strong id="autoroute-score-prevu-txt" style="color:#f59e0b;">--%</strong></span>
+            <span id="autoroute-calib-actuelle-txt" style="color:#a7f3d0;"></span>
+          </div>
+        </div>
+
+        <!-- ABONDANCE CONSTATÉE EN 1 CLIC -->
+        <div>
+          <label style="font-size:0.8rem;font-weight:700;color:#ffffff;display:block;margin-bottom:0.35rem;">
+            🧺 Résultat & Abondance constatée :
+          </label>
+          <input type="hidden" id="autoroute-abondance-val" value="moderee" />
+          <div class="autoroute-touch-grid">
+            <div class="autoroute-touch-btn" onclick="choisirAbondanceAutoroute('nulle', this)">
+              🚫<br>Bredouille (0)
+            </div>
+            <div class="autoroute-touch-btn" onclick="choisirAbondanceAutoroute('rare', this)">
+              🍄<br>Rare (1-3)
+            </div>
+            <div class="autoroute-touch-btn active" onclick="choisirAbondanceAutoroute('moderee', this)">
+              🧺<br>Moyen (4-10)
+            </div>
+            <div class="autoroute-touch-btn" onclick="choisirAbondanceAutoroute('abondante', this)">
+              🌟<br>Plein panier
+            </div>
+            <div class="autoroute-touch-btn" onclick="choisirAbondanceAutoroute('exceptionnelle', this)">
+              🔥<br>Explosion
+            </div>
+          </div>
+        </div>
+
+        <!-- STADE DE MATURITÉ -->
+        <div>
+          <label style="font-size:0.8rem;font-weight:700;color:#ffffff;display:block;margin-bottom:0.35rem;">
+            🌱 Stade de développement observé :
+          </label>
+          <input type="hidden" id="autoroute-stade-val" value="adulte" />
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.5rem;">
+            <div class="autoroute-touch-btn" onclick="choisirStadeAutoroute('primordium', this)">
+              🌱 Bouchons / Primordiums
+            </div>
+            <div class="autoroute-touch-btn active" onclick="choisirStadeAutoroute('adulte', this)">
+              🍄 Parfaits pour cueillette
+            </div>
+            <div class="autoroute-touch-btn" onclick="choisirStadeAutoroute('mature_avance', this)">
+              🍂 Âgés / Véreux
+            </div>
+          </div>
+        </div>
+
+        <!-- POIDS ESTIMÉ ET COMMENTAIRE -->
+        <div style="display:grid;grid-template-columns:140px 1fr;gap:0.6rem;">
+          <div>
+            <label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:0.25rem;">Poids récolté (kg)</label>
+            <input type="number" id="autoroute-poids-kg" step="0.1" placeholder="Ex: 1.5" style="width:100%;background:#090d13;border:1px solid var(--border);color:#fff;padding:0.45rem;border-radius:8px;font-family:inherit;font-size:0.85rem;" />
+          </div>
+          <div>
+            <label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:0.25rem;">Essences / Notes de terrain</label>
+            <input type="text" id="autoroute-notes" placeholder="Ex: Sous pins sylvestres et buis, sol calcaire, litière humide" style="width:100%;background:#090d13;border:1px solid var(--border);color:#fff;padding:0.45rem;border-radius:8px;font-family:inherit;font-size:0.85rem;" />
+          </div>
+        </div>
+
+        <!-- BOUTON D'ENVOI RAPIDE -->
+        <button class="btn-autoroute" id="btn-soumettre-autoroute" onclick="soumettreObservationAutoroute()" style="width:100%;justify-content:center;padding:0.85rem;font-size:1rem;margin-top:0.3rem;">
+          🚀 Enregistrer & Recalibrer le modèle en direct
+        </button>
+
+        <div id="autoroute-confirmation-box" style="display:none;padding:0.85rem;border-radius:12px;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.4);color:#a7f3d0;font-size:0.85rem;line-height:1.45;">
+        </div>
       </div>
     </div>
   </div>
@@ -1881,6 +2259,7 @@
           courbe,
           stades: courbe[0]?.details?.stades_carpophore || {},
           confusion_toxique: conf,
+          calibration_concepteur: item.calibration_concepteur || courbe[0]?.details?.calibration_concepteur || {},
         };
       }).filter(item => {
         const nom = item.nom.toLowerCase();
@@ -1948,7 +2327,10 @@
                   <div class="species-card-title">${item.nom}</div>
                   <div class="species-card-latin">${item.nom_scientifique || ''}</div>
                 </div>
-                <div class="species-badge-score ${clScore}">${scoreJ}%</div>
+                <div style="display:flex;align-items:center;gap:0.4rem;">
+                  ${item.calibration_concepteur?.active ? `<span class="calib-pill" title="Modèle étalonné par vos observations terrain (facteur x${item.calibration_concepteur.facteur})">⚡ Calibré</span>` : ''}
+                  <div class="species-badge-score ${clScore}">${scoreJ}%</div>
+                </div>
               </div>
 
               <div class="species-card-body">
@@ -1971,6 +2353,9 @@
 
               <div class="species-card-actions" onclick="event.stopPropagation()">
                 <span class="badge" style="margin:0;">${item.comestibilite}</span>
+                <button class="btn-card-log" onclick="ouvrirAutorouteCueillette('${escapedNom}', '${item.id || ''}', ${scoreJ})" title="Noter une récolte de ${escapedNom} ici pour étalonner le modèle">
+                  🧺 J'en ai trouvé !
+                </button>
                 <button class="btn-card-radar" onclick="lancerScanDirect('${escapedNom}')">
                   📡 Scanner à 5 km
                 </button>
@@ -2120,6 +2505,8 @@
       });
       if (index === 1) {
         document.getElementById('map').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else if (index === 3) {
+        actualiserCockpitConcepteur();
       }
     }
 
@@ -2483,6 +2870,340 @@
       }
     });
 
+    /* ======================================================== */
+    /* AUTOROUTE DU CONCEPTEUR & AUTO-CALIBRATION MODÈLE IA    */
+    /* ======================================================== */
+    let listeEspecesGlobal = [];
+
+    async function chargerCatalogueEspecesGlobal() {
+      if (listeEspecesGlobal.length > 0) return listeEspecesGlobal;
+      try {
+        const resp = await fetch("/api/especes");
+        if (resp.ok) {
+          const data = await resp.json();
+          listeEspecesGlobal = data.especes || [];
+        }
+      } catch (e) {}
+      return listeEspecesGlobal;
+    }
+
+    async function ouvrirAutorouteCueillette(nomEspece = null, idEspece = null, scorePredit = null) {
+      const modal = document.getElementById("modal-autoroute-cueillette");
+      if (!modal) return;
+
+      // 1. Récupération des coordonnées actuelles
+      const curLat = parseFloat(document.getElementById("input-lat")?.value || "45.4105");
+      const curLon = parseFloat(document.getElementById("input-lon")?.value || "5.2400");
+      document.getElementById("autoroute-lat").value = curLat.toFixed(5);
+      document.getElementById("autoroute-lon").value = curLon.toFixed(5);
+
+      // Date du jour par défaut
+      const aujourdhui = new Date().toISOString().split("T")[0];
+      document.getElementById("autoroute-date").value = aujourdhui;
+
+      // Label du lieu actif
+      const spotTxt = document.getElementById("label-lieu-actif")?.textContent || "";
+      document.getElementById("autoroute-nom-spot").textContent = spotTxt ? `Spot actuel : ${spotTxt}` : "";
+
+      // 2. Remplissage de la liste des espèces
+      const selectEsp = document.getElementById("autoroute-select-espece");
+      selectEsp.innerHTML = "";
+
+      const especesSource = (dernierRapport?.especes || dernierRapport?.especes_probables || []);
+      let liste = especesSource.length > 0 ? especesSource : await chargerCatalogueEspecesGlobal();
+
+      liste.forEach(item => {
+        const nom = item.nom || item.espece?.nom || "Espèce";
+        const id = item.id || item.espece?.id || nom;
+        const opt = document.createElement("option");
+        opt.value = id;
+        opt.textContent = nom;
+        opt.dataset.nom = nom;
+        selectEsp.appendChild(opt);
+      });
+
+      // Sélectionner l'espèce cible si fournie
+      if (idEspece) {
+        selectEsp.value = idEspece;
+      } else if (nomEspece) {
+        for (let opt of selectEsp.options) {
+          if (opt.dataset.nom === nomEspece || opt.textContent.includes(nomEspece)) {
+            selectEsp.value = opt.value;
+            break;
+          }
+        }
+      }
+
+      // Initialiser la sélection d'abondance et stade
+      choisirAbondanceAutoroute("moderee", document.querySelectorAll(".autoroute-touch-btn")[2]);
+      choisirStadeAutoroute("adulte", document.querySelectorAll(".autoroute-touch-btn")[6] || document.querySelectorAll(".autoroute-touch-btn")[5]);
+
+      auChangementEspeceAutoroute(scorePredit);
+
+      // Réinitialiser confirmation et notes
+      document.getElementById("autoroute-confirmation-box").style.display = "none";
+      document.getElementById("autoroute-poids-kg").value = "";
+      document.getElementById("autoroute-notes").value = "";
+
+      modal.classList.add("visible");
+    }
+
+    function fermerAutorouteCueillette() {
+      const modal = document.getElementById("modal-autoroute-cueillette");
+      if (modal) modal.classList.remove("visible");
+    }
+
+    function choisirAbondanceAutoroute(val, el) {
+      document.getElementById("autoroute-abondance-val").value = val;
+      const parent = el ? el.parentElement : null;
+      if (parent) {
+        parent.querySelectorAll(".autoroute-touch-btn").forEach(b => b.classList.remove("active"));
+        if (el) el.classList.add("active");
+      }
+    }
+
+    function choisirStadeAutoroute(val, el) {
+      document.getElementById("autoroute-stade-val").value = val;
+      const parent = el ? el.parentElement : null;
+      if (parent) {
+        parent.querySelectorAll(".autoroute-touch-btn").forEach(b => b.classList.remove("active"));
+        if (el) el.classList.add("active");
+      }
+    }
+
+    function recupererGpsPourAutoroute() {
+      if (!navigator.geolocation) {
+        afficherToast("Géolocalisation non supportée");
+        return;
+      }
+      afficherToast("📍 Recherche de votre position GPS...");
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          document.getElementById("autoroute-lat").value = pos.coords.latitude.toFixed(5);
+          document.getElementById("autoroute-lon").value = pos.coords.longitude.toFixed(5);
+          document.getElementById("autoroute-nom-spot").textContent = `Coordonnées GPS terrain capturées (±${Math.round(pos.coords.accuracy)}m)`;
+          afficherToast("Position GPS mise à jour pour l'observation !");
+        },
+        (err) => afficherToast(`Erreur GPS : ${err.message}`),
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    }
+
+    function auChangementEspeceAutoroute(forceScore = null) {
+      const sel = document.getElementById("autoroute-select-espece");
+      const espId = sel.value;
+      const opt = sel.options[sel.selectedIndex];
+      const nom = opt ? (opt.dataset.nom || opt.textContent) : "";
+
+      let scorePredit = forceScore;
+      if (scorePredit === null && dernierRapport) {
+        const liste = dernierRapport.especes || dernierRapport.especes_probables || [];
+        const espItem = liste.find(e => (e.id === espId) || (e.nom === nom));
+        if (espItem) {
+          scorePredit = espItem.score_actuel_J ?? espItem.score_actuel_j ?? (espItem.courbe_j_a_j10 || [])[0]?.score_pct ?? 0;
+        }
+      }
+
+      const scoreTxt = document.getElementById("autoroute-score-prevu-txt");
+      if (scorePredit !== null) {
+        scoreTxt.textContent = `${scorePredit}%`;
+        scoreTxt.dataset.score = scorePredit;
+      } else {
+        scoreTxt.textContent = "Non disponible sur ce spot";
+        scoreTxt.dataset.score = "";
+      }
+    }
+
+    async function soumettreObservationAutoroute() {
+      const btn = document.getElementById("btn-soumettre-autoroute");
+      btn.disabled = true;
+      btn.textContent = "⏳ Calibrage et enregistrement...";
+
+      const lat = parseFloat(document.getElementById("autoroute-lat").value);
+      const lon = parseFloat(document.getElementById("autoroute-lon").value);
+      const dateObs = document.getElementById("autoroute-date").value;
+      const sel = document.getElementById("autoroute-select-espece");
+      const espId = sel.value;
+      const opt = sel.options[sel.selectedIndex];
+      const nomEspece = opt ? (opt.dataset.nom || opt.textContent) : espId;
+      const abondance = document.getElementById("autoroute-abondance-val").value;
+      const stade = document.getElementById("autoroute-stade-val").value;
+      const poidsRaw = document.getElementById("autoroute-poids-kg").value;
+      const poidsKg = poidsRaw ? parseFloat(poidsRaw) : null;
+      const notes = document.getElementById("autoroute-notes").value;
+      const scorePreditRaw = document.getElementById("autoroute-score-prevu-txt").dataset.score;
+      const scorePredit = scorePreditRaw ? parseFloat(scorePreditRaw) : null;
+
+      try {
+        const resp = await fetch("/api/concepteur/observations", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            lat,
+            lon,
+            date: dateObs,
+            espece_id: espId,
+            nom_espece: nomEspece,
+            abondance,
+            stade,
+            quantite_kg: poidsKg,
+            commentaire: notes,
+            score_predit: scorePredit,
+            biotope_observe: document.getElementById("autoroute-nom-spot")?.textContent || ""
+          })
+        });
+
+        if (!resp.ok) {
+          const errData = await resp.json().catch(() => ({}));
+          throw new Error(errData.detail || `HTTP ${resp.status}`);
+        }
+
+        const res = await resp.json();
+        const impact = res.impact_calibration || {};
+        const gainPct = impact.gain_pourcentage || 0;
+        const facteur = impact.facteur_calibration || 1.0;
+
+        const box = document.getElementById("autoroute-confirmation-box");
+        box.style.display = "block";
+        box.innerHTML = `
+          <strong>🎉 Cueillette validée ! Auto-calibration appliquée :</strong><br>
+          • Espèce : <strong>${nomEspece}</strong><br>
+          • Nouveau coefficient modèle : <span style="color:#f59e0b;font-weight:800;">x${facteur}</span> (${gainPct >= 0 ? '+' : ''}${gainPct}%)<br>
+          • Les prédictions du modèle s'adaptent désormais à cette réalité sur tout le massif !
+        `;
+
+        afficherToast(`🍄 Cueillette de ${nomEspece} enregistrée ! Modèle recalibré avec succès.`);
+
+        // Relancer la simulation pour mettre à jour la carte et la liste avec le nouveau modèle
+        setTimeout(() => {
+          executerSimulation(lat, lon);
+          if (document.getElementById("tab-btn-3")?.classList.contains("active")) {
+            actualiserCockpitConcepteur();
+          }
+        }, 600);
+
+        setTimeout(() => {
+          fermerAutorouteCueillette();
+        }, 2500);
+
+      } catch (err) {
+        alert("Erreur lors de l'enregistrement : " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "🚀 Enregistrer & Recalibrer le modèle en direct";
+      }
+    }
+
+    /* ======================================================== */
+    /* TABLEAU DE BORD CONCEPTEUR & STATS D'AUTO-CALIBRATION    */
+    /* ======================================================== */
+    async function actualiserCockpitConcepteur() {
+      try {
+        const resp = await fetch("/api/concepteur/observations");
+        if (!resp.ok) return;
+        const data = await resp.json();
+        const tb = data.tableau_de_bord || {};
+        const observations = data.observations || [];
+        const calibrations = tb.calibrations_actives || [];
+
+        // 1. KPIs
+        document.getElementById("kpi-taux-concordance").textContent = `${tb.taux_recolte_positive_pct ?? '--'}%`;
+        document.getElementById("kpi-total-obs").textContent = tb.total_observations ?? 0;
+        document.getElementById("kpi-especes-calibrees").textContent = tb.nb_especes_calibrees ?? 0;
+        document.getElementById("kpi-taux-recolte").textContent = `${tb.taux_recolte_positive_pct ?? '--'}%`;
+        document.getElementById("compteur-historique-obs").textContent = `${observations.length} observation${observations.length > 1 ? 's' : ''}`;
+
+        // 2. Table des calibrations
+        const tableBody = document.getElementById("table-calibrations-body");
+        if (calibrations.length === 0) {
+          tableBody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:1.5rem;color:var(--muted);">Aucune calibration pour le moment. Enregistrez votre première cueillette avec le bouton "⚡ Noter une cueillette" !</td></tr>`;
+        } else {
+          tableBody.innerHTML = calibrations.map(c => {
+            const gain = c.gain_pourcentage || 0;
+            const clGain = gain > 0 ? "color:#34d399;" : (gain < 0 ? "color:#ef4444;" : "color:var(--muted);");
+            return `
+              <tr>
+                <td><strong>${c.nom_espece || c.espece_id}</strong></td>
+                <td><span class="badge">${c.nb_observations} sortie${c.nb_observations > 1 ? 's' : ''}</span></td>
+                <td><strong style="color:#f59e0b;font-size:0.95rem;">x${c.facteur_calibration}</strong></td>
+                <td><span style="${clGain}font-weight:700;">${gain >= 0 ? '+' : ''}${gain}%</span></td>
+                <td><span style="color:#34d399;">${c.succes_reels}</span></td>
+                <td><span style="color:#fca5a5;">${c.fausses_alertes}</span></td>
+                <td><span style="color:#fde68a;">${c.trouvailles_inattendues}</span></td>
+                <td><small style="color:var(--muted);">${c.derniere_observation || '--'}</small></td>
+              </tr>
+            `;
+          }).join("");
+        }
+
+        // 3. Liste des observations
+        const listeCont = document.getElementById("liste-observations-container");
+        if (observations.length === 0) {
+          listeCont.innerHTML = `<div style="padding:1.5rem;text-align:center;color:var(--muted);background:rgba(255,255,255,0.02);border-radius:12px;border:1px solid var(--border);">Aucune cueillette enregistrée. Utilisez l'Autoroute pour consigner vos trouvailles de champignons !</div>`;
+        } else {
+          listeCont.innerHTML = observations.map(o => {
+            const abLabels = {
+              "nulle": { t: "🚫 Bredouille (0)", c: "color:#94a3b8;border-color:rgba(148,163,184,0.3);background:rgba(148,163,184,0.1);" },
+              "rare": { t: "🍄 Rare (1-3)", c: "color:#67e8f9;border-color:rgba(6,182,212,0.3);background:rgba(6,182,212,0.1);" },
+              "moderee": { t: "🧺 Récolte moyenne", c: "color:#34d399;border-color:rgba(16,185,129,0.3);background:rgba(16,185,129,0.1);" },
+              "abondante": { t: "🌟 Plein panier", c: "color:#f59e0b;border-color:rgba(245,158,11,0.3);background:rgba(245,158,11,0.1);" },
+              "exceptionnelle": { t: "🔥 Explosion", c: "color:#f43f5e;border-color:rgba(244,63,94,0.3);background:rgba(244,63,94,0.1);" }
+            };
+            const ab = abLabels[o.abondance] || abLabels["moderee"];
+            const poids = o.quantite_kg ? ` • ${o.quantite_kg} kg` : "";
+            const predit = o.score_predit != null ? `(Modèle prédisait : ${o.score_predit}%)` : "";
+
+            return `
+              <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;padding:0.9rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.75rem;">
+                <div style="flex:1;min-width:240px;">
+                  <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+                    <strong style="color:#ffffff;font-size:0.95rem;">${o.nom_espece || o.espece_id}</strong>
+                    <span class="badge" style="${ab.c}">${ab.t}${poids}</span>
+                    <small style="color:var(--muted);">${o.date}</small>
+                  </div>
+                  <div style="font-size:0.8rem;color:var(--muted);margin-top:0.3rem;">
+                    📍 (${o.lat}, ${o.lon}) • ${predit}
+                    ${o.commentaire ? `<br><em>« ${o.commentaire} »</em>` : ''}
+                  </div>
+                </div>
+                <div style="display:flex;gap:0.4rem;align-items:center;">
+                  <button class="btn" style="padding:0.3rem 0.6rem;font-size:0.75rem;" onclick="chargerSpot(${o.lat}, ${o.lon}, '${(o.nom_espece || '').replace(/'/g, "\\'")}')" title="Centrer la carte sur ce coin">
+                    🗺️ Aller au spot
+                  </button>
+                  <button class="btn" style="padding:0.3rem 0.5rem;font-size:0.75rem;color:#fca5a5;border-color:rgba(239,68,68,0.3);" onclick="supprimerObservationConcepteur('${o.id}')" title="Supprimer cette observation">
+                    🗑️
+                  </button>
+                </div>
+              </div>
+            `;
+          }).join("");
+        }
+      } catch (e) {
+        console.error("Erreur chargement cockpit :", e);
+      }
+    }
+
+    async function supprimerObservationConcepteur(obsId) {
+      if (!confirm("Voulez-vous vraiment supprimer cette observation ? Le modèle sera immédiatement recalculé sans cette donnée.")) {
+        return;
+      }
+      try {
+        const resp = await fetch(`/api/concepteur/observations/${obsId}`, { method: "DELETE" });
+        if (!resp.ok) throw new Error("Erreur suppression");
+        afficherToast("Observation supprimée. Modèle réétalonné.");
+        actualiserCockpitConcepteur();
+        const lat = parseFloat(document.getElementById("input-lat")?.value || "45.4105");
+        const lon = parseFloat(document.getElementById("input-lon")?.value || "5.2400");
+        executerSimulation(lat, lon);
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    function exporterObservations(format) {
+      window.open(`/api/concepteur/export?format=${format}`, "_blank");
+    }
+
     /* CHARGEMENT INITIAL */
     window.addEventListener("DOMContentLoaded", () => {
       initialiserCarte();
@@ -2531,9 +3252,6 @@
       if (map) map.setView([48.4047, 2.6989], 12);
       chargerSpot(48.4047, 2.6989, "Forêt de Fontainebleau (77)");
     }
-  </script>
-</body>
-</html>
   </script>
 </body>
 </html>

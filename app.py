@@ -1,10 +1,11 @@
 from typing import Optional
 from pathlib import Path
 import time
-from fastapi import FastAPI, HTTPException, Query
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi.responses import FileResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 
+import carnet_observations
 from modele_fructification import (
     CATALOGUE_ESPECES,
     simuler_pousse_point_gps,
@@ -120,3 +121,86 @@ def api_zones_espece_5km(
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+# ==============================================================================
+# AUTOROUTE D'OBSERVATIONS & AUTO-CALIBRATION DU MODÈLE (ESPACE CONCEPTEUR)
+# ==============================================================================
+
+@app.get("/api/concepteur/observations")
+def api_lister_observations():
+    """Renvoie la totalité des observations terrain et le tableau de bord concepteur."""
+    return {
+        "observations": carnet_observations.lister_observations(),
+        "tableau_de_bord": carnet_observations.obtenir_tableau_de_bord_concepteur(),
+    }
+
+
+@app.post("/api/concepteur/observations")
+async def api_ajouter_observation(request: Request):
+    """
+    Enregistre une cueillette réelle du concepteur et recalibre immédiatement
+    le modèle bioclimatique pour les espèces concernées.
+    """
+    try:
+        data = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Corps JSON invalide.")
+
+    lat = data.get("lat")
+    lon = data.get("lon")
+    espece_id = data.get("espece_id")
+    nom_espece = data.get("nom_espece") or espece_id
+    if lat is None or lon is None or not espece_id:
+        raise HTTPException(status_code=422, detail="Latitude, longitude et espece_id sont requis.")
+
+    res = carnet_observations.ajouter_observation(
+        lat=float(lat),
+        lon=float(lon),
+        espece_id=str(espece_id),
+        nom_espece=str(nom_espece),
+        date_obs=data.get("date"),
+        abondance=data.get("abondance", "moderee"),
+        quantite_kg=data.get("quantite_kg"),
+        stade=data.get("stade", "adulte"),
+        score_predit=data.get("score_predit"),
+        commentaire=data.get("commentaire", ""),
+        biotope_observe=data.get("biotope_observe", ""),
+    )
+
+    # Réinitialisation des caches prédictifs en mémoire pour réactivité instantanée
+    _CACHE_API_SIMULER.clear()
+    _CACHE_API_RADAR.clear()
+
+    return res
+
+
+@app.delete("/api/concepteur/observations/{obs_id}")
+def api_supprimer_observation(obs_id: str):
+    """Supprime une observation erronée et recalibre le modèle."""
+    succes = carnet_observations.supprimer_observation(obs_id)
+    if not succes:
+        raise HTTPException(status_code=404, detail="Observation introuvable.")
+    _CACHE_API_SIMULER.clear()
+    _CACHE_API_RADAR.clear()
+    return {"statut": "succes", "message": "Observation supprimée et modèle recalibré."}
+
+
+@app.get("/api/concepteur/dashboard")
+def api_dashboard_concepteur():
+    """Statistiques, matrice de précision et coefficients actifs de calibration."""
+    return carnet_observations.obtenir_tableau_de_bord_concepteur()
+
+
+@app.get("/api/concepteur/export")
+def api_export_observations(format: str = Query("json", regex="^(json|csv)$")):
+    """Exporte les données terrain pour SIG, tableur Excel ou analyse."""
+    if format == "csv":
+        csv_data = carnet_observations.exporter_observations_csv()
+        return PlainTextResponse(
+            content=csv_data,
+            media_type="text/csv",
+            headers={"Content-Disposition": "attachment; filename=observations_cueillettes.csv"},
+        )
+    return carnet_observations.lister_observations()
+

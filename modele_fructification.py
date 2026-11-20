@@ -16,6 +16,12 @@ from environnement import (
     _point_dans_polygone,
 )
 
+try:
+    import carnet_observations
+    _OBTENIR_FACTEUR_CALIB = carnet_observations.obtenir_facteur_calibration
+except Exception:
+    _OBTENIR_FACTEUR_CALIB = lambda esp_id: 1.0
+
 
 # Catalogue élargi des espèces de champignons sauvages comestibles (42 espèces)
 CATALOGUE_ESPECES = [
@@ -2430,6 +2436,13 @@ def calculer_score_jour(espece, meteo, index_jour, score_biotope, topographie=No
         * facteur_limitant_temp
         * (0.52 * score_hydrique + 0.48 * score_thermique)
     )
+
+    # 8. Facteur de calibration empirique issu des observations réelles de cueillette du concepteur
+    esp_id = espece.get("id") or str(espece.get("nom_scientifique", "")).lower().replace(" ", "_")
+    facteur_calibration_concepteur = _OBTENIR_FACTEUR_CALIB(esp_id)
+    if facteur_calibration_concepteur != 1.0:
+        score_final = score_final * facteur_calibration_concepteur
+
     score_pct_int = int(round(max(0.0, min(100.0, score_final))))
 
     stades_carpophore = _calculer_stades_maturite_carpophore(
@@ -2656,6 +2669,10 @@ def simuler_pousse_point_gps(latitude, longitude, past_days=20, forecast_days=11
                 "score_sol": score_biotope,
             },
             "confusion_toxique": obtenir_confusion_toxique(espece["id"]),
+            "calibration_concepteur": {
+                "active": _OBTENIR_FACTEUR_CALIB(espece["id"]) != 1.0,
+                "facteur": _OBTENIR_FACTEUR_CALIB(espece["id"]),
+            },
         }
         resultats_especes.append(item_esp)
 
