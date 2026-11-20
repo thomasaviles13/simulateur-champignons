@@ -238,11 +238,11 @@ CATALOGUE_ESPECES = [
         "nom_scientifique": "Hydnum repandum",
         "mois_actifs": [9, 10, 11, 12],
         "mois_optimaux": [10, 11],
-        "ph_optimal": (4.8, 7.0),
-        "temp_sol_optimale": (6.0, 14.0),
-        "temp_sol_limites": (2.0, 18.0),
-        "pluie_20j_optimale_mm": (45.0, 120.0),
-        "delai_maturation_jours": (8, 15),
+        "ph_optimal": (4.5, 7.8),
+        "temp_sol_optimale": (5.5, 14.5),
+        "temp_sol_limites": (1.5, 18.5),
+        "pluie_20j_optimale_mm": (38.0, 125.0),
+        "delai_maturation_jours": (7, 14),
         "choc_thermique": "baisse",
         "essences_hotes": ["hêtre", "chêne", "châtaignier", "épicéa", "sapin", "pin", "feuillus", "conifères"],
         "altitude_max": 1800,
@@ -2470,15 +2470,30 @@ def simuler_pousse_point_gps(latitude, longitude, past_days=20, forecast_days=11
         score_j = previsions_11j[0]["score_pct"] if previsions_11j else 0
         score_max_10j = max((p["score_pct"] for p in previsions_11j), default=0)
 
-        resultats_especes.append({
+        item_esp = {
             "id": espece["id"],
             "nom": espece["nom"],
             "nom_scientifique": espece["nom_scientifique"],
+            "comestibilite": espece.get("comestibilite", "Comestible"),
             "compatibilite_biotope_pct": int(round(score_biotope * 100)),
             "score_actuel_J": score_j,
+            "score_actuel_j": score_j,
             "score_max_J10": score_max_10j,
+            "score_max_j10": score_max_10j,
             "courbe_J_a_J10": previsions_11j,
-        })
+            "courbe_j_a_j10": previsions_11j,
+            "espece": {
+                "id": espece["id"],
+                "nom": espece["nom"],
+                "nom_scientifique": espece["nom_scientifique"],
+                "comestibilite": espece.get("comestibilite", "Comestible"),
+            },
+            "aptitude_biotope": {
+                "score_foret": score_biotope,
+                "score_sol": score_biotope,
+            },
+        }
+        resultats_especes.append(item_esp)
 
     # Tri par score maximum sur la période J..J+10 décroissant
     resultats_especes.sort(
@@ -2487,21 +2502,78 @@ def simuler_pousse_point_gps(latitude, longitude, past_days=20, forecast_days=11
 
     profil_env["microclimat_canopee_sol"] = _extraire_parametres_edaphiques_et_canopee(profil_env)
 
+    # Enrichissement du sol avec alias pour le frontend
+    sol_env = profil_env.get("sol") or {}
+    ph_val = sol_env.get("ph")
+    if "ph_eau" not in sol_env:
+        sol_env["ph_eau"] = ph_val
+    if "classe_texture" not in sol_env:
+        sol_env["classe_texture"] = sol_env.get("type_sol")
+    if "qualificatif_ph" not in sol_env and ph_val is not None:
+        sol_env["qualificatif_ph"] = (
+            "Neutre" if 6.0 <= ph_val <= 7.3 else ("Acide" if ph_val < 6.0 else "Calcaire")
+        )
+    profil_env["sol"] = sol_env
+
+    # Calcul des cumuls météo
+    precips = meteo.get("precipitation_sum", [])
+    cumul_20j = round(float(sum(precips[:idx_aujourd_hui + 1])), 1) if precips else 0.0
+    cumul_10j = round(float(sum(precips[idx_aujourd_hui + 1:])), 1) if precips else 0.0
+
+    # Construction du verdict du jour synthétique
+    top_score_j = max((e["score_actuel_J"] for e in resultats_especes), default=0)
+    top_3_j = sorted(resultats_especes, key=lambda e: e["score_actuel_J"], reverse=True)[:3]
+    top_especes_j = [
+        {
+            "nom": e["nom"],
+            "nom_scientifique": e["nom_scientifique"],
+            "score": e["score_actuel_J"],
+            "id": e["id"],
+        }
+        for e in top_3_j
+    ]
+
+    if top_score_j >= 75:
+        qualif = "EXCELLENT"
+        conseil = f"Excellentes conditions aujourd'hui ({cumul_20j} mm de pluie cumulée). Plusieurs espèces sont en pleine maturité !"
+    elif top_score_j >= 45:
+        qualif = "FAVORABLE"
+        conseil = f"Conditions favorables avec des poussées actives ({cumul_20j} mm cumulés). Bonnes chances de cueillette en sous-bois abrités."
+    elif top_score_j >= 25:
+        qualif = "MODÉRÉ"
+        conseil = f"Poussées localisées ou carpophores jeunes en cours de développement ({cumul_20j} mm). Surveillez les jours à venir."
+    else:
+        qualif = "CALME"
+        conseil = "Activité mycélienne en attente d'une pluie stimulante. Consultez les prévisions sur 10 jours."
+
+    verdict_du_jour = {
+        "score_global_j": top_score_j,
+        "qualificatif": qualif,
+        "conseil": conseil,
+        "top_especes_j": top_especes_j,
+    }
+
+    meteo_periode_dict = {
+        "dates": dates,
+        "index_aujourd_hui": idx_aujourd_hui,
+        "cumul_pluie_20j": cumul_20j,
+        "cumul_pluie_10j": cumul_10j,
+        "precipitation_sum": meteo.get("precipitation_sum", []),
+        "soil_temperature_0cm": meteo.get("soil_temperature_0cm", []),
+        "soil_moisture_0_to_7cm": meteo.get("soil_moisture_0_to_7cm", []),
+        "temperature_2m_min": meteo.get("temperature_2m_min", []),
+        "wind_speed_10m_max": meteo.get("wind_speed_10m_max", []),
+        "et0_fao_evapotranspiration": meteo.get("et0_fao_evapotranspiration", []),
+        "relative_humidity_2m": meteo.get("relative_humidity_2m", []),
+    }
+
     return {
         "date_simulation": dates[idx_aujourd_hui],
         "environnement": profil_env,
-        "meteo_periode": {
-            "dates": dates,
-            "index_aujourd_hui": idx_aujourd_hui,
-            "precipitation_sum": meteo.get("precipitation_sum", []),
-            "soil_temperature_0cm": meteo.get("soil_temperature_0cm", []),
-            "soil_moisture_0_to_7cm": meteo.get("soil_moisture_0_to_7cm", []),
-            "temperature_2m_min": meteo.get("temperature_2m_min", []),
-            "wind_speed_10m_max": meteo.get("wind_speed_10m_max", []),
-            "et0_fao_evapotranspiration": meteo.get("et0_fao_evapotranspiration", []),
-            "relative_humidity_2m": meteo.get("relative_humidity_2m", []),
-        },
+        "meteo_periode": meteo_periode_dict,
         "especes_probables": resultats_especes,
+        "especes": resultats_especes,
+        "verdict_du_jour": verdict_du_jour,
     }
 
 
@@ -2618,6 +2690,7 @@ def rechercher_zones_optimales_5km(
 
     # --- Génération des zones candidates dans le disque de 5 km ---
     candidats = []
+    toutes_especes_rayon = {}
 
     # A. Échantillonnage des parcelles forestières IGN réelles et de leurs lisières
     for idx_p, p in enumerate(parcelles):
@@ -2731,6 +2804,24 @@ def rechercher_zones_optimales_5km(
                 profil_env=profil_z,
             )
             sc = res_cible["score_pct"]
+
+            # Enregistrement multi-espèces de toutes les espèces viables dans le rayon de 5 km
+            if is_mode_auto and sc >= 15:
+                esp_id_cand = esp_cand["id"]
+                if esp_id_cand not in toutes_especes_rayon or sc > toutes_especes_rayon[esp_id_cand]["score_max_pct"]:
+                    toutes_especes_rayon[esp_id_cand] = {
+                        "id": esp_id_cand,
+                        "nom": esp_cand["nom"],
+                        "nom_scientifique": esp_cand.get("nom_scientifique", ""),
+                        "comestibilite": esp_cand.get("comestibilite", "Comestible"),
+                        "score_max_pct": sc,
+                        "meilleure_distance_km": round(dist_km, 2),
+                        "direction": dir_card,
+                        "biotope": _formater_libelle_biotope_zone(foret_z),
+                        "latitude": lat_z,
+                        "longitude": lon_z,
+                    }
+
             if sc > meilleur_score:
                 meilleur_score = sc
                 meilleur_esp = esp_cand
@@ -2767,14 +2858,16 @@ def rechercher_zones_optimales_5km(
         zones_evaluees.append({
             "latitude": lat_z,
             "longitude": lon_z,
-            "distance_km": dist_km,
+            "distance_km": round(dist_km, 2),
             "cap_deg": cap_deg,
             "direction_cardinale": dir_card,
+            "score": meilleur_score,
             "score_pct": meilleur_score,
             "score_max_proche_pct": score_max_proche,
             "meilleure_echeance": meilleure_echeance,
             "compatibilite_biotope_pct": int(round(meilleur_bio * 100)),
             "type_milieu": type_milieu,
+            "nom_espece": meilleur_esp["nom"],
             "libelle_biotope": _formater_libelle_biotope_zone(foret_z),
             "altitude_m": topo_z["altitude_m"],
             "pente_deg": topo_z["pente_deg"],
@@ -2802,9 +2895,36 @@ def rechercher_zones_optimales_5km(
         reverse=True,
     )
 
-    # Dédoublonnage spatial : évite d'empiler 2 marqueurs à moins de 350 m l'un de l'autre
+    # Dédoublonnage spatial avec diversification d'espèces en mode automatique
     zones_retenues = []
+
+    # En mode auto : sélectionner d'abord la meilleure zone pour chaque espèce détectée
+    if is_mode_auto and toutes_especes_rayon:
+        especes_deja_placees = set()
+        for z in zones_evaluees:
+            esp_id_z = z["espece"]["id"]
+            if esp_id_z not in especes_deja_placees:
+                parcelle = z.pop("_parcelle", None)
+                if parcelle and parcelle.get("poly") and parcelle["poly"][0]:
+                    z["polygone_coords"] = _simplifier_anneau_leaflet(parcelle["poly"][0], max_points=36)
+                else:
+                    z["polygone_coords"] = None
+                z["rang"] = len(zones_retenues) + 1
+                zones_retenues.append(z)
+                especes_deja_placees.add(esp_id_z)
+                if len(zones_retenues) >= max_zones:
+                    break
+
+    # Compléter avec les meilleures zones restantes non encore incluses
     for z in zones_evaluees:
+        if len(zones_retenues) >= max_zones:
+            break
+        deja_prise = any(
+            abs(z["latitude"] - r["latitude"]) < 0.0001 and abs(z["longitude"] - r["longitude"]) < 0.0001
+            for r in zones_retenues
+        )
+        if deja_prise:
+            continue
         trop_proche = False
         for existante in zones_retenues:
             d_inter, _, _ = calculer_distance_et_cap(
@@ -2821,27 +2941,30 @@ def rechercher_zones_optimales_5km(
                 z["polygone_coords"] = None
             z["rang"] = len(zones_retenues) + 1
             zones_retenues.append(z)
-            if len(zones_retenues) >= max_zones:
-                break
 
     # Synthèse des meilleurs champignons trouvés dans le rayon de 5 km
-    especes_uniques = {}
-    for z in zones_retenues:
-        z_esp = z.get("espece") or {}
-        nom_esp = z_esp.get("nom") or "Champignon"
-        if nom_esp not in especes_uniques or z["score_pct"] > especes_uniques[nom_esp]["score_max_pct"]:
-            especes_uniques[nom_esp] = {
-                "nom": nom_esp,
-                "nom_scientifique": z_esp.get("nom_scientifique", ""),
-                "comestibilite": z_esp.get("comestibilite", "Comestible"),
-                "score_max_pct": z["score_pct"],
-                "meilleure_distance_km": z["distance_km"],
-                "direction": z["direction_cardinale"],
-                "biotope": z["libelle_biotope"],
-                "latitude": z["latitude"],
-                "longitude": z["longitude"],
-            }
-    top_especes_5km = sorted(especes_uniques.values(), key=lambda x: x["score_max_pct"], reverse=True)
+    if is_mode_auto and toutes_especes_rayon:
+        top_especes_5km = sorted(
+            toutes_especes_rayon.values(), key=lambda x: x["score_max_pct"], reverse=True
+        )
+    else:
+        especes_uniques = {}
+        for z in zones_retenues:
+            z_esp = z.get("espece") or {}
+            nom_esp = z_esp.get("nom") or "Champignon"
+            if nom_esp not in especes_uniques or z["score_pct"] > especes_uniques[nom_esp]["score_max_pct"]:
+                especes_uniques[nom_esp] = {
+                    "nom": nom_esp,
+                    "nom_scientifique": z_esp.get("nom_scientifique", ""),
+                    "comestibilite": z_esp.get("comestibilite", "Comestible"),
+                    "score_max_pct": z["score_pct"],
+                    "meilleure_distance_km": z["distance_km"],
+                    "direction": z["direction_cardinale"],
+                    "biotope": z["libelle_biotope"],
+                    "latitude": z["latitude"],
+                    "longitude": z["longitude"],
+                }
+        top_especes_5km = sorted(especes_uniques.values(), key=lambda x: x["score_max_pct"], reverse=True)
 
     info_esp = {
         "id": espece["id"] if espece else "auto",

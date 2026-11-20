@@ -1488,50 +1488,86 @@
     }
 
     function mettreAJourProfil(data) {
-      const env = data.environnement;
+      const env = data.environnement || {};
       const topo = env.topographie || {};
       const sol = env.sol || {};
       const foret = env.foret || {};
       const meteo = data.meteo_periode || {};
 
-      document.getElementById("env-alt").textContent = `${topo.altitude_m ?? '--'} m`;
-      document.getElementById("env-pente").textContent = `${topo.pente_pct ?? '--'}% (${topo.pente_deg ?? '--'}°)`;
+      const altVal = topo.altitude_m ?? env.altitude_m ?? '--';
+      document.getElementById("env-alt").textContent = `${altVal} m`;
+      document.getElementById("env-pente").textContent = topo.pente_deg != null ? `${topo.pente_pct ?? '--'}% (${topo.pente_deg}°)` : '--';
       document.getElementById("env-orientation").textContent = topo.orientation || '--';
 
-      const phVal = sol.ph_eau != null ? sol.ph_eau.toFixed(1) : '--';
-      document.getElementById("env-ph").textContent = `${phVal} (${sol.qualificatif_ph || '--'})`;
-      document.getElementById("env-sol-type").textContent = sol.classe_texture || '--';
-      document.getElementById("env-sol-details").textContent = `Argile ${sol.argile_pct ?? '--'}% • Sable ${sol.sable_pct ?? '--'}% • Matière organique ${sol.matiere_organique_g_kg ?? '--'} g/kg`;
+      const phRaw = sol.ph_eau ?? sol.ph;
+      const phVal = phRaw != null ? Number(phRaw).toFixed(1) : '--';
+      const qualPh = sol.qualificatif_ph || (phRaw ? (phRaw >= 7.3 ? 'Calcaire' : (phRaw <= 6.0 ? 'Acide' : 'Neutre')) : '--');
+      document.getElementById("env-ph").textContent = `${phVal} (${qualPh})`;
+      document.getElementById("env-sol-type").textContent = sol.classe_texture || sol.type_sol || 'Limoneux standard';
+      document.getElementById("env-sol-details").textContent = `Argile ${sol.argile_pct ?? '--'}% • Sable ${sol.sable_pct ?? '--'}% • Carbone org. ${sol.carbone_organique_g_kg ?? '--'} g/kg`;
 
-      document.getElementById("env-foret").textContent = foret.en_zone_boisee ? "Boisé (En forêt)" : "Hors forêt";
+      document.getElementById("env-foret").textContent = foret.en_zone_boisee ? "Boisé (En forêt)" : (foret.en_lisiere ? "Lisière forestière" : "Hors massif IGN");
       let detailsForet = "";
       if (foret.peuplements && foret.peuplements.length > 0) {
-        detailsForet = foret.peuplements.map(p => `<span class="badge">🌲 ${p.essence || p.code_essence}</span>`).join(" ");
+        detailsForet = foret.peuplements.map(p => `<span class="badge">🌲 ${p.essence || p.formation_vegetale || p.code_essence}</span>`).join(" ");
+      } else if (foret.peuplements_lisiere && foret.peuplements_lisiere.length > 0) {
+        detailsForet = foret.peuplements_lisiere.map(p => `<span class="badge">🌿 Lisière : ${p.essence || p.formation_vegetale}</span>`).join(" ");
       } else {
-        detailsForet = `<span class="badge" style="background:rgba(244,63,94,0.15);color:#fecdd3;border-color:rgba(244,63,94,0.3);">Non boisé à l'IGN</span>`;
+        detailsForet = `<span class="badge" style="background:rgba(244,63,94,0.15);color:#fecdd3;border-color:rgba(244,63,94,0.3);">Non boisé au centre (lisières & prairies)</span>`;
       }
       document.getElementById("env-canopee-details").innerHTML = detailsForet;
 
-      document.getElementById("meteo-cumul-20j").textContent = `${meteo.cumul_pluie_20j ?? '--'} mm`;
-      document.getElementById("meteo-cumul-10j").textContent = `${meteo.cumul_pluie_10j ?? '--'} mm`;
+      // Calcul des cumuls pluie
+      let c20 = meteo.cumul_pluie_20j;
+      let c10 = meteo.cumul_pluie_10j;
+      if (c20 == null && meteo.precipitation_sum) {
+        const idxJ = meteo.index_aujourd_hui || 20;
+        const precips = meteo.precipitation_sum || [];
+        c20 = Math.round(precips.slice(0, idxJ + 1).reduce((a, b) => a + (b || 0), 0) * 10) / 10;
+        c10 = Math.round(precips.slice(idxJ + 1).reduce((a, b) => a + (b || 0), 0) * 10) / 10;
+      }
+      document.getElementById("meteo-cumul-20j").textContent = `${c20 ?? '--'} mm`;
+      document.getElementById("meteo-cumul-10j").textContent = `${c10 ?? '--'} mm`;
+
+      const listeEspeces = data.especes || data.especes_probables || [];
 
       // HERO VERDICT CARD
       const verdict = data.verdict_du_jour || {};
-      const scoreGlob = verdict.score_global_j ?? 0;
-      document.getElementById("verdict-score").textContent = `${scoreGlob}%`;
-      document.getElementById("verdict-qualif").textContent = verdict.qualificatif || "CALCULÉ";
-      document.getElementById("verdict-desc").textContent = verdict.conseil || "Conditions calculées pour la date actuelle.";
+      const scoreGlob = verdict.score_global_j ?? (listeEspeces.length > 0 ? Math.max(...listeEspeces.map(e => e.score_actuel_J || e.score_actuel_j || 0)) : 0);
+      const verdictScoreEl = document.getElementById("verdict-score");
+      verdictScoreEl.textContent = `${scoreGlob}%`;
+      if (scoreGlob >= 75) {
+        verdictScoreEl.style.color = "#34d399";
+      } else if (scoreGlob >= 45) {
+        verdictScoreEl.style.color = "#f59e0b";
+      } else {
+        verdictScoreEl.style.color = "#94a3b8";
+      }
+
+      document.getElementById("verdict-qualif").textContent = verdict.qualificatif || (scoreGlob >= 75 ? "EXCELLENT" : (scoreGlob >= 45 ? "FAVORABLE" : "CALME"));
+      document.getElementById("verdict-desc").textContent = verdict.conseil || (scoreGlob >= 45 ? "De très bonnes conditions de cueillette pour plusieurs espèces." : "Conditions modérées, consultez le scan à 5 km pour repérer les meilleurs vallons.");
 
       // PODIUM DU JOUR
-      const podium = verdict.top_especes_j || [];
+      let podium = verdict.top_especes_j;
+      if (!podium || podium.length === 0) {
+        podium = [...listeEspeces]
+          .sort((a, b) => (b.score_actuel_J ?? b.score_actuel_j ?? 0) - (a.score_actuel_J ?? a.score_actuel_j ?? 0))
+          .slice(0, 3)
+          .map(e => ({
+            nom: e.nom || e.espece?.nom,
+            score: e.score_actuel_J ?? e.score_actuel_j ?? 0,
+            id: e.id || e.espece?.id
+          }));
+      }
+
       const podiumEl = document.getElementById("podium-especes");
-      if (podium && podium.length > 0) {
+      if (podium && podium.length > 0 && podium[0].score > 0) {
         const ranks = ['🥇', '🥈', '🥉'];
         podiumEl.innerHTML = podium.map((esp, i) => `
           <div class="podium-item" onclick="afficherDetailEspeceDirect('${esp.nom.replace(/'/g, "\\'")}')">
-            <div class="podium-rank">${ranks[i] || '⭐'} Prêt à cueillir</div>
+            <div class="podium-rank">${ranks[i] || '⭐'} Top ${i+1}</div>
             <div class="podium-name" title="${esp.nom}">${esp.nom}</div>
-            <div class="podium-score">${esp.score}%</div>
+            <div class="podium-score ${classeScore(esp.score)}">${esp.score}%</div>
           </div>
         `).join('');
       } else {
@@ -1542,10 +1578,13 @@
       const sel5km = document.getElementById("select-espece-5km");
       if (sel5km) {
         sel5km.innerHTML = '<option value="auto" selected>✨ Tous les meilleurs champignons (Automatique)</option>';
-        (data.especes || []).forEach(item => {
+        listeEspeces.forEach(item => {
+          const nomEsp = item.nom || item.espece?.nom || 'Espèce';
+          const idEsp = item.id || item.espece?.id || nomEsp;
+          const scoreJ = item.score_actuel_J ?? item.score_actuel_j ?? (item.courbe_j_a_j10 || item.courbe_J_a_J10 || [])[0]?.score_pct ?? 0;
           const opt = document.createElement("option");
-          opt.value = item.espece.id || item.espece.nom;
-          opt.textContent = `${item.espece.nom} (${item.courbe_j_a_j10[0]?.score_pct || 0}%)`;
+          opt.value = idEsp;
+          opt.textContent = `${nomEsp} (${scoreJ}%)`;
           sel5km.appendChild(opt);
         });
       }
@@ -1565,13 +1604,33 @@
 
       const filtreNom = (document.getElementById("filtre-recherche")?.value || "").toLowerCase().trim();
       const scoreMin = parseInt(document.getElementById("filtre-score")?.value || "0", 10);
+      const listeRaw = dernierRapport.especes || dernierRapport.especes_probables || [];
 
-      const items = (dernierRapport.especes || []).filter(item => {
-        const nom = (item.espece.nom || "").toLowerCase();
-        const nomSci = (item.espece.nom_scientifique || "").toLowerCase();
-        const scoreJ = item.courbe_j_a_j10[0]?.score_pct || 0;
+      const items = listeRaw.map(item => {
+        const nom = item.nom || item.espece?.nom || '';
+        const nomSci = item.nom_scientifique || item.espece?.nom_scientifique || '';
+        const courbe = item.courbe_j_a_j10 || item.courbe_J_a_J10 || [];
+        const scoreJ = item.score_actuel_J ?? item.score_actuel_j ?? (courbe[0]?.score_pct || 0);
+        const scoreMax = item.score_max_J10 ?? item.score_max_j10 ?? Math.max(...courbe.map(c => c.score_pct || 0), 0);
+        const comestibilite = item.comestibilite || item.espece?.comestibilite || 'Comestible';
+        const biotopePct = item.compatibilite_biotope_pct ?? Math.round(((item.aptitude_biotope?.score_foret || 0.8) * 100));
+
+        return {
+          id: item.id || item.espece?.id,
+          nom,
+          nom_scientifique: nomSci,
+          comestibilite,
+          scoreJ,
+          scoreMax,
+          biotopePct,
+          courbe,
+          stades: courbe[0]?.details?.stades_carpophore || {},
+        };
+      }).filter(item => {
+        const nom = item.nom.toLowerCase();
+        const nomSci = item.nom_scientifique.toLowerCase();
         const matchTexte = !filtreNom || nom.includes(filtreNom) || nomSci.includes(filtreNom);
-        const matchScore = scoreJ >= scoreMin || item.score_max_j10 >= scoreMin;
+        const matchScore = item.scoreJ >= scoreMin || item.scoreMax >= scoreMin;
         return matchTexte && matchScore;
       });
 
@@ -1584,12 +1643,9 @@
         cardsContainer.innerHTML = `<div style="grid-column:1/-1;padding:2rem;text-align:center;color:var(--muted);">Aucune espèce ne correspond aux filtres.</div>`;
       } else {
         cardsContainer.innerHTML = items.map(item => {
-          const scoreJ = item.courbe_j_a_j10[0]?.score_pct || 0;
+          const scoreJ = item.scoreJ;
           const clScore = classeScore(scoreJ);
-          const bio = item.aptitude_biotope || {};
-          const foretPct = Math.round((bio.score_foret || 0) * 100);
-          const solPct = Math.round((bio.score_sol || 0) * 100);
-          const st = item.courbe_j_a_j10[0]?.details?.stades_carpophore || {};
+          const st = item.stades;
 
           let statusTxt = "En repos végétatif";
           let statusColor = "var(--muted)";
@@ -1604,14 +1660,14 @@
             statusColor = "#6ee7b7";
           }
 
-          const escapedNom = item.espece.nom.replace(/'/g, "\\'");
+          const escapedNom = item.nom.replace(/'/g, "\\'");
 
           return `
             <div class="species-card" onclick="afficherDetailEspece('${escapedNom}')">
               <div class="species-card-header">
                 <div>
-                  <div class="species-card-title">${item.espece.nom}</div>
-                  <div class="species-card-latin">${item.espece.nom_scientifique || ''}</div>
+                  <div class="species-card-title">${item.nom}</div>
+                  <div class="species-card-latin">${item.nom_scientifique || ''}</div>
                 </div>
                 <div class="species-badge-score ${clScore}">${scoreJ}%</div>
               </div>
@@ -1623,20 +1679,15 @@
 
                 <div class="species-biotope-bars">
                   <div class="biotope-bar-item">
-                    <span style="width:58px;">Arbres :</span>
-                    <div class="biotope-bar-track"><div class="biotope-bar-fill" style="width:${foretPct}%;"></div></div>
-                    <span style="width:28px;text-align:right;">${foretPct}%</span>
-                  </div>
-                  <div class="biotope-bar-item">
-                    <span style="width:58px;">Sol & pH :</span>
-                    <div class="biotope-bar-track"><div class="biotope-bar-fill" style="width:${solPct}%;background:#f59e0b;"></div></div>
-                    <span style="width:28px;text-align:right;">${solPct}%</span>
+                    <span style="width:68px;">Affinité :</span>
+                    <div class="biotope-bar-track"><div class="biotope-bar-fill" style="width:${item.biotopePct}%;"></div></div>
+                    <span style="width:28px;text-align:right;">${item.biotopePct}%</span>
                   </div>
                 </div>
               </div>
 
               <div class="species-card-actions" onclick="event.stopPropagation()">
-                <span class="badge" style="margin:0;">${item.espece.comestibilite || 'Comestible'}</span>
+                <span class="badge" style="margin:0;">${item.comestibilite}</span>
                 <button class="btn-card-radar" onclick="lancerScanDirect('${escapedNom}')">
                   📡 Scanner à 5 km
                 </button>
@@ -1651,16 +1702,28 @@
       if (items.length === 0) {
         tbody.innerHTML = `<tr><td colspan="13" style="text-align:center;padding:1.5rem;color:var(--muted);">Aucune espèce trouvée.</td></tr>`;
       } else {
+        // Mettre à jour l'en-tête du tableau avec les dates réelles
+        if (items[0] && items[0].courbe) {
+          const ths = document.querySelectorAll("#table-head-row th");
+          items[0].courbe.forEach((jour, idx) => {
+            const th = ths[idx + 2];
+            if (th) {
+              const jjmm = jour.date ? jour.date.slice(5).split("-").reverse().join("/") : '';
+              th.innerHTML = `${jour.echeance || ('J+' + idx)}<br><small style="font-weight:normal;font-size:0.7rem;">${jjmm}</small>`;
+            }
+          });
+        }
+
         tbody.innerHTML = items.map(item => {
-          const cells = item.courbe_j_a_j10.map(j => {
-            const sc = j.score_pct;
+          const cells = item.courbe.map(j => {
+            const sc = j.score_pct ?? 0;
             return `<td><span class="score-cell ${classeScore(sc)}">${sc}%</span></td>`;
           }).join('');
 
           return `
-            <tr style="cursor:pointer;" onclick="afficherDetailEspece('${item.espece.nom.replace(/'/g, "\\'")}')">
-              <td><strong>${item.espece.nom}</strong><br><small style="color:var(--muted);">${item.espece.nom_scientifique || ''}</small></td>
-              <td><span class="badge">${item.espece.comestibilite}</span></td>
+            <tr style="cursor:pointer;" onclick="afficherDetailEspece('${item.nom.replace(/'/g, "\\'")}')">
+              <td><strong>${item.nom}</strong><br><small style="color:var(--muted);">${item.nom_scientifique || ''}</small></td>
+              <td><span class="badge">${item.comestibilite}</span></td>
               ${cells}
             </tr>
           `;
@@ -1695,21 +1758,31 @@
 
     function afficherDetailEspece(nomEspece) {
       if (!dernierRapport) return;
-      const item = dernierRapport.especes.find(e => e.espece.nom === nomEspece);
+      const liste = dernierRapport.especes || dernierRapport.especes_probables || [];
+      const item = liste.find(e => {
+        const nom = e.nom || e.espece?.nom;
+        const id = e.id || e.espece?.id;
+        return nom === nomEspece || id === nomEspece;
+      });
       if (!item) return;
 
+      const nom = item.nom || item.espece?.nom || nomEspece;
+      const comest = item.comestibilite || item.espece?.comestibilite || 'Comestible';
+      const courbe = item.courbe_j_a_j10 || item.courbe_J_a_J10 || [];
+
       const box = document.getElementById("detail-espece");
-      document.getElementById("detail-titre").textContent = `🍄 ${item.espece.nom} (${item.espece.comestibilite})`;
+      document.getElementById("detail-titre").textContent = `🍄 ${nom} (${comest})`;
       document.getElementById("detail-desc").textContent = `Courbe de maturation sur 11 jours à ${lieuActuelLabel}.`;
 
       const grid = document.getElementById("detail-grid-jours");
-      grid.innerHTML = item.courbe_j_a_j10.map(j => {
-        const sc = j.score_pct;
+      grid.innerHTML = courbe.map((j, idx) => {
+        const sc = j.score_pct ?? 0;
         const st = j.details?.stades_carpophore || {};
+        const labelJour = j.echeance || j.label_jour || (idx === 0 ? 'J' : `J+${idx}`);
         return `
           <div class="day-card">
-            <strong>${j.label_jour}</strong>
-            <div style="font-size:0.65rem;color:var(--muted);">${j.date.substring(5)}</div>
+            <strong>${labelJour}</strong>
+            <div style="font-size:0.65rem;color:var(--muted);">${(j.date || '').substring(5)}</div>
             <div class="score-cell ${classeScore(sc)}" style="margin:0.35rem 0;">${sc}%</div>
             <div style="font-size:0.68rem;color:#34d399;">Adulte: ${st.adultes_pct || 0}%</div>
             <div style="font-size:0.68rem;color:#f59e0b;">Pousse: ${st.en_pousse_pct || 0}%</div>
