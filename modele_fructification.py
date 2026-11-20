@@ -1320,6 +1320,169 @@ def _score_intervalle(valeur, opt_min, opt_max, lim_min, lim_max):
     return (lim_max - valeur) / max(0.01, (lim_max - opt_max))
 
 
+# =====================================================================
+# MODULE DE VIGILANCE MYCOLOGIQUE & RISQUES DE CONFUSION TOXICOLOGIQUE
+# =====================================================================
+CONFUSIONS_TOXIQUES = {
+    "agaric_bois": {
+        "toxique": "Amanite phalloïde / printanière (Amanita phalloides, verna)",
+        "gravite": "MORTEL",
+        "critere_cle": "L'amanite mortelle possède des lames d'un BLANC IMMACULÉ et une VOLVE en sac à la base du pied enfoui. L'agaric comestible a des lames rosées puis brun chocolat et aucune volve.",
+        "icone": "☠️",
+        "securisant": False,
+    },
+    "rose_des_pres": {
+        "toxique": "Amanite phalloïde & Agaric jaunissant (Agaricus xanthodermus)",
+        "gravite": "MORTEL / TOXIQUE",
+        "critere_cle": "Rejeter impérativement tout champignon blanc à lames blanches (amanite) ou jaunissant vivement au frottement à la base du pied avec odeur désagréable d'encre/iode (agaric jaunissant).",
+        "icone": "☠️",
+        "securisant": False,
+    },
+    "coulemelle": {
+        "toxique": "Petites Lépiotes mortelles (Lepiota brunneoincarnata, helveola, cristata)",
+        "gravite": "MORTEL",
+        "critere_cle": "Règle absolue du mycologue : NE JAMAIS ramasser de lépiote dont le chapeau fait moins de 10-12 cm de diamètre. La vraie coulemelle est géante, son pied est chiné comme une peau de serpent et son anneau est double et coulissant.",
+        "icone": "☠️",
+        "securisant": False,
+    },
+    "lepiote_mamelonnee": {
+        "toxique": "Petites Lépiotes mortelles du groupe brunneoincarnata",
+        "gravite": "MORTEL",
+        "critere_cle": "Rejeter systématiquement tout spécimen de petite taille (< 10 cm). Anneau coulissant et pied chiné obligatoires.",
+        "icone": "☠️",
+        "securisant": False,
+    },
+    "girolle": {
+        "toxique": "Clitocybe de l'olivier (Omphalotus illudens) & Fausse girolle",
+        "gravite": "TRÈS TOXIQUE",
+        "critere_cle": "La vraie girolle pousse au sol, a de la chair blanche et possède des PLIS (replis de chair non détachables), jamais de vraies lames serrées. Le clitocybe de l'olivier pousse en touffes serrées au pied ou sur souches de feuillus.",
+        "icone": "⚠️",
+        "securisant": False,
+    },
+    "chanterelle_cineree": {
+        "toxique": "Clitocybe de l'olivier ou fausses chanterelles",
+        "gravite": "TOXIQUE",
+        "critere_cle": "Présence de plis ramifiés gris cendré sous le chapeau creux. Chair mince et odeur fruitée agréable.",
+        "icone": "⚠️",
+        "securisant": False,
+    },
+    "cepe_bordeaux": {
+        "toxique": "Bolet amer (Tylopilus felleus) & Bolet de Satan (Rubroboletus satanas)",
+        "gravite": "INDIGESTION SÉVÈRE / TRÈS AMER",
+        "critere_cle": "Le cèpe de Bordeaux a des pores fins blancs devenant jaune-verdâtre (jamais rouge vif), et un fin réseau blanc au sommet du pied. Le bolet de Satan a un pied renflé rouge sang.",
+        "icone": "⚠️",
+        "securisant": False,
+    },
+    "bolet_bai": {
+        "toxique": "Bolet amer (Tylopilus felleus)",
+        "gravite": "AMER IMMANGEABLE",
+        "critere_cle": "Les pores du bolet bai bleuissent légèrement au doigt. Le bolet amer a des pores rosâtres à maturité et un gros réseau noir saillant sur le pied.",
+        "icone": "⚠️",
+        "securisant": False,
+    },
+    "tricholome_terreux": {
+        "toxique": "Tricholome tigré (Tricholoma pardinum) & Inocybes toxiques",
+        "gravite": "TRÈS TOXIQUE",
+        "critere_cle": "Le petit gris comestible est frêle, sans anneau, chapeau feutré-souris, pousse sous pins. Le tricholome tigré est trapu, gros pied renflé, grosses écailles brunes, surtout en montagne calcaire.",
+        "icone": "⚠️",
+        "securisant": False,
+    },
+    "pied_bleu": {
+        "toxique": "Cortinaires violets à cortine rouille (Cortinarius violaceus, purpurascens)",
+        "gravite": "INDIGESTION",
+        "critere_cle": "Le pied bleu a une sporée rose-crème et aucune cortine filamenteuse ni résidu rouille. Odeur fruitée caractéristique de bonbon/anisette.",
+        "icone": "⚠️",
+        "securisant": False,
+    },
+    "pleurote_huitre": {
+        "toxique": "Pleurote de l'olivier (Omphalotus olearius)",
+        "gravite": "TRÈS TOXIQUE",
+        "critere_cle": "Le pleurote en huître sort de novembre à février par temps froid, de couleur gris plomb à beige. Le pleurote de l'olivier est orange vif à jaune cuivré et pousse en été/automne.",
+        "icone": "⚠️",
+        "securisant": False,
+    },
+    "morille_commune": {
+        "toxique": "Gyromitre fausse-morille (Gyromitra esculenta)",
+        "gravite": "MORTEL CRU",
+        "critere_cle": "La vraie morille a un chapeau creux alvéolé en rayons de miel, soudé au pied. Le gyromitre a un chapeau cérébriforme (en cervelle) brun-rouge. Toutes les morilles doivent impérativement être cuites au moins 20 minutes !",
+        "icone": "☠️",
+        "securisant": False,
+    },
+    "lactaire_delicieux": {
+        "toxique": "Lactaires à lait blanc très âcres (Lactarius torminosus, etc.)",
+        "gravite": "GASTRO-ENTÉRITE VIOLENTE",
+        "critere_cle": "Les lactaires comestibles saignent TOUJOURS d'un lait orange vif ou rouge sang à la cassure (jamais blanc). Poussent sous pins.",
+        "icone": "⚠️",
+        "securisant": False,
+    },
+    "marasme_oreades": {
+        "toxique": "Petits Clitocybes blancs des pelouses (Clitocybe rivulosa, cerussata)",
+        "gravite": "TRÈS TOXIQUE (Syndrome muscarinien)",
+        "critere_cle": "Le faux mousseron a un pied élastique imputrescible que l'on peut tordre sans le casser, des lames très espacées et une odeur d'amande amère.",
+        "icone": "⚠️",
+        "securisant": False,
+    },
+    "pied_de_mouton": {
+        "toxique": "Aucune confusion mortelle connue en Europe",
+        "gravite": "COMESTIBLE REMARQUABLE SANS RISQUE",
+        "critere_cle": "Unique grâce à ses aiguillons fragiles sous le chapeau qui se détachent facilement au doigt. Aucune espèce à aiguillons n'est toxique.",
+        "icone": "🛡️",
+        "securisant": True,
+    },
+    "pied_de_mouton_roussissant": {
+        "toxique": "Aucune confusion mortelle",
+        "gravite": "COMESTIBLE EXCELLENT SANS RISQUE",
+        "critere_cle": "Aiguillons bien visibles non décurrents, silhouette plus rousse et plus grêle que le grand pied-de-mouton.",
+        "icone": "🛡️",
+        "securisant": True,
+    },
+    "trompette_mort": {
+        "toxique": "Aucune confusion mortelle (Espèce signature)",
+        "gravite": "COMESTIBLE EXCELLENT SANS RISQUE",
+        "critere_cle": "Entonnoir entièrement creux noir à gris cendré, hyménium lisse ou très légèrement veiné. Impossible à confondre.",
+        "icone": "🛡️",
+        "securisant": True,
+    },
+    "chanterelle_tube": {
+        "toxique": "Aucune confusion dangereuse",
+        "gravite": "COMESTIBLE DÉLICIEUX SANS DANGER",
+        "critere_cle": "Pied tubulaire creux jaune vif éclatant, chapeau brun percé au centre, plis espacés décurrents.",
+        "icone": "🛡️",
+        "securisant": True,
+    },
+    "sparassis_crepu": {
+        "toxique": "Aucune confusion mortelle",
+        "gravite": "COMESTIBLE EXCELLENT SANS RISQUE",
+        "critere_cle": "Forme d'éponge ou d'énorme chou-fleur frisé au pied des vieux pins.",
+        "icone": "🛡️",
+        "securisant": True,
+    },
+    "oreille_de_judas": {
+        "toxique": "Aucune confusion mortelle",
+        "gravite": "COMESTIBLE SÛR",
+        "critere_cle": "Consistance gélatineuse en forme d'oreille humaine, pousse quasi-exclusivement sur bois mort de sureau.",
+        "icone": "🛡️",
+        "securisant": True,
+    },
+}
+
+def obtenir_confusion_toxique(espece_id):
+    """Renvoie la fiche de vigilance toxicologique contextuelle d'une espèce."""
+    cle = str(espece_id).strip().lower()
+    if cle in CONFUSIONS_TOXIQUES:
+        return CONFUSIONS_TOXIQUES[cle]
+    for k, val in CONFUSIONS_TOXIQUES.items():
+        if k in cle or cle in k:
+            return val
+    return {
+        "toxique": "Espèces voisines toxiques à vérifier en cas de doute",
+        "gravite": "VIGILANCE",
+        "critere_cle": "Toujours faire contrôler sa récolte auprès d'un pharmacien ou d'une société mycologique en cas de spécimen atypique.",
+        "icone": "ℹ️",
+        "securisant": False,
+    }
+
+
 # Groupes trophiques des espèces du catalogue :
 # - "lignicole" : pousse sur le bois (troncs, souches, racines) -> très peu dépendant du pH du sol minéral,
 #                 mais 100 % dépendant de la présence de l'arbre hôte.
@@ -2492,6 +2655,7 @@ def simuler_pousse_point_gps(latitude, longitude, past_days=20, forecast_days=11
                 "score_foret": score_biotope,
                 "score_sol": score_biotope,
             },
+            "confusion_toxique": obtenir_confusion_toxique(espece["id"]),
         }
         resultats_especes.append(item_esp)
 
@@ -2820,6 +2984,7 @@ def rechercher_zones_optimales_5km(
                         "biotope": _formater_libelle_biotope_zone(foret_z),
                         "latitude": lat_z,
                         "longitude": lon_z,
+                        "confusion_toxique": obtenir_confusion_toxique(esp_id_cand),
                     }
 
             if sc > meilleur_score:
@@ -2881,6 +3046,7 @@ def rechercher_zones_optimales_5km(
                 "nom_scientifique": meilleur_esp.get("nom_scientifique", ""),
                 "comestibilite": meilleur_esp.get("comestibilite", "Comestible"),
             },
+            "confusion_toxique": obtenir_confusion_toxique(meilleur_esp["id"]),
             "_parcelle": parcelle_poly,
         })
 

@@ -1,5 +1,11 @@
 import math
+import time
 import requests
+
+# Cache spatial haute performance en mémoire (TTL 12h à 24h)
+_CACHE_PARCELLES_FORET = {}
+_CACHE_MNT = {}
+_CACHE_PROFIL_ENV = {}
 
 
 def recuperer_altitude(latitude, longitude):
@@ -486,8 +492,15 @@ def construire_mnt_rayon(lat_centre, lon_centre, rayon_km=5.0, taille_grille=8):
     """
     Construit un Modèle Numérique de Terrain (MNT) régulier (8x8 = 64 points) couvrant
     le disque de `rayon_km` autour de (lat_centre, lon_centre) en une seule requête HTTP
-    groupée vers Open-Meteo Elevation.
+    groupée vers Open-Meteo Elevation, avec cache spatial (TTL 24h).
     """
+    cache_key = (round(lat_centre, 2), round(lon_centre, 2), round(rayon_km, 1), taille_grille)
+    maintenant = time.time()
+    if cache_key in _CACHE_MNT:
+        mnt_cached, exp = _CACHE_MNT[cache_key]
+        if maintenant < exp:
+            return mnt_cached
+
     marge_km = rayon_km + 0.4
     d_lat = marge_km / 111.132
     cos_lat = max(0.2, math.cos(math.radians(lat_centre)))
@@ -531,7 +544,7 @@ def construire_mnt_rayon(lat_centre, lon_centre, rayon_km=5.0, taille_grille=8):
     except requests.RequestException as e:
         print(f"Avertissement MNT Open-Meteo 5km : {e}")
 
-    return {
+    mnt_res = {
         "min_lat": min_lat,
         "max_lat": max_lat,
         "min_lon": min_lon,
@@ -539,6 +552,8 @@ def construire_mnt_rayon(lat_centre, lon_centre, rayon_km=5.0, taille_grille=8):
         "taille": taille_grille,
         "grille_z": grille_z,
     }
+    _CACHE_MNT[cache_key] = (mnt_res, maintenant + 86400)
+    return mnt_res
 
 
 def _interpoler_z_mnt(mnt, lat, lon):
@@ -688,8 +703,15 @@ def recuperer_polygones_foret_rayon(lat_centre, lon_centre, rayon_km=5.0):
     """
     Récupère en une seule requête WFS tous les polygones forestiers IGN BD Forêt V2
     situés dans un rayon de `rayon_km` autour de (lat_centre, lon_centre), avec leurs
-    boîtes englobantes précalculées pour l'indexation spatiale rapide.
+    boîtes englobantes précalculées pour l'indexation spatiale rapide et cache mémoire.
     """
+    cache_key = (round(lat_centre, 2), round(lon_centre, 2), round(rayon_km, 1))
+    maintenant = time.time()
+    if cache_key in _CACHE_PARCELLES_FORET:
+        parcelles_cached, exp = _CACHE_PARCELLES_FORET[cache_key]
+        if maintenant < exp:
+            return parcelles_cached
+
     d_lat = rayon_km / 111.132
     cos_lat = max(0.2, math.cos(math.radians(lat_centre)))
     d_lon = rayon_km / (111.320 * cos_lat)
@@ -747,6 +769,7 @@ def recuperer_polygones_foret_rayon(lat_centre, lon_centre, rayon_km=5.0):
     except requests.RequestException as e:
         print(f"Avertissement WFS IGN 5km : {e}")
 
+    _CACHE_PARCELLES_FORET[cache_key] = (parcelles, maintenant + 43200)
     return parcelles
 
 
@@ -899,8 +922,15 @@ def estimer_sol_local_zone(sol_reference, foret_zone, topo_zone):
 def recuperer_profil_environnemental(latitude, longitude):
     """
     Agrège la topographie (altitude, pente, exposition), les peuplements forestiers (IGN BD Forêt)
-    et les données pédologiques (SoilGrids).
+    et les données pédologiques (SoilGrids), avec cache mémoire (TTL 12h).
     """
+    cache_key = (round(latitude, 3), round(longitude, 3))
+    maintenant = time.time()
+    if cache_key in _CACHE_PROFIL_ENV:
+        prof_cached, exp = _CACHE_PROFIL_ENV[cache_key]
+        if maintenant < exp:
+            return prof_cached
+
     topographie = recuperer_topographie(latitude, longitude)
     foret = recuperer_foret_ign(latitude, longitude)
     essences_noms = [
@@ -909,13 +939,15 @@ def recuperer_profil_environnemental(latitude, longitude):
     ]
     sol = recuperer_donnees_sol(latitude, longitude, essences_foret=essences_noms)
 
-    return {
+    res = {
         "coordonnees": {"latitude": latitude, "longitude": longitude},
         "altitude_m": topographie.get("altitude_m"),
         "topographie": topographie,
         "sol": sol,
         "foret": foret,
     }
+    _CACHE_PROFIL_ENV[cache_key] = (res, maintenant + 43200)
+    return res
 
 
 if __name__ == "__main__":

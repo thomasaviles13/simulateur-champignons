@@ -1,5 +1,6 @@
 from typing import Optional
 from pathlib import Path
+import time
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -15,6 +16,10 @@ app = FastAPI(
     description="Prédiction de pousse de champignons sauvages comestibles (J à J+10)",
     version="2.0.0",
 )
+
+# Cache mémoire pour réponses sub-millisecondes (TTL 30 minutes)
+_CACHE_API_SIMULER = {}
+_CACHE_API_RADAR = {}
 
 STATIC_DIR = Path(__file__).parent / "static"
 STATIC_DIR.mkdir(exist_ok=True)
@@ -57,9 +62,19 @@ def api_simuler_point(
     """
     Exécute la simulation bioclimatique et édaphique complète sur (lat, lon)
     et renvoie l'environnement, la météo (J-20 à J+10) et les scores de J à J+10.
+    Réponse quasi-instantanée grâce au cache mémoire spatial.
     """
+    cache_key = (round(lat, 4), round(lon, 4))
+    maintenant = time.time()
+    if cache_key in _CACHE_API_SIMULER:
+        res, exp = _CACHE_API_SIMULER[cache_key]
+        if maintenant < exp:
+            return res
+
     try:
-        return simuler_pousse_point_gps(round(lat, 5), round(lon, 5))
+        data = simuler_pousse_point_gps(round(lat, 5), round(lon, 5))
+        _CACHE_API_SIMULER[cache_key] = (data, maintenant + 1800)
+        return data
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
@@ -84,14 +99,23 @@ def api_zones_espece_5km(
         raise HTTPException(status_code=422, detail="Veuillez spécifier espece_id ou nom_espece.")
     target_jour = decalage_jour if decalage_jour is not None else (jour_idx if jour_idx is not None else 0)
 
+    cache_key = (round(lat, 3), round(lon, 3), str(target_espece).lower(), round(rayon_km, 1), target_jour)
+    maintenant = time.time()
+    if cache_key in _CACHE_API_RADAR:
+        res, exp = _CACHE_API_RADAR[cache_key]
+        if maintenant < exp:
+            return res
+
     try:
-        return rechercher_zones_optimales_5km(
+        data = rechercher_zones_optimales_5km(
             round(lat, 5),
             round(lon, 5),
             espece_id=target_espece,
             rayon_km=rayon_km,
             decalage_jour=target_jour,
         )
+        _CACHE_API_RADAR[cache_key] = (data, maintenant + 1800)
+        return data
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:

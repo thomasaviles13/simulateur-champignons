@@ -876,9 +876,170 @@
       font-family: inherit !important;
     }
     .leaflet-popup-tip { background: rgba(15, 23, 42, 0.95) !important; }
+
+    /* Offline mode banner */
+    .offline-banner {
+      display: none;
+      background: linear-gradient(90deg, #b45309, #d97706);
+      color: #ffffff;
+      padding: 0.5rem 1rem;
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-align: center;
+      position: sticky;
+      top: 0;
+      z-index: 10002;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    }
+    .offline-banner.visible { display: block; }
+
+    /* Quick category filter chips */
+    .quick-filter-chips {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin: 0.85rem 0 0.5rem 0;
+    }
+    .chip-filter {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: var(--muted);
+      border-radius: 999px;
+      padding: 0.38rem 0.85rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-family: inherit;
+    }
+    .chip-filter:hover {
+      background: rgba(16, 185, 129, 0.1);
+      color: #ffffff;
+      border-color: rgba(16, 185, 129, 0.3);
+    }
+    .chip-filter.active {
+      background: rgba(16, 185, 129, 0.22);
+      color: #34d399;
+      border-color: #10b981;
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+    }
+
+    /* Harvest intuitive glance badge */
+    .harvest-glance-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.25rem 0.65rem;
+      border-radius: 999px;
+      font-size: 0.74rem;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      margin-top: 0.35rem;
+    }
+    .harvest-plein {
+      background: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+    .harvest-attentif {
+      background: rgba(245, 158, 11, 0.2);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.4);
+    }
+    .harvest-repos {
+      background: rgba(148, 163, 184, 0.15);
+      color: #94a3b8;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+    }
+
+    /* Safety pills */
+    .safety-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.25rem 0.55rem;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      max-width: 100%;
+    }
+    .safety-safe {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    .safety-warning {
+      background: rgba(239, 68, 68, 0.15);
+      color: #fca5a5;
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      cursor: pointer;
+    }
+
+    /* Toxic warning box */
+    .toxic-warning-box {
+      margin-top: 1.1rem;
+      border-radius: 12px;
+      padding: 0.9rem 1.1rem;
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      background: rgba(239, 68, 68, 0.08);
+    }
+    .toxic-warning-box.is-safe {
+      border-color: rgba(16, 185, 129, 0.35);
+      background: rgba(16, 185, 129, 0.08);
+    }
+
+    /* Modal offline */
+    .modal-offline {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 100000;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .modal-offline.visible { display: flex; }
+    .modal-offline-content {
+      background: #0f172a;
+      border: 1px solid var(--border-accent);
+      border-radius: 18px;
+      max-width: 580px;
+      width: 100%;
+      max-height: 85vh;
+      overflow-y: auto;
+      padding: 1.5rem;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+    }
+
+    .compass-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.76rem;
+      padding: 0.2rem 0.5rem;
+      background: rgba(6, 182, 212, 0.15);
+      border: 1px solid rgba(6, 182, 212, 0.35);
+      color: #67e8f9;
+      border-radius: 999px;
+      font-weight: 700;
+    }
   </style>
 </head>
 <body>
+
+  <!-- BANNIÈRE ÉTAT HORS-LIGNE -->
+  <div id="offline-banner" class="offline-banner">
+    🌲 Mode Forêt Hors-Ligne Actif • Vous naviguez sans réseau. Vos massifs et parcelles enregistrés restent disponibles.
+  </div>
 
   <!-- HEADER MODERNE -->
   <header>
@@ -887,9 +1048,9 @@
       <div>
         <h1 class="brand-title">
           Simulateur Champignons
-          <span style="font-size:0.72rem;background:rgba(16,185,129,0.18);color:#34d399;border:1px solid rgba(16,185,129,0.4);padding:0.15rem 0.5rem;border-radius:999px;">v1.3.0</span>
+          <span style="font-size:0.72rem;background:rgba(16,185,129,0.18);color:#34d399;border:1px solid rgba(16,185,129,0.4);padding:0.15rem 0.5rem;border-radius:999px;">v1.4.0 Expert</span>
         </h1>
-        <p class="brand-sub">Carte interactive & prévisions mycologiques (80 espèces contextuelles)</p>
+        <p class="brand-sub">Carte interactive, prédictions mycologiques & vigilance toxicologique</p>
       </div>
     </div>
 
@@ -911,6 +1072,21 @@
         />
         <div id="suggestions-ville" class="suggestions-dropdown"></div>
       </div>
+
+      <!-- BOUSSOLE TERRAIN -->
+      <button class="btn" id="btn-compass" onclick="basculerBoussole()" title="Activer la boussole et l'orientation en sous-bois">
+        🧭 Boussole
+      </button>
+
+      <!-- SAUVEGARDE HORS-LIGNE -->
+      <button class="btn" id="btn-save-offline" onclick="enregistrerMassifHorsLigne()" title="Sauvegarder ce massif et ses parcelles pour une consultation sans réseau en forêt">
+        💾 Enregistrer hors-ligne
+      </button>
+
+      <!-- TIROIR DES COINS ENREGISTRÉS -->
+      <button class="btn" id="btn-view-saved" onclick="ouvrirModalCoins()" title="Consulter mes massifs enregistrés pour le terrain">
+        📂 Mes coins (<span id="saved-coins-count">0</span>)
+      </button>
 
       <button class="btn-share" onclick="partagerLienLieu()" title="Copier ou envoyer le lien précis de ce coin">
         🔗 Partager ce coin
@@ -966,10 +1142,14 @@
       <div class="gauge-inner">
         <div class="gauge-score" id="verdict-score">--%</div>
         <div class="gauge-label" id="verdict-qualif">ANALYSE...</div>
+        <div id="verdict-panier" class="harvest-glance-badge harvest-repos">⏳ Calcul...</div>
       </div>
     </div>
     <div class="verdict-info">
-      <h2 id="verdict-titre">🍄 Bulletin Mycologique du Jour</h2>
+      <div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;margin-bottom:0.25rem;">
+        <h2 id="verdict-titre" style="margin:0;">🍄 Bulletin Mycologique du Jour</h2>
+        <span id="verdict-securite-badge" class="safety-pill safety-safe" style="font-size:0.75rem;">🛡️ Vigilance toxicologique active</span>
+      </div>
       <p id="verdict-desc">Interrogation de la météo des 20 derniers jours, du sol SoilGrids et des peuplements forestiers IGN en cours...</p>
     </div>
     <div class="podium-box" id="podium-especes">
@@ -1038,6 +1218,15 @@
           </div>
         </div>
 
+        <!-- BARRE DE CHIPS : FILTRES RAPIDES À UN CLIC (GRAND PUBLIC) -->
+        <div class="quick-filter-chips">
+          <button class="chip-filter active" onclick="filtrerParCategorie('tous', this)">✨ Tous (<span id="chip-total">44</span>)</button>
+          <button class="chip-filter" onclick="filtrerParCategorie('top', this)">🔥 Prêts à cueillir (≥ 60%)</button>
+          <button class="chip-filter" onclick="filtrerParCategorie('securisant', this)">🛡️ 100% Inconfondables & Sûrs</button>
+          <button class="chip-filter" onclick="filtrerParCategorie('bolets', this)">🍄 Bolets & Cèpes</button>
+          <button class="chip-filter" onclick="filtrerParCategorie('chanterelles', this)">🍂 Chanterelles & Pieds-de-mouton</button>
+        </div>
+
         <!-- VUE 1 : FICHES D'ESPÈCES GRAND PUBLIC -->
         <div id="view-cartes-container" class="species-cards-grid">
           <div style="grid-column: 1 / -1; padding: 2.5rem; text-align: center; color: var(--muted); font-size: 0.95rem;">
@@ -1053,6 +1242,9 @@
           </div>
           <p id="detail-desc" style="font-size:0.85rem;color:var(--muted);margin-top:0.4rem;"></p>
           <div class="detail-grid" id="detail-grid-jours"></div>
+
+          <!-- SECTION DE VIGILANCE TOXICOLOGIQUE DU COLLÈGE DES MYCOLOGUES -->
+          <div id="detail-toxic-box" class="toxic-warning-box" style="display:none;"></div>
         </div>
 
         <!-- VUE 2 : TABLEAU EXPERT J..J+10 -->
@@ -1224,6 +1416,25 @@
 
   </div>
 
+  <!-- MODAL DE GESTION DES COINS & MASSIFS HORS-LIGNE -->
+  <div id="modal-coins-offline" class="modal-offline" onclick="if(event.target === this) fermerModalCoins()">
+    <div class="modal-offline-content">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+        <h3 style="font-size:1.15rem;color:#ffffff;font-weight:800;display:flex;align-items:center;gap:0.5rem;margin:0;">
+          <span>📂 Mes Massifs & Parcelles Enregistrés</span>
+          <span style="font-size:0.72rem;background:rgba(16,185,129,0.2);color:#34d399;border:1px solid rgba(16,185,129,0.35);padding:0.15rem 0.5rem;border-radius:999px;">Mode Terrain</span>
+        </h3>
+        <button class="btn" onclick="fermerModalCoins()" style="padding:0.25rem 0.6rem;">✕</button>
+      </div>
+      <p style="font-size:0.8rem;color:var(--muted);margin-bottom:1rem;line-height:1.45;">
+        Ces massifs sont sauvegardés dans la mémoire de votre téléphone ou navigateur. Vous pouvez les rouvrir, explorer les prédictions et les parcelles forestières sans aucun réseau en sous-bois.
+      </p>
+      <div id="liste-coins-offline-body" style="display:flex;flex-direction:column;gap:0.75rem;">
+        <!-- Rempli dynamiquement -->
+      </div>
+    </div>
+  </div>
+
   <!-- TOAST NOTIFICATION FLOTTANT -->
   <div id="toast-notif" class="toast-notif"></div>
 
@@ -1239,6 +1450,17 @@
     let modeAffichageActif = 'cartes'; // 'cartes' ou 'tableau'
     let lieuActuelLabel = "";
     let timerRechercheVille = null;
+    let categorieFiltreActif = 'tous';
+    let boussoleActive = false;
+    let boussoleCap = null;
+    let spotsHorsLigne = [];
+
+    // Chargement initial des spots hors-ligne enregistrés
+    try {
+      spotsHorsLigne = JSON.parse(localStorage.getItem('simulateur_massifs_offline') || '[]');
+    } catch (e) {
+      spotsHorsLigne = [];
+    }
 
     /* INITIALISATION DE LA CARTE LEAFLET ACCUEIL */
     function initialiserCarte() {
@@ -1337,7 +1559,7 @@
 
       synchroniserUrlLieu(lat, lon, lieuActuelLabel);
 
-      // Sauvegarde dans le localStorage
+      // Sauvegarde du dernier lieu
       try {
         localStorage.setItem("simulateur_dernier_lieu", JSON.stringify({
           lat: lat,
@@ -1469,6 +1691,17 @@
       toast._timer = setTimeout(() => toast.classList.remove('visible'), 3500);
     }
 
+    /* HELPER : QUALIFICATION INTUITIVE DU STATUT DE RÉCOLTE (GRAND PUBLIC) */
+    function obtenirStatutRecolte(score) {
+      if (score >= 70) {
+        return { label: '🧺 Panier plein', classe: 'harvest-plein', desc: 'Conditions idéales de récolte' };
+      }
+      if (score >= 40) {
+        return { label: '🔍 Chasse attentive', classe: 'harvest-attentif', desc: 'Poussées actives et spécimens isolés' };
+      }
+      return { label: '💤 En repos', classe: 'harvest-repos', desc: 'Période de veille ou de maturation' };
+    }
+
     /* SIMULATION ET MISE À JOUR PROFIL */
     async function executerSimulation(lat, lon) {
       const tbody = document.getElementById("table-especes-body");
@@ -1544,6 +1777,14 @@
         verdictScoreEl.style.color = "#94a3b8";
       }
 
+      // MISE À JOUR BADGE INTUITIF DU PANIER (GLANCEABLE UI)
+      const stPanier = obtenirStatutRecolte(scoreGlob);
+      const panierPill = document.getElementById("verdict-panier");
+      if (panierPill) {
+        panierPill.textContent = stPanier.label;
+        panierPill.className = `harvest-glance-badge ${stPanier.classe}`;
+      }
+
       document.getElementById("verdict-qualif").textContent = verdict.qualificatif || (scoreGlob >= 75 ? "EXCELLENT" : (scoreGlob >= 45 ? "FAVORABLE" : "CALME"));
       document.getElementById("verdict-desc").textContent = verdict.conseil || (scoreGlob >= 45 ? "De très bonnes conditions de cueillette pour plusieurs espèces." : "Conditions modérées, consultez le scan à 5 km pour repérer les meilleurs vallons.");
 
@@ -1588,6 +1829,11 @@
           sel5km.appendChild(opt);
         });
       }
+
+      const chipTot = document.getElementById("chip-total");
+      if (chipTot) chipTot.textContent = listeEspeces.length;
+
+      mettreAJourCompteurCoins();
     }
 
     function classeScore(score) {
@@ -1598,7 +1844,15 @@
       return "s-none";
     }
 
-    /* AFFICHAGE DES ESPÈCES (FICHES / TABLEAU) */
+    /* FILTRAGE PAR CATÉGORIES RAPIDES */
+    function filtrerParCategorie(cat, el) {
+      categorieFiltreActif = cat;
+      document.querySelectorAll('.chip-filter').forEach(c => c.classList.remove('active'));
+      if (el) el.classList.add('active');
+      afficherTableauEspeces();
+    }
+
+    /* AFFICHAGE DES ESPÈCES (FICHES / TABLEAU) AVEC CATÉGORIES ET SÉCURITÉ TOXICOLOGIQUE */
     function afficherTableauEspeces() {
       if (!dernierRapport) return;
 
@@ -1614,6 +1868,7 @@
         const scoreMax = item.score_max_J10 ?? item.score_max_j10 ?? Math.max(...courbe.map(c => c.score_pct || 0), 0);
         const comestibilite = item.comestibilite || item.espece?.comestibilite || 'Comestible';
         const biotopePct = item.compatibilite_biotope_pct ?? Math.round(((item.aptitude_biotope?.score_foret || 0.8) * 100));
+        const conf = item.confusion_toxique || { securisant: false, toxique: 'Vérifier l\'espèce', gravite: 'Vigilance', critere_cle: 'Faire contrôler sa récolte' };
 
         return {
           id: item.id || item.espece?.id,
@@ -1625,13 +1880,27 @@
           biotopePct,
           courbe,
           stades: courbe[0]?.details?.stades_carpophore || {},
+          confusion_toxique: conf,
         };
       }).filter(item => {
         const nom = item.nom.toLowerCase();
         const nomSci = item.nom_scientifique.toLowerCase();
         const matchTexte = !filtreNom || nom.includes(filtreNom) || nomSci.includes(filtreNom);
         const matchScore = item.scoreJ >= scoreMin || item.scoreMax >= scoreMin;
-        return matchTexte && matchScore;
+
+        // Filtre par catégorie rapide
+        let matchCat = true;
+        if (categorieFiltreActif === 'top') {
+          matchCat = item.scoreJ >= 60;
+        } else if (categorieFiltreActif === 'securisant') {
+          matchCat = item.confusion_toxique.securisant === true;
+        } else if (categorieFiltreActif === 'bolets') {
+          matchCat = nom.includes('bolet') || nom.includes('cèpe');
+        } else if (categorieFiltreActif === 'chanterelles') {
+          matchCat = nom.includes('chanterelle') || nom.includes('girolle') || nom.includes('trompette') || nom.includes('mouton');
+        }
+
+        return matchTexte && matchScore && matchCat;
       });
 
       const compteur = document.getElementById("compteur-especes");
@@ -1640,12 +1909,13 @@
       // 1. VUE FICHES
       const cardsContainer = document.getElementById("view-cartes-container");
       if (items.length === 0) {
-        cardsContainer.innerHTML = `<div style="grid-column:1/-1;padding:2rem;text-align:center;color:var(--muted);">Aucune espèce ne correspond aux filtres.</div>`;
+        cardsContainer.innerHTML = `<div style="grid-column:1/-1;padding:2rem;text-align:center;color:var(--muted);">Aucune espèce ne correspond à ces critères.</div>`;
       } else {
         cardsContainer.innerHTML = items.map(item => {
           const scoreJ = item.scoreJ;
           const clScore = classeScore(scoreJ);
           const st = item.stades;
+          const conf = item.confusion_toxique;
 
           let statusTxt = "En repos végétatif";
           let statusColor = "var(--muted)";
@@ -1662,6 +1932,15 @@
 
           const escapedNom = item.nom.replace(/'/g, "\\'");
 
+          // Badge de sécurité toxicologique
+          let badgeSecurite = "";
+          if (conf.securisant) {
+            badgeSecurite = `<span class="safety-pill safety-safe" title="Aucune confusion mortelle connue en Europe">🛡️ Inconfondable (Sûr)</span>`;
+          } else {
+            const courtTox = (conf.toxique || '').split('(')[0].trim();
+            badgeSecurite = `<span class="safety-pill safety-warning" onclick="event.stopPropagation();afficherDetailEspece('${escapedNom}')" title="Attention aux confusions. Cliquez pour voir le critère discriminant.">⚠️ Vigilance : ${courtTox} ➔</span>`;
+          }
+
           return `
             <div class="species-card" onclick="afficherDetailEspece('${escapedNom}')">
               <div class="species-card-header">
@@ -1675,6 +1954,10 @@
               <div class="species-card-body">
                 <div class="species-status-row" style="color:${statusColor};">
                   <span>${statusTxt}</span>
+                </div>
+
+                <div style="margin-top:0.2rem;">
+                  ${badgeSecurite}
                 </div>
 
                 <div class="species-biotope-bars">
@@ -1702,7 +1985,6 @@
       if (items.length === 0) {
         tbody.innerHTML = `<tr><td colspan="13" style="text-align:center;padding:1.5rem;color:var(--muted);">Aucune espèce trouvée.</td></tr>`;
       } else {
-        // Mettre à jour l'en-tête du tableau avec les dates réelles
         if (items[0] && items[0].courbe) {
           const ths = document.querySelectorAll("#table-head-row th");
           items[0].courbe.forEach((jour, idx) => {
@@ -1722,8 +2004,13 @@
 
           return `
             <tr style="cursor:pointer;" onclick="afficherDetailEspece('${item.nom.replace(/'/g, "\\'")}')">
-              <td><strong>${item.nom}</strong><br><small style="color:var(--muted);">${item.nom_scientifique || ''}</small></td>
-              <td><span class="badge">${item.comestibilite}</span></td>
+              <td>
+                <strong>${item.nom}</strong><br>
+                <small style="color:var(--muted);">${item.nom_scientifique || ''}</small>
+              </td>
+              <td>
+                <span class="badge">${item.comestibilite}</span>
+              </td>
               ${cells}
             </tr>
           `;
@@ -1769,6 +2056,7 @@
       const nom = item.nom || item.espece?.nom || nomEspece;
       const comest = item.comestibilite || item.espece?.comestibilite || 'Comestible';
       const courbe = item.courbe_j_a_j10 || item.courbe_J_a_J10 || [];
+      const conf = item.confusion_toxique || { securisant: false, toxique: 'Espèces voisines', gravite: 'Vigilance', critere_cle: 'Contrôler en cas de doute' };
 
       const box = document.getElementById("detail-espece");
       document.getElementById("detail-titre").textContent = `🍄 ${nom} (${comest})`;
@@ -1789,6 +2077,23 @@
           </div>
         `;
       }).join('');
+
+      // Section de vigilance toxicologique
+      const toxBox = document.getElementById("detail-toxic-box");
+      if (toxBox) {
+        toxBox.style.display = "block";
+        toxBox.className = `toxic-warning-box ${conf.securisant ? 'is-safe' : ''}`;
+        toxBox.innerHTML = `
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.45rem;flex-wrap:wrap;gap:0.4rem;">
+            <strong style="color:#ffffff;font-size:0.95rem;">${conf.icone || '⚠️'} Vigilance Toxicologique du Mycologue</strong>
+            <span class="badge" style="background:${conf.securisant ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'};color:${conf.securisant ? '#34d399' : '#fca5a5'};border-color:${conf.securisant ? 'rgba(16,185,129,0.4)' : 'rgba(239,68,68,0.4)'};">${conf.gravite}</span>
+          </div>
+          <div style="font-size:0.83rem;color:#cbd5e1;line-height:1.5;">
+            <div style="margin-bottom:0.25rem;"><strong>Espèce piège à ne pas confondre :</strong> <span style="color:#ffffff;">${conf.toxique}</span></div>
+            <div style="color:#fcd34d;"><strong>Critère d'identification absolu :</strong> ${conf.critere_cle}</div>
+          </div>
+        `;
+      }
 
       box.style.display = "block";
       box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -1814,7 +2119,6 @@
         view.classList.toggle('active', idx === index);
       });
       if (index === 1) {
-        // Défilement doux vers la carte pour voir les zones projetées
         document.getElementById('map').scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
     }
@@ -1847,7 +2151,6 @@
         const nbZones = (dernierScan5km.zones_optimales || dernierScan5km.zones || []).length;
         if (statut) statut.textContent = `✅ ${nbZones} zone(s) identifiée(s)`;
 
-        // Scroll vers la carte pour voir les zones projetées
         document.getElementById('map').scrollIntoView({ behavior: 'smooth', block: 'center' });
       } catch (err) {
         if (statut) statut.textContent = "❌ Erreur scan";
@@ -1908,7 +2211,7 @@
         `);
       });
 
-      // 2. Affichage immédiat des meilleurs champignons trouvés à 5 km
+      // 2. Affichage immédiat des meilleurs champignons trouvés à 5 km avec vigilance toxicologique
       let html = "";
       if (topEspeces.length > 0) {
         html += `
@@ -1917,22 +2220,32 @@
               <span>🏆 Meilleurs champignons trouvés dans le rayon de 5 km :</span>
             </div>
             <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:0.75rem;">
-              ${topEspeces.slice(0, 8).map(esp => `
-                <div style="background:rgba(9,13,19,0.9);border:1px solid var(--border-accent);border-radius:12px;padding:0.85rem;display:flex;justify-content:space-between;align-items:center;gap:0.6rem;">
-                  <div>
-                    <div style="font-weight:700;color:#ffffff;font-size:0.95rem;">🍄 ${esp.nom}</div>
-                    <div style="font-size:0.76rem;color:var(--muted);margin-top:0.15rem;">
-                      ${esp.biotope || 'Forêt'} • à ${esp.meilleure_distance_km.toFixed(1)} km (${esp.direction})
+              ${topEspeces.slice(0, 8).map(esp => {
+                const conf = esp.confusion_toxique || { securisant: false, icone: '⚠️', toxique: 'Vérifier' };
+                const secBadge = conf.securisant
+                  ? `<span style="font-size:0.7rem;color:#34d399;">🛡️ Sûr</span>`
+                  : `<span style="font-size:0.7rem;color:#fca5a5;">${conf.icone} Risque</span>`;
+
+                return `
+                  <div style="background:rgba(9,13,19,0.9);border:1px solid var(--border-accent);border-radius:12px;padding:0.85rem;display:flex;justify-content:space-between;align-items:center;gap:0.6rem;">
+                    <div>
+                      <div style="font-weight:700;color:#ffffff;font-size:0.95rem;display:flex;align-items:center;gap:0.4rem;">
+                        <span>🍄 ${esp.nom}</span>
+                        ${secBadge}
+                      </div>
+                      <div style="font-size:0.76rem;color:var(--muted);margin-top:0.15rem;">
+                        ${esp.biotope || 'Forêt'} • à ${esp.meilleure_distance_km.toFixed(1)} km (${esp.direction})
+                      </div>
+                    </div>
+                    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.3rem;">
+                      <span class="score-cell ${classeScore(esp.score_max_pct)}">${esp.score_max_pct}%</span>
+                      <button class="btn" onclick="centrerSurZone(${esp.latitude}, ${esp.longitude})" style="padding:0.25rem 0.55rem;font-size:0.72rem;background:rgba(16,185,129,0.15);color:#34d399;border-color:rgba(16,185,129,0.3);">
+                        Voir ➔
+                      </button>
                     </div>
                   </div>
-                  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.3rem;">
-                    <span class="score-cell ${classeScore(esp.score_max_pct)}">${esp.score_max_pct}%</span>
-                    <button class="btn" onclick="centrerSurZone(${esp.latitude}, ${esp.longitude})" style="padding:0.25rem 0.55rem;font-size:0.72rem;background:rgba(16,185,129,0.15);color:#34d399;border-color:rgba(16,185,129,0.3);">
-                      Voir ➔
-                    </button>
-                  </div>
-                </div>
-              `).join('')}
+                `;
+              }).join('')}
             </div>
           </div>
         `;
@@ -1965,6 +2278,202 @@
       document.getElementById("resultats-scan-5km").innerHTML = "Scan réinitialisé. Les marqueurs ont été effacés de la carte.";
     }
 
+    /* ======================================================== */
+    /* GESTION MODE RANDOM HORS-LIGNE (PWA & LOCAL STORAGE)    */
+    /* ======================================================== */
+    function enregistrerMassifHorsLigne() {
+      if (!dernierRapport) {
+        afficherToast("⏳ Veuillez d'abord choisir un lieu à enregistrer.");
+        return;
+      }
+      const lat = parseFloat(document.getElementById("input-lat").value);
+      const lon = parseFloat(document.getElementById("input-lon").value);
+      const nom = lieuActuelLabel || `Massif (${lat.toFixed(4)}, ${lon.toFixed(4)})`;
+
+      const nouveauCoin = {
+        id: Date.now(),
+        nom: nom,
+        lat: lat,
+        lon: lon,
+        date: new Date().toLocaleDateString('fr-FR'),
+        rapport: dernierRapport,
+        radar: dernierScan5km
+      };
+
+      // Évite les doublons stricts à moins de 200m
+      spotsHorsLigne = spotsHorsLigne.filter(s => Math.abs(s.lat - lat) > 0.002 || Math.abs(s.lon - lon) > 0.002);
+      spotsHorsLigne.unshift(nouveauCoin);
+      if (spotsHorsLigne.length > 25) spotsHorsLigne.pop();
+
+      try {
+        localStorage.setItem('simulateur_massifs_offline', JSON.stringify(spotsHorsLigne));
+        mettreAJourCompteurCoins();
+        afficherToast(`💾 Massif "${nom}" enregistré pour vos sorties hors-ligne !`);
+      } catch (err) {
+        afficherToast("Erreur lors de la sauvegarde locale : " + err.message);
+      }
+    }
+
+    function mettreAJourCompteurCoins() {
+      const el = document.getElementById("saved-coins-count");
+      if (el) el.textContent = spotsHorsLigne.length;
+    }
+
+    function ouvrirModalCoins() {
+      const modal = document.getElementById("modal-coins-offline");
+      const listDiv = document.getElementById("liste-coins-offline-body");
+      if (!modal || !listDiv) return;
+
+      if (spotsHorsLigne.length === 0) {
+        listDiv.innerHTML = `
+          <div style="text-align:center;padding:2rem;color:var(--muted);font-size:0.9rem;">
+            🌲 Aucun massif enregistré pour l'instant.<br>
+            <span style="font-size:0.8rem;margin-top:0.5rem;display:block;">
+              Cliquez sur <strong>« 💾 Enregistrer hors-ligne »</strong> lorsque vous explorez un coin pour le garder dans votre poche sans réseau.
+            </span>
+          </div>
+        `;
+      } else {
+        listDiv.innerHTML = spotsHorsLigne.map((s, idx) => {
+          const top3 = (s.rapport?.especes_probables || s.rapport?.especes || []).slice(0, 3).map(e => e.nom.split('(')[0].trim()).join(' • ');
+          return `
+            <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:0.75rem 0.95rem;display:flex;justify-content:space-between;align-items:center;gap:0.75rem;">
+              <div>
+                <strong style="color:#ffffff;font-size:0.95rem;">📍 ${s.nom}</strong>
+                <div style="font-size:0.74rem;color:var(--muted);margin-top:0.2rem;">
+                  Enregistré le ${s.date} • (${s.lat.toFixed(3)}, ${s.lon.toFixed(3)})
+                </div>
+                ${top3 ? `<div style="font-size:0.74rem;color:#34d399;margin-top:0.2rem;">🍄 ${top3}</div>` : ''}
+              </div>
+              <div style="display:flex;gap:0.4rem;align-items:center;">
+                <button class="btn btn-accent" onclick="chargerCoinHorsLigne(${idx})" style="padding:0.35rem 0.75rem;font-size:0.8rem;">
+                  Charger ➔
+                </button>
+                <button class="btn" onclick="supprimerCoinHorsLigne(${idx})" style="padding:0.35rem 0.55rem;font-size:0.8rem;color:#fca5a5;border-color:rgba(239,68,68,0.3);" title="Supprimer">
+                  ✕
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      modal.classList.add("visible");
+    }
+
+    function fermerModalCoins() {
+      const modal = document.getElementById("modal-coins-offline");
+      if (modal) modal.classList.remove("visible");
+    }
+
+    function chargerCoinHorsLigne(idx) {
+      const s = spotsHorsLigne[idx];
+      if (!s) return;
+
+      fermerModalCoins();
+      document.getElementById("input-lat").value = s.lat;
+      document.getElementById("input-lon").value = s.lon;
+      lieuActuelLabel = s.nom;
+      document.getElementById("label-lieu-actif").textContent = s.nom;
+      if (marker) marker.setLatLng([s.lat, s.lon]);
+      if (map) map.setView([s.lat, s.lon], 13);
+
+      dernierRapport = s.rapport;
+      mettreAJourProfil(dernierRapport);
+      afficherTableauEspeces();
+
+      if (s.radar) {
+        dernierScan5km = s.radar;
+        afficherZonesScan5km(dernierScan5km);
+      }
+
+      afficherToast(`🌲 Massif "${s.nom}" restauré immédiatement (Mode Hors-Ligne) !`);
+    }
+
+    function supprimerCoinHorsLigne(idx) {
+      spotsHorsLigne.splice(idx, 1);
+      try {
+        localStorage.setItem('simulateur_massifs_offline', JSON.stringify(spotsHorsLigne));
+        mettreAJourCompteurCoins();
+        ouvrirModalCoins();
+      } catch (e) {}
+    }
+
+    /* ======================================================== */
+    /* BOUSSOLE & ORIENTATION TERRAIN                           */
+    /* ======================================================== */
+    function basculerBoussole() {
+      const btn = document.getElementById("btn-compass");
+      if (boussoleActive) {
+        boussoleActive = false;
+        if (btn) {
+          btn.textContent = "🧭 Boussole";
+          btn.style.color = "inherit";
+          btn.style.borderColor = "var(--border)";
+        }
+        window.removeEventListener("deviceorientation", gererOrientationBoussole);
+        return;
+      }
+
+      if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function") {
+        DeviceOrientationEvent.requestPermission()
+          .then(permissionState => {
+            if (permissionState === "granted") {
+              demarrerBoussole();
+            } else {
+              alert("Permission refusée pour la boussole.");
+            }
+          })
+          .catch(err => alert("Erreur boussole : " + err.message));
+      } else if (window.DeviceOrientationEvent) {
+        demarrerBoussole();
+      } else {
+        alert("Votre appareil ne prend pas en charge la boussole gyroscopique.");
+      }
+    }
+
+    function demarrerBoussole() {
+      boussoleActive = true;
+      const btn = document.getElementById("btn-compass");
+      if (btn) {
+        btn.textContent = "🧭 Boussole Active";
+        btn.style.color = "#67e8f9";
+        btn.style.borderColor = "#06b6d4";
+      }
+      window.addEventListener("deviceorientation", gererOrientationBoussole, true);
+      afficherToast("🧭 Boussole active : orientez votre téléphone en marchant.");
+    }
+
+    function gererOrientationBoussole(event) {
+      let heading = event.webkitCompassHeading || (event.alpha ? (360 - event.alpha) : null);
+      if (heading != null) {
+        boussoleCap = Math.round(heading);
+        const dirs = ["N", "NE", "E", "SE", "S", "SO", "O", "NO"];
+        const idx = Math.round(boussoleCap / 45) % 8;
+        const dir = dirs[idx];
+        const btn = document.getElementById("btn-compass");
+        if (btn) {
+          btn.innerHTML = `🧭 ${boussoleCap}° (${dir})`;
+        }
+      }
+    }
+
+    /* GESTION ÉTAT EN LIGNE / HORS-LIGNE */
+    function surveillerEtatConnexion() {
+      const banner = document.getElementById("offline-banner");
+      const maj = () => {
+        if (!navigator.onLine) {
+          if (banner) banner.classList.add("visible");
+          afficherToast("🌲 Réseau perdu : le Mode Terrain Hors-Ligne est actif.");
+        } else {
+          if (banner) banner.classList.remove("visible");
+        }
+      };
+      window.addEventListener("online", maj);
+      window.addEventListener("offline", maj);
+      maj();
+    }
+
     // Fermer les suggestions au clic extérieur
     document.addEventListener('click', (e) => {
       const wrap = document.querySelector('.search-box-wrap');
@@ -1977,6 +2486,8 @@
     /* CHARGEMENT INITIAL */
     window.addEventListener("DOMContentLoaded", () => {
       initialiserCarte();
+      surveillerEtatConnexion();
+      mettreAJourCompteurCoins();
 
       const urlParams = new URLSearchParams(window.location.search);
       const pLat = parseFloat(urlParams.get("lat"));
@@ -1984,11 +2495,9 @@
       const pNom = urlParams.get("nom") || urlParams.get("ville") || null;
 
       if (!isNaN(pLat) && !isNaN(pLon)) {
-        // 1. Paramètres dans l'URL
         if (map) map.setView([pLat, pLon], 13);
         chargerSpot(pLat, pLon, pNom);
       } else if (pNom) {
-        // 2. Nom de ville dans l'URL
         fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(pNom)}&type=municipality&limit=1`)
           .then(r => r.json())
           .then(data => {
@@ -2001,7 +2510,6 @@
           })
           .catch(() => chargerDernierLieuOuDefaut());
       } else {
-        // 3. Arrivée directe sur le site : charge le dernier spot visité ou spot de démo par défaut
         chargerDernierLieuOuDefaut();
       }
     });
@@ -2019,10 +2527,13 @@
         }
       } catch (e) {}
 
-      // Par défaut : centrer sur la France et charger Fontainebleau
+      // Par défaut : centrer sur Fontainebleau
       if (map) map.setView([48.4047, 2.6989], 12);
       chargerSpot(48.4047, 2.6989, "Forêt de Fontainebleau (77)");
     }
+  </script>
+</body>
+</html>
   </script>
 </body>
 </html>
