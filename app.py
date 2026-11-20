@@ -1,3 +1,4 @@
+from typing import Optional
 from pathlib import Path
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import FileResponse
@@ -67,21 +68,29 @@ def api_simuler_point(
 def api_zones_espece_5km(
     lat: float = Query(..., description="Latitude du centre", ge=-90.0, le=90.0),
     lon: float = Query(..., description="Longitude du centre", ge=-180.0, le=180.0),
-    espece_id: str = Query(..., description="Identifiant de l'espèce de champignon"),
+    espece_id: Optional[str] = Query(None, description="Identifiant de l'espèce"),
+    nom_espece: Optional[str] = Query(None, description="Nom vernaculaire de l'espèce"),
     rayon_km: float = Query(5.0, description="Rayon de recherche en km", ge=1.0, le=10.0),
-    decalage_jour: int = Query(0, description="Échéance en jours (0=J, 1=J+1, ..., 10=J+10)", ge=0, le=10),
+    decalage_jour: Optional[int] = Query(None, description="Échéance en jours (0=J, ..., 10=J+10)"),
+    jour_idx: Optional[int] = Query(None, description="Index du jour"),
 ):
     """
     Scanne un rayon de 5 km autour de (lat, lon) pour une espèce donnée et renvoie
     les meilleures zones de récolte (forêts IGN, lisières, prairies, versants).
+    Accepte indifféremment espece_id ou nom_espece, ainsi que decalage_jour ou jour_idx.
     """
+    target_espece = espece_id or nom_espece
+    if not target_espece:
+        raise HTTPException(status_code=422, detail="Veuillez spécifier espece_id ou nom_espece.")
+    target_jour = decalage_jour if decalage_jour is not None else (jour_idx if jour_idx is not None else 0)
+
     try:
         return rechercher_zones_optimales_5km(
             round(lat, 5),
             round(lon, 5),
-            espece_id=espece_id,
+            espece_id=target_espece,
             rayon_km=rayon_km,
-            decalage_jour=decalage_jour,
+            decalage_jour=target_jour,
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc

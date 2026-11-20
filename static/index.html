@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Simulateur Champignons • Bulletin & Pousses du Sous-bois</title>
+  <title>Simulateur Champignons • Carte Interactive & Bulletin du Sous-bois</title>
 
   <!-- PWA & Favicon -->
   <link rel="icon" type="image/png" href="/favicon.png" />
   <link rel="apple-touch-icon" href="/img/logo.png" />
   <link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="#060a10" />
-  <meta name="description" content="Bulletin mycologique du jour, prévisions de fructification sur 11 jours et analyse bioclimatique pour ramasser les champignons en France." />
+  <meta name="description" content="Carte interactive mycologique, prévisions de fructification de champignons sauvages en France et scanner de parcelles forestières à 5 km." />
 
   <!-- Google Fonts: Plus Jakarta Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -25,15 +25,13 @@
   <style>
     :root {
       --bg: #060a10;
-      --bg-card: rgba(13, 19, 29, 0.85);
-      --panel: rgba(15, 23, 42, 0.75);
-      --panel-alt: rgba(10, 16, 26, 0.9);
+      --panel: rgba(15, 23, 42, 0.85);
+      --panel-alt: rgba(10, 16, 26, 0.92);
       --border: rgba(255, 255, 255, 0.08);
       --border-accent: rgba(16, 185, 129, 0.35);
       --accent: #10b981;
-      --accent-glow: rgba(16, 185, 129, 0.3);
+      --accent-glow: rgba(16, 185, 129, 0.35);
       --amber: #f59e0b;
-      --amber-glow: rgba(245, 158, 11, 0.25);
       --text: #f1f5f9;
       --muted: #94a3b8;
       --radius: 18px;
@@ -44,7 +42,7 @@
     body {
       background-color: var(--bg);
       background-image: 
-        radial-gradient(at 15% 15%, rgba(16, 185, 129, 0.12) 0px, transparent 45%),
+        radial-gradient(at 15% 15%, rgba(16, 185, 129, 0.1) 0px, transparent 45%),
         radial-gradient(at 85% 85%, rgba(245, 158, 11, 0.08) 0px, transparent 40%),
         radial-gradient(at 50% 50%, rgba(9, 13, 19, 1) 0px, var(--bg) 100%);
       background-attachment: fixed;
@@ -52,320 +50,21 @@
       font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
       min-height: 100vh;
       -webkit-font-smoothing: antialiased;
+      padding-bottom: 4rem;
     }
 
-    /* Scrollbars */
+    /* Scrollbars discrètes */
     ::-webkit-scrollbar { width: 7px; height: 7px; }
     ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); }
     ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 999px; }
     ::-webkit-scrollbar-thumb:hover { background: rgba(16, 185, 129, 0.5); }
 
-    /* ========================================================= */
-    /* ÉCRAN D'ACCUEIL : 100% ÉPURÉ, CLAIR, SANS DONNÉE PARASITE */
-    /* ========================================================= */
-    #ecran-accueil {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 2rem 1.25rem 3rem;
-    }
-
-    .accueil-hero {
-      width: 100%;
-      max-width: 620px;
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 1.5rem;
-    }
-
-    .accueil-logo-wrap {
-      position: relative;
-    }
-
-    .accueil-logo {
-      width: 88px;
-      height: 88px;
-      border-radius: 22px;
-      box-shadow: 0 0 35px var(--accent-glow), 0 0 0 1px rgba(16, 185, 129, 0.4);
-      animation: logo-float 4s ease-in-out infinite alternate;
-    }
-
-    @keyframes logo-float {
-      0% { transform: translateY(0); box-shadow: 0 0 25px rgba(16, 185, 129, 0.35); }
-      100% { transform: translateY(-6px); box-shadow: 0 0 45px rgba(245, 158, 11, 0.4), 0 0 20px rgba(16, 185, 129, 0.6); }
-    }
-
-    .accueil-titre {
-      font-size: 2.1rem;
-      font-weight: 800;
-      letter-spacing: -0.03em;
-      line-height: 1.15;
-      background: linear-gradient(135deg, #ffffff 40%, #a7f3d0 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .accueil-badge-version {
-      font-size: 0.72rem;
-      font-weight: 700;
-      background: rgba(16, 185, 129, 0.18);
-      color: #34d399;
-      border: 1px solid rgba(16, 185, 129, 0.4);
-      padding: 0.2rem 0.55rem;
-      border-radius: 999px;
-      vertical-align: middle;
-      display: inline-block;
-      margin-left: 0.4rem;
-    }
-
-    .accueil-sous-titre {
-      font-size: 1.05rem;
-      color: var(--muted);
-      line-height: 1.5;
-      max-width: 520px;
-    }
-
-    .accueil-carte-action {
-      width: 100%;
-      background: rgba(13, 19, 29, 0.85);
-      border: 1px solid rgba(16, 185, 129, 0.35);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65), 0 0 30px rgba(16, 185, 129, 0.12);
-      border-radius: 24px;
-      padding: 1.85rem;
-      text-align: left;
-    }
-
-    .accueil-question {
-      font-size: 1.25rem;
-      font-weight: 800;
-      color: #ffffff;
-      margin-bottom: 0.35rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .accueil-indication {
-      font-size: 0.88rem;
-      color: var(--muted);
-      margin-bottom: 1.35rem;
-      line-height: 1.45;
-    }
-
-    /* Bouton GPS 1-Clic Géant */
-    .btn-accueil-gps {
-      width: 100%;
-      background: linear-gradient(135deg, #059669 0%, #10b981 100%);
-      color: #ffffff;
-      border: 1px solid rgba(110, 231, 183, 0.4);
-      padding: 1.1rem 1.4rem;
-      border-radius: 16px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      box-shadow: 0 8px 25px rgba(16, 185, 129, 0.35);
-      transition: all 0.25s ease;
-      font-family: inherit;
-    }
-
-    .btn-accueil-gps:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 12px 32px rgba(16, 185, 129, 0.55);
-    }
-
-    .gps-icon-large {
-      font-size: 1.8rem;
-      flex-shrink: 0;
-    }
-
-    .gps-text-wrap {
-      display: flex;
-      flex-direction: column;
-      text-align: left;
-    }
-
-    .gps-text-main {
-      font-size: 1.05rem;
-      font-weight: 800;
-      color: #ffffff;
-      letter-spacing: -0.01em;
-    }
-
-    .gps-text-sub {
-      font-size: 0.8rem;
-      color: rgba(255, 255, 255, 0.85);
-      font-weight: 500;
-    }
-
-    /* Séparateur OU */
-    .accueil-ou-separator {
-      display: flex;
-      align-items: center;
-      text-align: center;
-      margin: 1.35rem 0;
-      color: var(--muted);
-      font-size: 0.74rem;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-    }
-
-    .accueil-ou-separator::before,
-    .accueil-ou-separator::after {
-      content: '';
-      flex: 1;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.09);
-    }
-
-    .accueil-ou-separator span {
-      padding: 0 0.85rem;
-    }
-
-    /* Champ recherche commune */
-    .accueil-search-wrap {
-      position: relative;
-    }
-
-    .accueil-search-icon {
-      position: absolute;
-      left: 1rem;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 1.05rem;
-      color: var(--muted);
-      pointer-events: none;
-    }
-
-    .input-accueil-ville {
-      width: 100%;
-      background: rgba(9, 13, 19, 0.9);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      color: #ffffff;
-      padding: 0.95rem 1rem 0.95rem 2.8rem;
-      font-size: 0.96rem;
-      font-family: inherit;
-      outline: none;
-      transition: all 0.2s ease;
-    }
-
-    .input-accueil-ville:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
-    }
-
-    /* Suggestions Dropdown */
-    .suggestions-dropdown {
-      position: absolute;
-      top: calc(100% + 6px);
-      left: 0;
-      right: 0;
-      background: rgba(13, 19, 29, 0.98);
-      border: 1px solid var(--border-accent);
-      border-radius: 14px;
-      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.75);
-      z-index: 1000;
-      max-height: 250px;
-      overflow-y: auto;
-      display: none;
-      backdrop-filter: blur(16px);
-    }
-
-    .suggestion-item {
-      padding: 0.75rem 1rem;
-      cursor: pointer;
-      font-size: 0.88rem;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-      transition: background 0.15s ease;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .suggestion-item:last-child { border-bottom: none; }
-    .suggestion-item:hover { background: rgba(16, 185, 129, 0.18); color: #34d399; }
-
-    /* Box Dernier Coin */
-    .box-dernier-coin {
-      margin-top: 1rem;
-      padding: 0.85rem 1.1rem;
-      background: rgba(245, 158, 11, 0.12);
-      border: 1px solid rgba(245, 158, 11, 0.35);
-      border-radius: 14px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .box-dernier-coin:hover {
-      background: rgba(245, 158, 11, 0.22);
-      border-color: var(--amber);
-      transform: translateY(-1px);
-    }
-
-    /* Chips Massifs */
-    .accueil-suggestions-section {
-      margin-top: 1.35rem;
-    }
-
-    .accueil-sugg-titre {
-      font-size: 0.76rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--muted);
-      margin-bottom: 0.65rem;
-    }
-
-    .accueil-sugg-chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-    }
-
-    .btn-spot-chip {
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.09);
-      color: #cbd5e1;
-      padding: 0.45rem 0.85rem;
-      border-radius: 999px;
-      font-size: 0.82rem;
-      font-weight: 600;
-      white-space: nowrap;
-      cursor: pointer;
-      font-family: inherit;
-      transition: all 0.15s ease;
-    }
-
-    .btn-spot-chip:hover {
-      background: rgba(16, 185, 129, 0.18);
-      border-color: var(--accent);
-      color: #ffffff;
-      transform: translateY(-1px);
-    }
-
-    /* ========================================================= */
-    /* ÉCRAN RÉSULTATS : AFFICHÉ UNIQUEMENT APRÈS CHOIX DU LIEU */
-    /* ========================================================= */
-    #section-resultats {
-      display: none; /* Masqué tant qu'aucun lieu n'est sélectionné */
-      padding-bottom: 4rem;
-    }
-
-    /* HEADER SUPÉRIEUR RÉSULTATS */
+    /* HEADER SUPÉRIEUR STICKY */
     header {
       position: sticky;
       top: 0;
       z-index: 1000;
-      background: rgba(9, 13, 19, 0.92);
+      background: rgba(9, 13, 19, 0.94);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       border-bottom: 1px solid var(--border);
@@ -378,41 +77,225 @@
       box-shadow: 0 4px 25px rgba(0, 0, 0, 0.45);
     }
 
-    .brand-wrap { display: flex; align-items: center; gap: 0.75rem; }
+    .brand-wrap { display: flex; align-items: center; gap: 0.85rem; }
 
-    .logo-img-small {
-      width: 40px;
-      height: 40px;
-      border-radius: 10px;
-      box-shadow: 0 0 15px var(--accent-glow);
+    .logo-img {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px var(--accent-glow), 0 0 0 1px rgba(16, 185, 129, 0.4);
+      flex-shrink: 0;
     }
 
-    .brand-title-small {
-      font-size: 1.05rem;
+    .brand-title {
+      font-size: 1.15rem;
       font-weight: 800;
-      color: #ffffff;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #ffffff 40%, #a7f3d0 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
     }
 
-    /* BANDEAU DU LIEU ACTIF & ACTIONS */
-    .location-hero-bar {
+    .brand-sub {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    /* BARRE D'ACTION HEADER */
+    .header-actions-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      flex-wrap: wrap;
+    }
+
+    /* Bouton GPS Direct */
+    .btn-geoloc-main {
+      background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+      color: #ffffff;
+      border: 1px solid rgba(110, 231, 183, 0.45);
+      padding: 0.6rem 1.1rem;
+      border-radius: 999px;
+      font-size: 0.86rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+      font-family: inherit;
+    }
+
+    .btn-geoloc-main:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6);
+    }
+
+    /* Recherche ville */
+    .search-box-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-icon-inside {
+      position: absolute;
+      left: 0.85rem;
+      font-size: 0.88rem;
+      color: var(--muted);
+      pointer-events: none;
+    }
+
+    .input-ville {
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid var(--border);
+      color: #ffffff;
+      padding: 0.55rem 0.9rem 0.55rem 2.3rem;
+      border-radius: 999px;
+      font-size: 0.84rem;
+      font-family: inherit;
+      width: 230px;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .input-ville:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+      width: 270px;
+    }
+
+    .suggestions-dropdown {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      width: 320px;
+      background: rgba(13, 19, 29, 0.98);
+      border: 1px solid var(--border-accent);
+      border-radius: 14px;
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.75);
+      z-index: 2000;
+      max-height: 250px;
+      overflow-y: auto;
+      display: none;
+      backdrop-filter: blur(16px);
+    }
+
+    .suggestion-item {
+      padding: 0.7rem 0.95rem;
+      cursor: pointer;
+      font-size: 0.85rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      transition: background 0.15s ease;
+    }
+
+    .suggestion-item:last-child { border-bottom: none; }
+    .suggestion-item:hover { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+
+    /* Bouton Partager */
+    .btn-share {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(217, 119, 6, 0.25) 100%);
+      border: 1px solid rgba(245, 158, 11, 0.5);
+      color: #fde68a;
+      padding: 0.55rem 0.95rem;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-family: inherit;
+      transition: all 0.2s ease;
+    }
+
+    .btn-share:hover {
+      border-color: var(--amber);
+      color: #ffffff;
+      box-shadow: 0 4px 15px rgba(245, 158, 11, 0.35);
+      transform: translateY(-1px);
+    }
+
+    /* CONTENEUR CARTE PLEINE LARGEUR FRONT & CENTER */
+    .hero-map-section {
       max-width: 1400px;
       margin: 1rem auto 0;
-      padding: 0.85rem 1.25rem;
-      background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(15, 23, 42, 0.85) 100%);
+      padding: 0 1.25rem;
+    }
+
+    .map-card-wrapper {
+      background: var(--panel);
+      border: 1px solid var(--border-accent);
+      border-radius: var(--radius);
+      padding: 0.75rem;
+      box-shadow: 0 15px 45px rgba(0, 0, 0, 0.55), 0 0 25px rgba(16, 185, 129, 0.12);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .map-banner-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.4rem 0.6rem 0.75rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .map-instruction-tag {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .map-instruction-tag span.badge-click {
+      background: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+      font-size: 0.74rem;
+    }
+
+    #map {
+      width: 100%;
+      height: 480px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      z-index: 10;
+    }
+
+    @media (max-width: 768px) {
+      #map { height: 380px; }
+    }
+
+    /* BANDEAU DU POINT ACTIF SOUS LA CARTE */
+    .active-spot-bar {
+      margin-top: 0.75rem;
+      padding: 0.75rem 1rem;
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(9, 13, 19, 0.9) 100%);
       border: 1px solid rgba(16, 185, 129, 0.35);
-      border-radius: 16px;
+      border-radius: 14px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
-      gap: 0.85rem;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+      gap: 0.75rem;
     }
 
-    .location-badge-wrap {
+    .spot-info-text {
       display: flex;
       align-items: center;
-      gap: 0.65rem;
+      gap: 0.6rem;
+      font-size: 0.92rem;
     }
 
     .location-dot-pulse {
@@ -431,65 +314,163 @@
       100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
     }
 
-    .location-title-label {
-      color: var(--muted);
-      font-size: 0.82rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    .location-name-active {
-      font-weight: 800;
-      color: #ffffff;
-      font-size: 1.15rem;
-      letter-spacing: -0.01em;
-    }
-
-    .location-actions {
+    /* CHIPS DES SPOTS PRÉDÉFINIS */
+    .quick-spots-bar {
       display: flex;
-      align-items: center;
-      gap: 0.6rem;
-    }
-
-    .btn-action-pill {
-      font-family: inherit;
-      font-size: 0.84rem;
-      font-weight: 700;
-      padding: 0.55rem 1rem;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      background: rgba(15, 23, 42, 0.9);
-      color: #e2e8f0;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
       gap: 0.45rem;
-      transition: all 0.2s ease;
+      overflow-x: auto;
+      scrollbar-width: none;
     }
 
-    .btn-action-pill:hover {
+    .btn-spot-chip {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      color: #cbd5e1;
+      padding: 0.4rem 0.8rem;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s ease;
+    }
+
+    .btn-spot-chip:hover {
+      background: rgba(16, 185, 129, 0.18);
       border-color: var(--accent);
       color: #ffffff;
       transform: translateY(-1px);
     }
 
-    .btn-action-pill.btn-share {
-      background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(217, 119, 6, 0.25) 100%);
-      border-color: rgba(245, 158, 11, 0.5);
-      color: #fde68a;
+    /* HERO VERDICT CARD (BULLETIN MYCOLOGIQUE DU JOUR) */
+    .hero-verdict-card {
+      max-width: 1400px;
+      margin: 1.1rem auto 0;
+      padding: 1.4rem 1.6rem;
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.16) 0%, rgba(13, 19, 29, 0.95) 60%, rgba(245, 158, 11, 0.1) 100%);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      border-radius: 20px;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5), 0 0 25px rgba(16, 185, 129, 0.12);
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 1.6rem;
+      align-items: center;
     }
 
-    .btn-action-pill.btn-share:hover {
-      border-color: #f59e0b;
-      box-shadow: 0 4px 15px rgba(245, 158, 11, 0.35);
-      color: #fff;
+    @media (max-width: 900px) {
+      .hero-verdict-card { grid-template-columns: 1fr; text-align: center; gap: 1.25rem; }
+    }
+
+    .gauge-wrapper {
+      position: relative;
+      width: 105px;
+      height: 105px;
+      border-radius: 50%;
+      background: conic-gradient(from 180deg, #10b981 0%, #f59e0b 60%, #ef4444 100%);
+      padding: 7px;
+      box-shadow: 0 0 25px var(--accent-glow);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto;
+    }
+
+    .gauge-inner {
+      width: 100%;
+      height: 100%;
+      background: #090d13;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+
+    .gauge-score {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .gauge-label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: #34d399;
+      text-transform: uppercase;
+      margin-top: 0.2rem;
+      letter-spacing: 0.05em;
+    }
+
+    .verdict-info h2 {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: #ffffff;
+      margin-bottom: 0.35rem;
+      letter-spacing: -0.01em;
+    }
+
+    .verdict-info p {
+      font-size: 0.92rem;
+      color: #cbd5e1;
+      line-height: 1.5;
+      max-width: 620px;
+    }
+
+    .podium-box {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .podium-item {
+      background: rgba(9, 13, 19, 0.75);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 0.65rem 0.95rem;
+      text-align: center;
+      min-width: 115px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .podium-item:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    .podium-rank {
+      font-size: 0.68rem;
+      font-weight: 800;
+      color: #f59e0b;
+      text-transform: uppercase;
+    }
+
+    .podium-name {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin: 0.2rem 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 120px;
+    }
+
+    .podium-score {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #34d399;
     }
 
     /* BARRE D'ONGLETS DU TABLEAU DE BORD */
     .tab-bar-container {
       max-width: 1400px;
-      margin: 1.1rem auto 0;
+      margin: 1.25rem auto 0;
       padding: 0 1.25rem;
       display: flex;
       justify-content: space-between;
@@ -535,133 +516,10 @@
       background: rgba(255, 255, 255, 0.05);
     }
 
-    /* BULLETIN DU JOUR HERO CARD */
-    .hero-verdict-card {
-      max-width: 1400px;
-      margin: 1.1rem auto 0;
-      padding: 1.5rem 1.75rem;
-      background: linear-gradient(135deg, rgba(16, 185, 129, 0.16) 0%, rgba(13, 19, 29, 0.95) 60%, rgba(245, 158, 11, 0.1) 100%);
-      border: 1px solid rgba(16, 185, 129, 0.4);
-      border-radius: 20px;
-      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5), 0 0 25px rgba(16, 185, 129, 0.12);
-      display: grid;
-      grid-template-columns: auto 1fr auto;
-      gap: 1.75rem;
-      align-items: center;
-    }
-
-    @media (max-width: 900px) {
-      .hero-verdict-card { grid-template-columns: 1fr; text-align: center; gap: 1.25rem; }
-    }
-
-    .gauge-wrapper {
-      position: relative;
-      width: 110px;
-      height: 110px;
-      border-radius: 50%;
-      background: conic-gradient(from 180deg, #10b981 0%, #f59e0b 60%, #ef4444 100%);
-      padding: 7px;
-      box-shadow: 0 0 25px var(--accent-glow);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto;
-    }
-
-    .gauge-inner {
-      width: 100%;
-      height: 100%;
-      background: #090d13;
-      border-radius: 50%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-    }
-
-    .gauge-score {
-      font-size: 1.65rem;
-      font-weight: 800;
-      color: #ffffff;
-      line-height: 1;
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    .gauge-label {
-      font-size: 0.65rem;
-      font-weight: 700;
-      color: #34d399;
-      text-transform: uppercase;
-      margin-top: 0.2rem;
-      letter-spacing: 0.05em;
-    }
-
-    .verdict-info h2 {
-      font-size: 1.35rem;
-      font-weight: 800;
-      color: #ffffff;
-      margin-bottom: 0.4rem;
-      letter-spacing: -0.01em;
-    }
-
-    .verdict-info p {
-      font-size: 0.94rem;
-      color: #cbd5e1;
-      line-height: 1.5;
-      max-width: 620px;
-    }
-
-    .podium-box {
-      display: flex;
-      gap: 0.75rem;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-
-    .podium-item {
-      background: rgba(9, 13, 19, 0.75);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 0.65rem 0.95rem;
-      text-align: center;
-      min-width: 115px;
-      transition: all 0.2s ease;
-    }
-
-    .podium-item:hover {
-      border-color: var(--accent);
-      transform: translateY(-2px);
-    }
-
-    .podium-rank {
-      font-size: 0.68rem;
-      font-weight: 800;
-      color: #f59e0b;
-      text-transform: uppercase;
-    }
-
-    .podium-name {
-      font-size: 0.88rem;
-      font-weight: 700;
-      color: #ffffff;
-      margin: 0.2rem 0;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 120px;
-    }
-
-    .podium-score {
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: #34d399;
-    }
-
-    /* CONTENEUR PRINCIPAL */
+    /* CONTENEUR PRINCIPAL ONGLETS */
     .main-view-container {
       max-width: 1400px;
-      margin: 1.25rem auto 0;
+      margin: 1.1rem auto 0;
       padding: 0 1.25rem;
     }
 
@@ -678,7 +536,7 @@
       box-shadow: 0 12px 36px -8px rgba(0, 0, 0, 0.55);
     }
 
-    /* BARRE D'OUTILS ET COMMUTATEUR VUE FICHES / VUE TABLEAU */
+    /* VUE FICHES ESPÈCES */
     .view-switcher-bar {
       display: flex;
       justify-content: space-between;
@@ -690,7 +548,6 @@
       border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     }
 
-    /* GRILLE DE FICHES D'ESPÈCES GRAND PUBLIC */
     .species-cards-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -707,8 +564,7 @@
       justify-content: space-between;
       gap: 0.85rem;
       transition: all 0.2s ease;
-      position: relative;
-      overflow: hidden;
+      cursor: pointer;
     }
 
     .species-card:hover {
@@ -822,7 +678,40 @@
       color: #ffffff;
     }
 
-    /* TABLEAU EXPERT J..J+10 */
+    /* TIROIR DÉTAIL D'ESPÈCE */
+    .detail-box {
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      border-radius: 18px;
+      padding: 1.25rem;
+      margin-bottom: 1.25rem;
+      display: none;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(16, 185, 129, 0.15) inset;
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(11, minmax(88px, 1fr));
+      gap: 0.6rem;
+      margin-top: 1rem;
+      overflow-x: auto;
+      padding-bottom: 0.4rem;
+    }
+
+    .day-card {
+      background: rgba(9, 13, 19, 0.85);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0.6rem;
+      text-align: center;
+      font-size: 0.77rem;
+      transition: all 0.2s ease;
+    }
+
+    .day-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .day-card strong { display: block; color: #ffffff; margin-bottom: 0.3rem; font-weight: 700; }
+
+    /* TABLEAU EXPERT */
     .table-responsive {
       overflow-x: auto;
       border-radius: 14px;
@@ -871,58 +760,16 @@
     .s-low { background: rgba(244, 63, 94, 0.15); color: #fecdd3; border: 1px solid rgba(244, 63, 94, 0.3); }
     .s-none { background: rgba(255, 255, 255, 0.03); color: #64748b; border: 1px solid rgba(255, 255, 255, 0.05); }
 
-    /* DETAIL BOX D'UNE ESPÈCE */
-    .detail-box {
-      background: rgba(15, 23, 42, 0.9);
-      border: 1px solid rgba(16, 185, 129, 0.4);
-      border-radius: 18px;
-      padding: 1.25rem;
-      margin-bottom: 1.25rem;
-      display: none;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(16, 185, 129, 0.15) inset;
-    }
-
-    .detail-grid {
-      display: grid;
-      grid-template-columns: repeat(11, minmax(88px, 1fr));
-      gap: 0.6rem;
-      margin-top: 1rem;
-      overflow-x: auto;
-      padding-bottom: 0.4rem;
-    }
-
-    .day-card {
+    /* RADAR 5 KM PANEL */
+    .radar-controls-card {
       background: rgba(9, 13, 19, 0.85);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 0.6rem;
-      text-align: center;
-      font-size: 0.77rem;
-      transition: all 0.2s ease;
+      border: 1px solid var(--border-accent);
+      border-radius: 16px;
+      padding: 1.25rem;
+      margin-bottom: 1rem;
     }
 
-    .day-card:hover { border-color: var(--accent); transform: translateY(-2px); }
-    .day-card strong { display: block; color: #ffffff; margin-bottom: 0.3rem; font-weight: 700; }
-
-    /* ONGLET CARTE & RADAR */
-    .map-radar-layout {
-      display: grid;
-      grid-template-columns: 1fr 420px;
-      gap: 1.25rem;
-    }
-
-    @media (max-width: 1050px) {
-      .map-radar-layout { grid-template-columns: 1fr; }
-    }
-
-    #map {
-      width: 100%;
-      height: 520px;
-      border-radius: 14px;
-      border: 1px solid var(--border);
-    }
-
-    /* ONGLET METEO ET SOUS-BOIS */
+    /* MÉTÉO & SOUS-BOIS */
     .env-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -966,7 +813,7 @@
       margin: 0.2rem 0.25rem 0 0;
     }
 
-    /* BOUTONS ET INPUTS GÉNÉRIQUES */
+    /* BOUTONS ET INPUTS */
     .btn {
       font-family: inherit;
       background: rgba(15, 23, 42, 0.85);
@@ -987,7 +834,7 @@
     .btn-accent { background: var(--accent); color: #fff; border-color: var(--accent); }
     .btn-accent:hover { background: #059669; }
 
-    /* TOAST NOTIFICATION */
+    /* TOAST */
     .toast-notif {
       position: fixed;
       bottom: 2rem;
@@ -1033,370 +880,335 @@
 </head>
 <body>
 
-  <!-- ======================================================== -->
-  <!-- 1. ÉCRAN D'ACCUEIL : ZÉRO DONNÉE PARASITE, CHOIX DU LIEU -->
-  <!-- ======================================================== -->
-  <div id="ecran-accueil">
-    <div class="accueil-hero">
-      <div class="accueil-logo-wrap">
-        <img src="/img/logo.png" alt="Logo Simulateur" class="accueil-logo" />
-      </div>
+  <!-- HEADER MODERNE -->
+  <header>
+    <div class="brand-wrap">
+      <img src="/img/logo.png" alt="Logo" class="logo-img" />
       <div>
-        <h1 class="accueil-titre">
+        <h1 class="brand-title">
           Simulateur Champignons
-          <span class="accueil-badge-version">v1.3.0</span>
+          <span style="font-size:0.72rem;background:rgba(16,185,129,0.18);color:#34d399;border:1px solid rgba(16,185,129,0.4);padding:0.15rem 0.5rem;border-radius:999px;">v1.3.0</span>
         </h1>
-        <p class="accueil-sous-titre">
-          La météo et les prévisions de pousse des champignons dans vos sous-bois.
-        </p>
+        <p class="brand-sub">Carte interactive & prévisions mycologiques (80 espèces contextuelles)</p>
+      </div>
+    </div>
+
+    <!-- BOUTONS D'ACTION DIRECTS -->
+    <div class="header-actions-wrap">
+      <button class="btn-geoloc-main" id="btn-geoloc-top" onclick="geolocaliserUtilisateur()" title="Me localiser automatiquement via GPS">
+        📍 Me localiser (GPS)
+      </button>
+
+      <div class="search-box-wrap">
+        <span class="search-icon-inside">🔍</span>
+        <input
+          type="text"
+          id="input-ville"
+          class="input-ville"
+          placeholder="Chercher une commune ou forêt..."
+          autocomplete="off"
+          oninput="rechercherCommuneGouv(this.value)"
+        />
+        <div id="suggestions-ville" class="suggestions-dropdown"></div>
       </div>
 
-      <div class="accueil-carte-action">
-        <h2 class="accueil-question">🍄 Où partez-vous aux champignons ?</h2>
-        <p class="accueil-indication">
-          Indiquez votre lieu de cueillette pour afficher le bulletin personnalisé de votre forêt :
-        </p>
+      <button class="btn-share" onclick="partagerLienLieu()" title="Copier ou envoyer le lien précis de ce coin">
+        🔗 Partager ce coin
+      </button>
+    </div>
+  </header>
 
-        <!-- Action 1 : GPS 1-Clic Automatique -->
-        <button class="btn-accueil-gps" id="btn-accueil-gps" onclick="geolocaliserAccueil()">
-          <span class="gps-icon-large">📍</span>
-          <div class="gps-text-wrap">
-            <span class="gps-text-main">Voir la situation autour de moi</span>
-            <span class="gps-text-sub">Localisation automatique via GPS (1 clic)</span>
-          </div>
-        </button>
-
-        <div class="accueil-ou-separator">
-          <span>OU CHERCHEZ UNE COMMUNE EN FRANCE</span>
+  <!-- ======================================================== -->
+  <!-- CARTE INTERACTIVE : FRONT & CENTER À L'ARRIVÉE SUR LE SITE -->
+  <!-- ======================================================== -->
+  <section class="hero-map-section">
+    <div class="map-card-wrapper">
+      <div class="map-banner-header">
+        <div class="map-instruction-tag">
+          <span>🗺️ Carte Interactive des Sous-bois</span>
+          <span class="badge-click">👆 Touchez ou cliquez sur la forêt pour poser votre repère</span>
         </div>
-
-        <!-- Action 2 : Saisie d'une ville / forêt -->
-        <div class="accueil-search-wrap">
-          <span class="accueil-search-icon">🔍</span>
-          <input
-            type="text"
-            id="input-accueil-ville"
-            class="input-accueil-ville"
-            placeholder="Ex : Fontainebleau, Morvan, Grenoble, Rambouillet..."
-            autocomplete="off"
-            oninput="rechercherCommuneAccueil(this.value)"
-          />
-          <div id="suggestions-accueil-ville" class="suggestions-dropdown"></div>
-        </div>
-
-        <!-- Raccourci Dernier Lieu Consulté -->
-        <div id="box-dernier-coin" class="box-dernier-coin" style="display:none;"></div>
-
-        <!-- Suggestions Express de Grands Massifs Forestiers -->
-        <div class="accueil-suggestions-section">
-          <div class="accueil-sugg-titre">🌿 Ou explorez un massif forestier :</div>
-          <div class="accueil-sugg-chips">
-            <button class="btn-spot-chip" onclick="selectionnerLieuAccueil(48.4047, 2.6989, 'Fontainebleau (77)')">🌳 Fontainebleau (77)</button>
-            <button class="btn-spot-chip" onclick="selectionnerLieuAccueil(47.2833, 4.0833, 'Morvan (58)')">🌲 Morvan (58)</button>
-            <button class="btn-spot-chip" onclick="selectionnerLieuAccueil(48.0167, -2.1833, 'Brocéliande (35)')">🧙 Brocéliande (35)</button>
-            <button class="btn-spot-chip" onclick="selectionnerLieuAccueil(44.1325, -0.8211, 'Landes (40)')">🌲 Landes (40)</button>
-            <button class="btn-spot-chip" onclick="selectionnerLieuAccueil(50.2215, 3.7580, 'Forêt de Mormal (59)')">🌲 Mormal (59)</button>
-            <button class="btn-spot-chip" onclick="selectionnerLieuAccueil(45.7719, 2.9614, 'Massif Central (63)')">⛰️ Massif Central (63)</button>
-            <button class="btn-spot-chip" onclick="selectionnerLieuAccueil(45.4105, 5.2400, 'Terres Froides (38)')">🌰 Terres Froides (38)</button>
-          </div>
+        <div style="font-size:0.78rem;color:var(--muted);">
+          Couches : Satellite IGN Ortho • Peuplements BD Forêt V2 • Topo IGN
         </div>
       </div>
+
+      <!-- CARTE LEAFLET INTERACTIVE -->
+      <div id="map"></div>
+
+      <!-- BANDEAU DU SPOT ACTIF & RACCOURCIS MASSIFS -->
+      <div class="active-spot-bar">
+        <div class="spot-info-text">
+          <span class="location-dot-pulse"></span>
+          <span style="color:var(--muted);font-size:0.8rem;text-transform:uppercase;font-weight:700;">Point actif :</span>
+          <strong id="label-lieu-actif" style="color:#ffffff;font-size:1.05rem;">Chargement du spot...</strong>
+        </div>
+
+        <div class="quick-spots-bar">
+          <span style="font-size:0.75rem;color:var(--muted);align-self:center;margin-right:0.2rem;">Coins célèbres :</span>
+          <button class="btn-spot-chip" onclick="chargerSpot(48.4047, 2.6989, 'Fontainebleau (77)')">🌳 Fontainebleau</button>
+          <button class="btn-spot-chip" onclick="chargerSpot(47.2833, 4.0833, 'Morvan (58)')">🌲 Morvan</button>
+          <button class="btn-spot-chip" onclick="chargerSpot(48.0167, -2.1833, 'Brocéliande (35)')">🧙 Brocéliande</button>
+          <button class="btn-spot-chip" onclick="chargerSpot(50.2215, 3.7580, 'Forêt de Mormal (59)')">🌲 Mormal</button>
+          <button class="btn-spot-chip" onclick="chargerSpot(44.1325, -0.8211, 'Landes (40)')">🌲 Landes</button>
+          <button class="btn-spot-chip" onclick="chargerSpot(45.4105, 5.2400, 'Terres Froides (38)')">🌰 Terres Froides</button>
+          <button class="btn-spot-chip" onclick="chargerSpot(45.7719, 2.9614, 'Massif Central (63)')">⛰️ Massif Central</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================================================== -->
+  <!-- BULLETIN MYCOLOGIQUE DU JOUR POUR CE POINT PRÉCIS       -->
+  <!-- ======================================================== -->
+  <div class="hero-verdict-card" id="hero-verdict-card">
+    <div class="gauge-wrapper">
+      <div class="gauge-inner">
+        <div class="gauge-score" id="verdict-score">--%</div>
+        <div class="gauge-label" id="verdict-qualif">ANALYSE...</div>
+      </div>
+    </div>
+    <div class="verdict-info">
+      <h2 id="verdict-titre">🍄 Bulletin Mycologique du Jour</h2>
+      <p id="verdict-desc">Interrogation de la météo des 20 derniers jours, du sol SoilGrids et des peuplements forestiers IGN en cours...</p>
+    </div>
+    <div class="podium-box" id="podium-especes">
+      <!-- Les 3 espèces phares prêtes à être récoltées aujourd'hui -->
     </div>
   </div>
 
+  <!-- NAVIGATION PAR ONGLETS -->
+  <div class="tab-bar-container">
+    <div class="tabs-nav">
+      <button class="tab-btn active" id="tab-btn-0" onclick="changerOngletWeb(0)">
+        🍄 Pousses & Espèces
+      </button>
+      <button class="tab-btn" id="tab-btn-1" onclick="changerOngletWeb(1)">
+        📡 Scanner Radar 5 km
+      </button>
+      <button class="tab-btn" id="tab-btn-2" onclick="changerOngletWeb(2)">
+        🌲 Météo & Sol du Sous-bois
+      </button>
+    </div>
+  </div>
 
-  <!-- ======================================================== -->
-  <!-- 2. SECTION RÉSULTATS : 100% PERTINENTE POUR LE LIEU CHOISI -->
-  <!-- ======================================================== -->
-  <div id="section-resultats">
-    
-    <!-- HEADER RÉSULTATS -->
-    <header>
-      <div class="brand-wrap">
-        <img src="/img/logo.png" alt="Logo" class="logo-img-small" />
-        <div>
-          <div class="brand-title-small">Simulateur Champignons</div>
-          <div style="font-size:0.75rem;color:var(--muted);">Bulletin Mycologique • 80 espèces contextuelles</div>
+  <!-- CONTENEUR DES ONGLETS -->
+  <div class="main-view-container">
+
+    <!-- ========================================== -->
+    <!-- ONGLET 0 : POUSSES & ESPÈCES DU SPOT       -->
+    <!-- ========================================== -->
+    <div class="view-tab-content active" id="view-tab-0">
+      <div class="card">
+        <div class="view-switcher-bar">
+          <div>
+            <h2 style="margin:0;padding:0;border:none;font-size:1.1rem;color:#ffffff;">
+              <span>Espèces comestibles sélectionnées pour ce terroir</span>
+              <span id="compteur-especes" style="font-size:0.8rem;color:#34d399;font-weight:600;margin-left:0.5rem;"></span>
+            </h2>
+            <div style="font-size:0.78rem;color:var(--muted);margin-top:0.2rem;">
+              Adaptées au mois en cours, à l'altitude locale et aux essences d'arbres observées.
+            </div>
+          </div>
+
+          <div style="display:flex;gap:0.6rem;align-items:center;flex-wrap:wrap;">
+            <input
+              type="search"
+              id="filtre-recherche"
+              placeholder="🔍 Rechercher (Cèpe, Girolle, Morille...)"
+              oninput="afficherTableauEspeces()"
+              style="background:rgba(9,13,19,0.85);border:1px solid var(--border);color:#fff;padding:0.45rem 0.8rem;border-radius:10px;font-size:0.82rem;font-family:inherit;min-width:200px;"
+            />
+            <select id="filtre-score" onchange="afficherTableauEspeces()" class="btn" style="padding:0.45rem 0.6rem;">
+              <option value="0">Toutes les espèces actives</option>
+              <option value="40">≥ 40 %</option>
+              <option value="65">≥ 65 % (Favorable)</option>
+              <option value="80">≥ 80 % (Optimal)</option>
+            </select>
+
+            <!-- BOUTON BASCULE VUE FICHES GRAND PUBLIC / VUE TABLEAU EXPERT -->
+            <div style="display:flex;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:10px;padding:2px;">
+              <button class="btn" id="btn-mode-cartes" onclick="basculerModeAffichage('cartes')" style="padding:0.35rem 0.65rem;border:none;background:rgba(16,185,129,0.2);color:#34d399;">
+                🃏 Fiches
+              </button>
+              <button class="btn" id="btn-mode-tableau" onclick="basculerModeAffichage('tableau')" style="padding:0.35rem 0.65rem;border:none;background:transparent;color:var(--muted);">
+                📊 Tableau J..J+10
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- VUE 1 : FICHES D'ESPÈCES GRAND PUBLIC -->
+        <div id="view-cartes-container" class="species-cards-grid">
+          <div style="grid-column: 1 / -1; padding: 2.5rem; text-align: center; color: var(--muted); font-size: 0.95rem;">
+            ⏳ Analyse bioclimatique et calcul des poussées en cours...
+          </div>
+        </div>
+
+        <!-- TIROIR DE DÉTAIL D'ESPÈCE -->
+        <div id="detail-espece" class="detail-box">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <h3 id="detail-titre" style="font-size:1.15rem;font-weight:800;color:#ffffff;">Détail de la trajectoire J..J+10</h3>
+            <button class="btn" onclick="document.getElementById('detail-espece').style.display='none'" style="padding:0.3rem 0.7rem;font-size:0.75rem;">✕ Fermer</button>
+          </div>
+          <p id="detail-desc" style="font-size:0.85rem;color:var(--muted);margin-top:0.4rem;"></p>
+          <div class="detail-grid" id="detail-grid-jours"></div>
+        </div>
+
+        <!-- VUE 2 : TABLEAU EXPERT J..J+10 -->
+        <div id="view-tableau-container" style="display:none;margin-top:1rem;">
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr id="table-head-row">
+                  <th>Espèce</th>
+                  <th>Comestibilité</th>
+                  <th>J (Aujourd'hui)</th>
+                  <th>J+1</th>
+                  <th>J+2</th>
+                  <th>J+3</th>
+                  <th>J+4</th>
+                  <th>J+5</th>
+                  <th>J+6</th>
+                  <th>J+7</th>
+                  <th>J+8</th>
+                  <th>J+9</th>
+                  <th>J+10</th>
+                </tr>
+              </thead>
+              <tbody id="table-especes-body">
+                <tr>
+                  <td colspan="13" style="text-align:center;padding:2rem;color:var(--muted);">
+                    Sélectionnez un point pour calculer les prévisions.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
-
-      <div style="display:flex;align-items:center;gap:0.6rem;">
-        <button class="btn-action-pill" onclick="retourAccueil()" title="Choisir une autre commune">
-          🔍 Changer de ville
-        </button>
-        <button class="btn-action-pill btn-share" onclick="partagerLienLieu()" title="Partager le lien direct de ce coin">
-          🔗 Partager ce coin
-        </button>
-      </div>
-    </header>
-
-    <!-- BANDEAU DE SITUATION ACTUELLE -->
-    <div class="location-hero-bar">
-      <div class="location-badge-wrap">
-        <span class="location-dot-pulse"></span>
-        <span class="location-title-label">Situation mycologique à :</span>
-        <span class="location-name-active" id="label-lieu-actif">Chargement...</span>
-      </div>
-      <div class="location-actions">
-        <button class="btn-action-pill" onclick="retourAccueil()" title="Changer d'endroit">
-          ✏️ Changer de lieu
-        </button>
-        <button class="btn-action-pill btn-share" onclick="partagerLienLieu()" title="Copier ou envoyer le lien">
-          🔗 Partager ce coin
-        </button>
-      </div>
     </div>
 
-    <!-- ONGLETS DE NAVIGATION -->
-    <div class="tab-bar-container">
-      <div class="tabs-nav">
-        <button class="tab-btn active" id="tab-btn-0" onclick="changerOngletWeb(0)">
-          🍄 Pousses & Espèces
-        </button>
-        <button class="tab-btn" id="tab-btn-1" onclick="changerOngletWeb(1)">
-          🗺️ Carte & Radar 5 km
-        </button>
-        <button class="tab-btn" id="tab-btn-2" onclick="changerOngletWeb(2)">
-          🌲 Météo & Sol du Sous-bois
-        </button>
-      </div>
-    </div>
+    <!-- ========================================== -->
+    <!-- ONGLET 1 : SCANNER RADAR 5 KM              -->
+    <!-- ========================================== -->
+    <div class="view-tab-content" id="view-tab-1">
+      <div class="card">
+        <div class="radar-controls-card">
+          <h2 style="font-size:1.15rem;font-weight:800;color:#ffffff;margin-bottom:0.6rem;">
+            📡 Scanner les parcelles forestières favorables à 5 km
+          </h2>
+          <p style="font-size:0.85rem;color:var(--muted);margin-bottom:1.1rem;line-height:1.45;">
+            Analyse chaque peuplement forestier IGN BD Forêt V2 et versant dans un disque de 5 km autour du point sélectionné, et cartographie les meilleurs spots directement sur la carte.
+          </p>
 
-    <!-- BULLETIN MYCOLOGIQUE DU JOUR (HERO VERDICT CARD) -->
-    <div class="hero-verdict-card" id="hero-verdict-card">
-      <div class="gauge-wrapper">
-        <div class="gauge-inner">
-          <div class="gauge-score" id="verdict-score">--%</div>
-          <div class="gauge-label" id="verdict-qualif">ANALYSE...</div>
-        </div>
-      </div>
-      <div class="verdict-info">
-        <h2 id="verdict-titre">🍄 Bulletin Mycologique du Jour</h2>
-        <p id="verdict-desc">Interrogation de la météo des 20 derniers jours, du sol SoilGrids et des peuplements forestiers IGN en cours...</p>
-      </div>
-      <div class="podium-box" id="podium-especes">
-        <!-- Les 3 espèces phares prêtes à être récoltées aujourd'hui -->
-      </div>
-    </div>
-
-    <div class="main-view-container">
-
-      <!-- ========================================== -->
-      <!-- ONGLET 0 : POUSSES & ESPÈCES (GRAND PUBLIC) -->
-      <!-- ========================================== -->
-      <div class="view-tab-content active" id="view-tab-0">
-        <div class="card">
-          <div class="view-switcher-bar">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:0.85rem;align-items:end;">
             <div>
-              <h2 style="margin:0;padding:0;border:none;font-size:1.1rem;color:#ffffff;">
-                <span>Espèces comestibles sélectionnées pour ce terroir</span>
-                <span id="compteur-especes" style="font-size:0.8rem;color:#34d399;font-weight:600;margin-left:0.5rem;"></span>
-              </h2>
-              <div style="font-size:0.78rem;color:var(--muted);margin-top:0.2rem;">
-                Adaptées au mois en cours, à l'altitude locale et aux essences d'arbres observées.
-              </div>
+              <label style="font-size:0.78rem;color:var(--muted);display:block;margin-bottom:0.35rem;font-weight:700;">Espèce ciblée pour le scan :</label>
+              <select id="select-espece-5km" class="btn" style="width:100%;padding:0.6rem;background:#090d13;color:#fff;"></select>
             </div>
 
-            <div style="display:flex;gap:0.6rem;align-items:center;flex-wrap:wrap;">
-              <input
-                type="search"
-                id="filtre-recherche"
-                placeholder="🔍 Rechercher (Cèpe, Girolle, Morille...)"
-                oninput="afficherTableauEspeces()"
-                style="background:rgba(9,13,19,0.85);border:1px solid var(--border);color:#fff;padding:0.45rem 0.8rem;border-radius:10px;font-size:0.82rem;font-family:inherit;min-width:200px;"
-              />
-              <select id="filtre-score" onchange="afficherTableauEspeces()" class="btn" style="padding:0.45rem 0.6rem;">
-                <option value="0">Toutes les espèces actives</option>
-                <option value="40">≥ 40 %</option>
-                <option value="65">≥ 65 % (Favorable)</option>
-                <option value="80">≥ 80 % (Optimal)</option>
+            <div>
+              <label style="font-size:0.78rem;color:var(--muted);display:block;margin-bottom:0.35rem;font-weight:700;">Échéance de prévision :</label>
+              <select id="select-jour-5km" class="btn" style="width:100%;padding:0.6rem;background:#090d13;color:#fff;">
+                <option value="0">Aujourd'hui (J)</option>
+                <option value="1">Demain (J+1)</option>
+                <option value="2">J+2</option>
+                <option value="3">J+3</option>
+                <option value="4">J+4</option>
+                <option value="5">J+5</option>
+                <option value="6">J+6</option>
+                <option value="7">J+7</option>
+                <option value="8">J+8</option>
+                <option value="9">J+9</option>
+                <option value="10">J+10</option>
               </select>
-
-              <!-- BOUTON BASCULE VUE FICHES GRAND PUBLIC / VUE TABLEAU EXPERT -->
-              <div style="display:flex;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:10px;padding:2px;">
-                <button class="btn" id="btn-mode-cartes" onclick="basculerModeAffichage('cartes')" style="padding:0.35rem 0.65rem;border:none;background:rgba(16,185,129,0.2);color:#34d399;">
-                  🃏 Fiches
-                </button>
-                <button class="btn" id="btn-mode-tableau" onclick="basculerModeAffichage('tableau')" style="padding:0.35rem 0.65rem;border:none;background:transparent;color:var(--muted);">
-                  📊 Tableau J..J+10
-                </button>
-              </div>
             </div>
-          </div>
 
-          <!-- VUE 1 : FICHES D'ESPÈCES GRAND PUBLIC -->
-          <div id="view-cartes-container" class="species-cards-grid">
-            <div style="grid-column: 1 / -1; padding: 2.5rem; text-align: center; color: var(--muted); font-size: 0.95rem;">
-              ⏳ Analyse bioclimatique et calcul des poussées en cours...
-            </div>
-          </div>
-
-          <!-- TIROIR DE DÉTAIL D'ESPÈCE (POUR LA VUE FICHES) -->
-          <div id="detail-espece" class="detail-box">
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-              <h3 id="detail-titre" style="font-size:1.15rem;font-weight:800;color:#ffffff;">Détail de la trajectoire J..J+10</h3>
-              <button class="btn" onclick="document.getElementById('detail-espece').style.display='none'" style="padding:0.3rem 0.7rem;font-size:0.75rem;">✕ Fermer</button>
-            </div>
-            <p id="detail-desc" style="font-size:0.85rem;color:var(--muted);margin-top:0.4rem;"></p>
-            <div class="detail-grid" id="detail-grid-jours"></div>
-          </div>
-
-          <!-- VUE 2 : TABLEAU EXPERT J..J+10 -->
-          <div id="view-tableau-container" style="display:none;margin-top:1rem;">
-            <div class="table-responsive">
-              <table>
-                <thead>
-                  <tr id="table-head-row">
-                    <th>Espèce</th>
-                    <th>Comestibilité</th>
-                    <th>J (Aujourd'hui)</th>
-                    <th>J+1</th>
-                    <th>J+2</th>
-                    <th>J+3</th>
-                    <th>J+4</th>
-                    <th>J+5</th>
-                    <th>J+6</th>
-                    <th>J+7</th>
-                    <th>J+8</th>
-                    <th>J+9</th>
-                    <th>J+10</th>
-                  </tr>
-                </thead>
-                <tbody id="table-especes-body">
-                  <tr>
-                    <td colspan="13" style="text-align:center;padding:2rem;color:var(--muted);">
-                      Sélectionnez un point pour calculer les prévisions.
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+            <div style="display:flex;gap:0.5rem;">
+              <button class="btn btn-accent" onclick="lancerScan5km()" style="flex:1;justify-content:center;padding:0.65rem 1rem;">
+                📡 Lancer le scan 5 km
+              </button>
+              <button class="btn" id="btn-effacer-5km" onclick="effacerScan5km()" style="padding:0.65rem 0.9rem;" title="Effacer les marqueurs radar de la carte">
+                ✕ Effacer
+              </button>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- ========================================== -->
-      <!-- ONGLET 1 : CARTE & SCANNER RADAR 5 KM      -->
-      <!-- ========================================== -->
-      <div class="view-tab-content" id="view-tab-1">
-        <div class="map-radar-layout">
-          <!-- CARTE LEAFLET -->
-          <div class="card">
-            <h2>
-              <span>🗺️ Carte Interactive & Biotopes IGN</span>
-              <span style="font-size:0.78rem;font-weight:normal;color:var(--muted);">Cliquez n'importe où pour déplacer le point</span>
-            </h2>
-            <div id="map"></div>
-          </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+          <h3 style="font-size:1rem;font-weight:700;color:#ffffff;">Résultats des parcelles identifiées</h3>
+          <span id="statut-scan-5km" style="font-size:0.82rem;color:#34d399;font-weight:700;"></span>
+        </div>
 
-          <!-- RADAR DE PROXIMITÉ 5 KM -->
-          <div class="card">
-            <h2>
-              <span>📡 Radar 5 km : Coins favorables</span>
-              <span id="statut-scan-5km" style="font-size:0.78rem;color:var(--muted);font-weight:normal;"></span>
-            </h2>
-
-            <div style="display:flex;flex-direction:column;gap:0.75rem;margin-bottom:1rem;">
-              <div>
-                <label style="font-size:0.78rem;color:var(--muted);display:block;margin-bottom:0.3rem;">Espèce ciblée pour le scan :</label>
-                <select id="select-espece-5km" class="btn" style="width:100%;padding:0.5rem;"></select>
-              </div>
-
-              <div>
-                <label style="font-size:0.78rem;color:var(--muted);display:block;margin-bottom:0.3rem;">Jour d'analyse :</label>
-                <select id="select-jour-5km" class="btn" style="width:100%;padding:0.5rem;">
-                  <option value="0">Aujourd'hui (J)</option>
-                  <option value="1">Demain (J+1)</option>
-                  <option value="2">J+2</option>
-                  <option value="3">J+3</option>
-                  <option value="4">J+4</option>
-                  <option value="5">J+5</option>
-                  <option value="6">J+6</option>
-                  <option value="7">J+7</option>
-                  <option value="8">J+8</option>
-                  <option value="9">J+9</option>
-                  <option value="10">J+10</option>
-                </select>
-              </div>
-
-              <div style="display:flex;gap:0.5rem;margin-top:0.25rem;">
-                <button class="btn btn-accent" onclick="lancerScan5km()" style="flex:1;justify-content:center;">
-                  📡 Scanner les 5 km
-                </button>
-                <button class="btn" id="btn-effacer-5km" onclick="effacerScan5km()" style="padding:0.5rem 0.8rem;" title="Effacer les zones sur la carte">
-                  ✕
-                </button>
-              </div>
-            </div>
-
-            <div id="resultats-scan-5km" style="font-size:0.84rem;color:var(--muted);line-height:1.45;max-height:280px;overflow-y:auto;">
-              Cliquez sur « Scanner les 5 km » pour cartographier les peuplements forestiers favorables autour de ce spot.
-            </div>
-          </div>
+        <div id="resultats-scan-5km" style="font-size:0.88rem;color:var(--muted);line-height:1.6;background:rgba(9,13,19,0.7);padding:1rem;border-radius:12px;border:1px solid var(--border);">
+          Sélectionnez une espèce et cliquez sur « Lancer le scan 5 km » pour projeter les meilleures parcelles de sous-bois sur la carte.
         </div>
       </div>
-
-      <!-- ========================================== -->
-      <!-- ONGLET 2 : MÉTÉO & SOL DU SOUS-BOIS        -->
-      <!-- ========================================== -->
-      <div class="view-tab-content" id="view-tab-2">
-        <div class="card">
-          <h2>🌲 Diagnostic du biotope & Météo des 20 derniers jours</h2>
-
-          <div class="env-grid">
-            <div class="env-item">
-              <div class="env-label">Altitude locale</div>
-              <div class="env-value" id="env-alt">-- m</div>
-            </div>
-
-            <div class="env-item">
-              <div class="env-label">Pente & Versant</div>
-              <div class="env-value">
-                <span id="env-pente">--%</span> • <span id="env-orientation">--</span>
-              </div>
-            </div>
-
-            <div class="env-item">
-              <div class="env-label">pH du sol (SoilGrids 0-30 cm)</div>
-              <div class="env-value" id="env-ph">--</div>
-            </div>
-
-            <div class="env-item">
-              <div class="env-label">Texture & Humidité du sol</div>
-              <div class="env-value" id="env-sol-type">--</div>
-              <div style="font-size:0.78rem;color:var(--muted);margin-top:0.35rem;" id="env-sol-details"></div>
-            </div>
-
-            <div class="env-item full">
-              <div class="env-label">Peuplement forestier (IGN BD Forêt V2)</div>
-              <div class="env-value" id="env-foret">--</div>
-              <div style="font-size:0.8rem;color:var(--muted);margin-top:0.35rem;" id="env-canopee-details"></div>
-            </div>
-
-            <div class="env-item">
-              <div class="env-label">Pluie cumulée (20 jours)</div>
-              <div class="env-value" id="meteo-cumul-20j">-- mm</div>
-            </div>
-
-            <div class="env-item">
-              <div class="env-label">Pluie récente (10 jours)</div>
-              <div class="env-value" id="meteo-cumul-10j">-- mm</div>
-            </div>
-          </div>
-
-          <!-- INPUTS COORDONNÉES RÉSERVÉS AUX EXPERTS -->
-          <details style="margin-top:1.5rem;font-size:0.8rem;color:var(--muted);">
-            <summary style="cursor:pointer;padding:0.4rem 0;">⚙️ Coordonnées GPS manuelles (Mode expert)</summary>
-            <div style="display:flex;gap:0.6rem;align-items:center;margin-top:0.6rem;flex-wrap:wrap;">
-              <input type="number" id="input-lat" step="0.0001" value="45.4105" style="background:#090d13;border:1px solid var(--border);color:#fff;padding:0.4rem 0.6rem;border-radius:8px;font-family:inherit;width:120px;" />
-              <input type="number" id="input-lon" step="0.0001" value="5.2400" style="background:#090d13;border:1px solid var(--border);color:#fff;padding:0.4rem 0.6rem;border-radius:8px;font-family:inherit;width:120px;" />
-              <button class="btn btn-accent" onclick="lancerDepuisInputs()">Appliquer</button>
-            </div>
-          </details>
-        </div>
-      </div>
-
     </div>
+
+    <!-- ========================================== -->
+    <!-- ONGLET 2 : MÉTÉO & DIAGNOSTIC DU SOUS-BOIS -->
+    <!-- ========================================== -->
+    <div class="view-tab-content" id="view-tab-2">
+      <div class="card">
+        <h2 style="font-size:1.15rem;font-weight:800;color:#ffffff;margin-bottom:1rem;">
+          🌲 Diagnostic du biotope & Météo des 20 derniers jours
+        </h2>
+
+        <div class="env-grid">
+          <div class="env-item">
+            <div class="env-label">Altitude locale</div>
+            <div class="env-value" id="env-alt">-- m</div>
+          </div>
+
+          <div class="env-item">
+            <div class="env-label">Pente & Versant</div>
+            <div class="env-value">
+              <span id="env-pente">--%</span> • <span id="env-orientation">--</span>
+            </div>
+          </div>
+
+          <div class="env-item">
+            <div class="env-label">pH du sol (SoilGrids 0-30 cm)</div>
+            <div class="env-value" id="env-ph">--</div>
+          </div>
+
+          <div class="env-item">
+            <div class="env-label">Texture & Humidité du sol</div>
+            <div class="env-value" id="env-sol-type">--</div>
+            <div style="font-size:0.78rem;color:var(--muted);margin-top:0.35rem;" id="env-sol-details"></div>
+          </div>
+
+          <div class="env-item full">
+            <div class="env-label">Peuplement forestier (IGN BD Forêt V2)</div>
+            <div class="env-value" id="env-foret">--</div>
+            <div style="font-size:0.8rem;color:var(--muted);margin-top:0.35rem;" id="env-canopee-details"></div>
+          </div>
+
+          <div class="env-item">
+            <div class="env-label">Pluie cumulée (20 jours)</div>
+            <div class="env-value" id="meteo-cumul-20j">-- mm</div>
+          </div>
+
+          <div class="env-item">
+            <div class="env-label">Pluie récente (10 jours)</div>
+            <div class="env-value" id="meteo-cumul-10j">-- mm</div>
+          </div>
+        </div>
+
+        <!-- INPUTS COORDONNÉES RÉSERVÉS AUX EXPERTS -->
+        <details style="margin-top:1.5rem;font-size:0.8rem;color:var(--muted);">
+          <summary style="cursor:pointer;padding:0.4rem 0;">⚙️ Coordonnées GPS manuelles (Mode expert)</summary>
+          <div style="display:flex;gap:0.6rem;align-items:center;margin-top:0.6rem;flex-wrap:wrap;">
+            <input type="number" id="input-lat" step="0.0001" value="45.4105" style="background:#090d13;border:1px solid var(--border);color:#fff;padding:0.4rem 0.6rem;border-radius:8px;font-family:inherit;width:120px;" />
+            <input type="number" id="input-lon" step="0.0001" value="5.2400" style="background:#090d13;border:1px solid var(--border);color:#fff;padding:0.4rem 0.6rem;border-radius:8px;font-family:inherit;width:120px;" />
+            <button class="btn btn-accent" onclick="lancerDepuisInputs()">Appliquer</button>
+          </div>
+        </details>
+      </div>
+    </div>
+
   </div>
 
   <!-- TOAST NOTIFICATION FLOTTANT -->
@@ -1413,138 +1225,86 @@
     let dernierScan5km = null;
     let modeAffichageActif = 'cartes'; // 'cartes' ou 'tableau'
     let lieuActuelLabel = "";
-    let timerRechercheAccueil = null;
+    let timerRechercheVille = null;
 
-    /* GESTION DE LA DOUBLE VUE : ACCUEIL VS RÉSULTATS */
-    function basculerVersResultats(nom) {
-      document.getElementById('ecran-accueil').style.display = 'none';
-      document.getElementById('section-resultats').style.display = 'block';
-      if (nom) {
-        lieuActuelLabel = nom;
-        document.getElementById('label-lieu-actif').textContent = nom;
-      }
-      if (!map) {
-        setTimeout(() => initialiserCarte(), 100);
-      } else {
-        setTimeout(() => map.invalidateSize(), 150);
-      }
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    /* INITIALISATION DE LA CARTE LEAFLET ACCUEIL */
+    function initialiserCarte() {
+      if (map) return;
 
-    function retourAccueil() {
-      document.getElementById('section-resultats').style.display = 'none';
-      document.getElementById('ecran-accueil').style.display = 'flex';
-      // Retirer les paramètres d'URL pour revenir à l'accueil
-      try {
-        window.history.replaceState({}, '', window.location.pathname);
-      } catch (e) {}
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      // Rafraîchir le dernier coin
-      verifierDernierCoinAccueil();
-    }
-
-    /* VÉRIFICATION DU DERNIER COIN DANS LE LOCALSTORAGE */
-    function verifierDernierCoinAccueil() {
-      try {
-        const raw = localStorage.getItem('simulateur_dernier_lieu');
-        if (raw) {
-          const d = JSON.parse(raw);
-          const box = document.getElementById('box-dernier-coin');
-          if (box && d && d.lat && d.lon) {
-            const nomAff = d.nom || `${d.lat}, ${d.lon}`;
-            box.innerHTML = `
-              <div style="display:flex;align-items:center;gap:0.6rem;font-size:0.88rem;">
-                <span style="font-size:1.1rem;">🕒</span>
-                <div>
-                  <div style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;font-weight:700;">Reprendre votre dernier coin :</div>
-                  <strong style="color:#ffffff;">${nomAff}</strong>
-                </div>
-              </div>
-              <span style="color:#f59e0b;font-weight:800;font-size:0.84rem;">Charger ➔</span>
-            `;
-            box.onclick = () => selectionnerLieuAccueil(d.lat, d.lon, d.nom);
-            box.style.display = 'flex';
-          }
-        }
-      } catch (e) {}
-    }
-
-    /* GÉOLOCALISATION 1-CLIC DEPUIS L'ACCUEIL */
-    function geolocaliserAccueil() {
-      const btn = document.getElementById('btn-accueil-gps');
-      if (!navigator.geolocation) {
-        alert("La géolocalisation n'est pas prise en charge par votre navigateur.");
-        return;
-      }
-      btn.innerHTML = '<span class="gps-icon-large">⏳</span><div class="gps-text-wrap"><span class="gps-text-main">Recherche de votre position GPS...</span><span class="gps-text-sub">Patientez 2-3 secondes...</span></div>';
-
-      navigator.geolocation.getCurrentPosition(
-        async (pos) => {
-          const lat = parseFloat(pos.coords.latitude.toFixed(4));
-          const lon = parseFloat(pos.coords.longitude.toFixed(4));
-          let nom = `Ma position GPS (${lat}, ${lon})`;
-          try {
-            const resp = await fetch(`https://api-adresse.data.gouv.fr/reverse/?lon=${lon}&lat=${lat}`);
-            if (resp.ok) {
-              const data = await resp.json();
-              if (data.features && data.features.length > 0) {
-                const p = data.features[0].properties;
-                nom = `${p.city || p.label}${p.postcode ? ' (' + p.postcode.substring(0, 2) + ')' : ''}`;
-              }
-            }
-          } catch (e) {}
-          btn.innerHTML = '<span class="gps-icon-large">📍</span><div class="gps-text-wrap"><span class="gps-text-main">Voir la situation autour de moi</span><span class="gps-text-sub">Localisation automatique via GPS (1 clic)</span></div>';
-          selectionnerLieuAccueil(lat, lon, nom);
-        },
-        (err) => {
-          btn.innerHTML = '<span class="gps-icon-large">📍</span><div class="gps-text-wrap"><span class="gps-text-main">Voir la situation autour de moi</span><span class="gps-text-sub">Localisation automatique via GPS (1 clic)</span></div>';
-          alert("Impossible d'activer votre localisation : " + err.message);
-        },
-        { enableHighAccuracy: true, timeout: 10000 }
+      const ignPlan = L.tileLayer(
+        "https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&STYLE=normal&FORMAT=image/png&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}",
+        { maxZoom: 18, attribution: "© IGN Géoplateforme" }
       );
+      const ignOrtho = L.tileLayer(
+        "https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=ORTHOIMAGERY.ORTHOPHOTOS&STYLE=normal&FORMAT=image/jpeg&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}",
+        { maxZoom: 19, attribution: "© IGN Orthophotos" }
+      );
+      const osm = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19, attribution: "© OpenStreetMap",
+      });
+      const topo = L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
+        maxZoom: 17, attribution: "© OpenTopoMap",
+      });
+      const bdForetWms = L.tileLayer.wms("https://data.geopf.fr/wms-r/wms", {
+        layers: "LANDCOVER.FORESTINVENTORY.V2",
+        format: "image/png",
+        transparent: true,
+        opacity: 0.55,
+        attribution: "© IGN BD Forêt V2",
+      });
+
+      map = L.map("map", {
+        center: [45.4105, 5.2400],
+        zoom: 13,
+        layers: [ignPlan],
+      });
+
+      L.control.layers(
+        { "Plan IGN V2": ignPlan, "Satellite IGN": ignOrtho, "OpenStreetMap": osm, "Topographique": topo },
+        { "🌲 Calque Peuplements BD Forêt V2": bdForetWms }
+      ).addTo(map);
+
+      coucheZones5km = L.layerGroup().addTo(map);
+      marker = L.marker([45.4105, 5.2400], { draggable: true }).addTo(map);
+
+      // Clic direct sur la carte pour se positionner précisément
+      map.on("click", async (e) => {
+        const lat = parseFloat(e.latlng.lat.toFixed(4));
+        const lon = parseFloat(e.latlng.lng.toFixed(4));
+        await positionnerEtCharger(lat, lon);
+      });
+
+      // Déplacement du marqueur (drag)
+      marker.on("dragend", async (e) => {
+        const ll = marker.getLatLng();
+        const lat = parseFloat(ll.lat.toFixed(4));
+        const lon = parseFloat(ll.lng.toFixed(4));
+        await positionnerEtCharger(lat, lon);
+      });
     }
 
-    /* RECHERCHE DE COMMUNE DATA.GOUV.FR DEPUIS L'ACCUEIL */
-    function rechercherCommuneAccueil(query) {
-      clearTimeout(timerRechercheAccueil);
-      const dropdown = document.getElementById('suggestions-accueil-ville');
-      if (!query || query.trim().length < 2) {
-        dropdown.style.display = 'none';
-        return;
-      }
-      timerRechercheAccueil = setTimeout(async () => {
-        try {
-          const resp = await fetch("https://api-adresse.data.gouv.fr/search/?q=" + encodeURIComponent(query) + "&type=municipality&limit=5");
-          if (!resp.ok) return;
+    async function positionnerEtCharger(lat, lon) {
+      document.getElementById("input-lat").value = lat;
+      document.getElementById("input-lon").value = lon;
+      marker.setLatLng([lat, lon]);
+      map.panTo([lat, lon]);
+
+      let nom = `Point GPS (${lat.toFixed(4)}, ${lon.toFixed(4)})`;
+      try {
+        const resp = await fetch(`https://api-adresse.data.gouv.fr/reverse/?lon=${lon}&lat=${lat}`);
+        if (resp.ok) {
           const data = await resp.json();
-          if (!data.features || data.features.length === 0) {
-            dropdown.style.display = 'none';
-            return;
+          if (data.features && data.features.length > 0) {
+            const p = data.features[0].properties;
+            nom = `${p.city || p.label}${p.postcode ? ' (' + p.postcode.substring(0, 2) + ')' : ''}`;
           }
-          dropdown.innerHTML = data.features.map(f => {
-            const label = f.properties.label;
-            const dep = f.properties.context || '';
-            const coords = f.geometry.coordinates; // [lon, lat]
-            const escapedLabel = label.replace(/'/g, "\\'");
-            return `<div class="suggestion-item" onclick="selectionnerLieuAccueil(${coords[1]}, ${coords[0]}, '${escapedLabel}')">
-              <span>📍 <strong>${label}</strong></span> <span style="font-size:0.75rem;color:var(--muted);">(${dep})</span>
-            </div>`;
-          }).join('');
-          dropdown.style.display = 'block';
-        } catch (e) {
-          dropdown.style.display = 'none';
         }
-      }, 250);
+      } catch (err) {}
+
+      chargerSpot(lat, lon, nom);
     }
 
-    function selectionnerLieuAccueil(lat, lon, label) {
-      const dropdown = document.getElementById('suggestions-accueil-ville');
-      if (dropdown) dropdown.style.display = 'none';
-      basculerVersResultats(label);
-      chargerSpot(lat, lon, label);
-    }
-
-    /* CHARGEMENT D'UN SPOT */
+    /* CHARGEMENT D'UN SPOT ET LANCEMENT SIMULATION */
     function chargerSpot(lat, lon, label = null) {
       lat = parseFloat(lat);
       lon = parseFloat(lon);
@@ -1555,25 +1315,14 @@
 
       if (label) {
         lieuActuelLabel = label;
-        document.getElementById("label-lieu-actif").textContent = lieuActuelLabel;
-        synchroniserUrlLieu(lat, lon, lieuActuelLabel);
       } else {
         lieuActuelLabel = `Point GPS (${lat.toFixed(4)}, ${lon.toFixed(4)})`;
-        document.getElementById("label-lieu-actif").textContent = lieuActuelLabel;
-        synchroniserUrlLieu(lat, lon, null);
-        // Rétrogéocodage asynchrone
-        fetch(`https://api-adresse.data.gouv.fr/reverse/?lon=${lon}&lat=${lat}`)
-          .then(r => r.json())
-          .then(d => {
-            if (d.features && d.features.length > 0) {
-              const p = d.features[0].properties;
-              lieuActuelLabel = `${p.city || p.label}${p.postcode ? ' (' + p.postcode.substring(0, 2) + ')' : ''}`;
-              document.getElementById("label-lieu-actif").textContent = lieuActuelLabel;
-              synchroniserUrlLieu(lat, lon, lieuActuelLabel);
-            }
-          })
-          .catch(() => {});
       }
+      document.getElementById("label-lieu-actif").textContent = lieuActuelLabel;
+      const inp = document.getElementById("input-ville");
+      if (inp) inp.value = lieuActuelLabel.startsWith("Point GPS") ? "" : lieuActuelLabel;
+
+      synchroniserUrlLieu(lat, lon, lieuActuelLabel);
 
       // Sauvegarde dans le localStorage
       try {
@@ -1592,11 +1341,75 @@
       const lat = parseFloat(document.getElementById("input-lat").value);
       const lon = parseFloat(document.getElementById("input-lon").value);
       if (!isNaN(lat) && !isNaN(lon)) {
-        chargerSpot(lat, lon);
+        positionnerEtCharger(lat, lon);
       }
     }
 
-    /* SYNCHRONISATION DE L'ADRESSE URL (PERMALIEN PARTAGEABLE) */
+    /* GÉOLOCALISATION GPS 1-CLIC */
+    function geolocaliserUtilisateur() {
+      const btn = document.getElementById('btn-geoloc-top');
+      if (!navigator.geolocation) {
+        alert("La géolocalisation n'est pas prise en charge par votre navigateur.");
+        return;
+      }
+      btn.textContent = '⏳ Localisation...';
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          btn.textContent = '📍 Me localiser (GPS)';
+          const lat = parseFloat(pos.coords.latitude.toFixed(4));
+          const lon = parseFloat(pos.coords.longitude.toFixed(4));
+          if (map) map.setView([lat, lon], 14);
+          await positionnerEtCharger(lat, lon);
+        },
+        (err) => {
+          btn.textContent = '📍 Me localiser (GPS)';
+          alert("Impossible de récupérer votre position GPS : " + err.message);
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    }
+
+    /* RECHERCHE COMMUNE AVEC AUTOCOMPLÉTION */
+    function rechercherCommuneGouv(query) {
+      clearTimeout(timerRechercheVille);
+      const dropdown = document.getElementById('suggestions-ville');
+      if (!query || query.trim().length < 2) {
+        dropdown.style.display = 'none';
+        return;
+      }
+      timerRechercheVille = setTimeout(async () => {
+        try {
+          const resp = await fetch("https://api-adresse.data.gouv.fr/search/?q=" + encodeURIComponent(query) + "&type=municipality&limit=5");
+          if (!resp.ok) return;
+          const data = await resp.json();
+          if (!data.features || data.features.length === 0) {
+            dropdown.style.display = 'none';
+            return;
+          }
+          dropdown.innerHTML = data.features.map(f => {
+            const label = f.properties.label;
+            const dep = f.properties.context || '';
+            const coords = f.geometry.coordinates; // [lon, lat]
+            const escapedLabel = label.replace(/'/g, "\\'");
+            return `<div class="suggestion-item" onclick="selectionnerVille(${coords[1]}, ${coords[0]}, '${escapedLabel}')">
+              📍 <strong>${label}</strong> <span style="font-size:0.75rem;color:var(--muted);">(${dep})</span>
+            </div>`;
+          }).join('');
+          dropdown.style.display = 'block';
+        } catch (e) {
+          dropdown.style.display = 'none';
+        }
+      }, 250);
+    }
+
+    function selectionnerVille(lat, lon, label) {
+      document.getElementById('input-ville').value = label;
+      document.getElementById('suggestions-ville').style.display = 'none';
+      if (map) map.setView([lat, lon], 13);
+      positionnerEtCharger(lat, lon);
+    }
+
+    /* SYNCHRONISATION URL PERMALIEN */
     function synchroniserUrlLieu(lat, lon, nom) {
       try {
         const params = new URLSearchParams();
@@ -1610,7 +1423,6 @@
       } catch (e) {}
     }
 
-    /* PARTAGE DE L'ADRESSE DU SPOT */
     async function partagerLienLieu() {
       const url = window.location.href;
       const nom = lieuActuelLabel || "mon coin";
@@ -1629,7 +1441,7 @@
 
       try {
         await navigator.clipboard.writeText(url);
-        afficherToast('📋 Lien copié ! En envoyant cette adresse, vos amis verront directement ce coin.');
+        afficherToast('📋 Lien copié ! En envoyant cette adresse, vos amis verront directement ce coin exact.');
       } catch (err) {
         prompt('Copiez ce lien pour le partager :', url);
       }
@@ -1644,7 +1456,7 @@
       toast._timer = setTimeout(() => toast.classList.remove('visible'), 3500);
     }
 
-    /* SIMULATION ET APPEL API */
+    /* SIMULATION ET MISE À JOUR PROFIL */
     async function executerSimulation(lat, lon) {
       const tbody = document.getElementById("table-especes-body");
       tbody.innerHTML = `<tr><td colspan="13" style="text-align:center;padding:2rem;color:var(--muted);">Analyse météo, sol SoilGrids & IGN BD Forêt pour (${lat}, ${lon})...</td></tr>`;
@@ -1718,7 +1530,7 @@
       sel5km.innerHTML = "";
       (data.especes || []).forEach(item => {
         const opt = document.createElement("option");
-        opt.value = item.espece.nom;
+        opt.value = item.espece.id || item.espece.nom;
         opt.textContent = `${item.espece.nom} (${item.courbe_j_a_j10[0]?.score_pct || 0}%)`;
         sel5km.appendChild(opt);
       });
@@ -1732,7 +1544,7 @@
       return "s-none";
     }
 
-    /* AFFICHAGE DES ESPÈCES (FICHES GRAND PUBLIC OU TABLEAU EXPERT) */
+    /* AFFICHAGE DES ESPÈCES (FICHES / TABLEAU) */
     function afficherTableauEspeces() {
       if (!dernierRapport) return;
 
@@ -1751,7 +1563,7 @@
       const compteur = document.getElementById("compteur-especes");
       if (compteur) compteur.textContent = `(${items.length} espèce${items.length > 1 ? 's' : ''})`;
 
-      // 1. VUE FICHES GRAND PUBLIC
+      // 1. VUE FICHES
       const cardsContainer = document.getElementById("view-cartes-container");
       if (items.length === 0) {
         cardsContainer.innerHTML = `<div style="grid-column:1/-1;padding:2rem;text-align:center;color:var(--muted);">Aucune espèce ne correspond aux filtres.</div>`;
@@ -1760,9 +1572,8 @@
           const scoreJ = item.courbe_j_a_j10[0]?.score_pct || 0;
           const clScore = classeScore(scoreJ);
           const bio = item.aptitude_biotope || {};
-          const topoPct = Math.round((bio.score_topo || 0) * 100);
-          const solPct = Math.round((bio.score_sol || 0) * 100);
           const foretPct = Math.round((bio.score_foret || 0) * 100);
+          const solPct = Math.round((bio.score_sol || 0) * 100);
           const st = item.courbe_j_a_j10[0]?.details?.stades_carpophore || {};
 
           let statusTxt = "En repos végétatif";
@@ -1896,7 +1707,7 @@
     }
 
     function afficherDetailEspeceDirect(nom) {
-      basculerVersResultats(nom);
+      changerOngletWeb(0);
       afficherDetailEspece(nom);
     }
 
@@ -1907,7 +1718,6 @@
       lancerScan5km();
     }
 
-    /* GESTION DES ONGLETS DU TABLEAU DE BORD */
     function changerOngletWeb(index) {
       document.querySelectorAll('.tab-btn').forEach((btn, idx) => {
         btn.classList.toggle('active', idx === index);
@@ -1915,69 +1725,15 @@
       document.querySelectorAll('.view-tab-content').forEach((view, idx) => {
         view.classList.toggle('active', idx === index);
       });
-      if (index === 1 && map) {
-        setTimeout(() => map.invalidateSize(), 150);
+      if (index === 1) {
+        // Défilement doux vers la carte pour voir les zones projetées
+        document.getElementById('map').scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
     }
 
-    /* INITIALISATION DE LA CARTE LEAFLET */
-    function initialiserCarte() {
-      if (map) return;
-      const ignPlan = L.tileLayer(
-        "https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2&STYLE=normal&FORMAT=image/png&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}",
-        { maxZoom: 18, attribution: "© IGN Géoplateforme" }
-      );
-      const ignOrtho = L.tileLayer(
-        "https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=ORTHOIMAGERY.ORTHOPHOTOS&STYLE=normal&FORMAT=image/jpeg&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}",
-        { maxZoom: 19, attribution: "© IGN Orthophotos" }
-      );
-      const osm = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        maxZoom: 19, attribution: "© OpenStreetMap",
-      });
-      const topo = L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
-        maxZoom: 17, attribution: "© OpenTopoMap",
-      });
-      const bdForetWms = L.tileLayer.wms("https://data.geopf.fr/wms-r/wms", {
-        layers: "LANDCOVER.FORESTINVENTORY.V2",
-        format: "image/png",
-        transparent: true,
-        opacity: 0.55,
-        attribution: "© IGN BD Forêt V2",
-      });
-
-      map = L.map("map", {
-        center: [45.4105, 5.2400],
-        zoom: 13,
-        layers: [ignPlan],
-      });
-
-      L.control.layers(
-        { "Plan IGN V2": ignPlan, "Satellite IGN": ignOrtho, "OpenStreetMap": osm, "Topographique": topo },
-        { "🌲 Calque Peuplements BD Forêt V2": bdForetWms }
-      ).addTo(map);
-
-      coucheZones5km = L.layerGroup().addTo(map);
-      marker = L.marker([45.4105, 5.2400]).addTo(map);
-
-      map.on("click", async (e) => {
-        const lat = parseFloat(e.latlng.lat.toFixed(4));
-        const lon = parseFloat(e.latlng.lng.toFixed(4));
-        let nom = null;
-        try {
-          const resp = await fetch(`https://api-adresse.data.gouv.fr/reverse/?lon=${lon}&lat=${lat}`);
-          if (resp.ok) {
-            const data = await resp.json();
-            if (data.features && data.features.length > 0) {
-              const p = data.features[0].properties;
-              nom = `${p.city || p.label}${p.postcode ? ' (' + p.postcode.substring(0, 2) + ')' : ''}`;
-            }
-          }
-        } catch (err) {}
-        chargerSpot(lat, lon, nom);
-      });
-    }
-
-    /* SCAN 5 KM */
+    /* ======================================================== */
+    /* SCAN 5 KM ROBUSTE (RÉSOLUTION COMPLÈTE DU BOGUE)         */
+    /* ======================================================== */
     async function lancerScan5km() {
       const nomEspece = document.getElementById("select-espece-5km").value;
       const jourIdx = parseInt(document.getElementById("select-jour-5km").value, 10);
@@ -1985,17 +1741,25 @@
       const lon = parseFloat(document.getElementById("input-lon").value);
 
       const statut = document.getElementById("statut-scan-5km");
-      statut.textContent = "Scan en cours...";
+      statut.textContent = "⏳ Scan des parcelles en cours...";
 
       try {
-        const resp = await fetch(`/api/zones-espece?nom_espece=${encodeURIComponent(nomEspece)}&lat=${lat}&lon=${lon}&jour_idx=${jourIdx}&rayon_km=5`);
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const url = `/api/zones-espece?espece_id=${encodeURIComponent(nomEspece)}&nom_espece=${encodeURIComponent(nomEspece)}&lat=${lat}&lon=${lon}&decalage_jour=${jourIdx}&jour_idx=${jourIdx}&rayon_km=5`;
+        const resp = await fetch(url);
+        if (!resp.ok) {
+          const errData = await resp.json().catch(() => ({}));
+          throw new Error(errData.detail || `HTTP ${resp.status}`);
+        }
         dernierScan5km = await resp.json();
         afficherZonesScan5km(dernierScan5km);
-        statut.textContent = `${dernierScan5km.nb_zones} zones favorables`;
+        const nbZones = (dernierScan5km.zones_optimales || dernierScan5km.zones || []).length;
+        statut.textContent = `✅ ${nbZones} zone(s) identifiée(s)`;
+
+        // Scroll vers la carte pour voir le résultat
+        document.getElementById('map').scrollIntoView({ behavior: 'smooth', block: 'center' });
       } catch (err) {
-        statut.textContent = "Erreur scan";
-        alert("Erreur lors du scan 5 km : " + err.message);
+        statut.textContent = "❌ Erreur scan";
+        alert("Erreur lors de la recherche 5 km : " + err.message);
       }
     }
 
@@ -2004,51 +1768,75 @@
       coucheZones5km.clearLayers();
 
       const resDiv = document.getElementById("resultats-scan-5km");
-      const zones = data.zones || [];
+      const zones = data.zones_optimales || data.zones || [];
+      const nomEsp = (data.espece && data.espece.nom) ? data.espece.nom : (data.espece || "l'espèce");
 
       if (zones.length === 0) {
-        resDiv.innerHTML = `<div style="padding:0.5rem;color:var(--muted);">Aucune zone de biotope très favorable détectée à 5 km pour ${data.espece}.</div>`;
+        resDiv.innerHTML = `<div style="padding:0.75rem;color:var(--muted);">Aucune zone favorable détectée à 5 km pour ${nomEsp}. Essayez une autre espèce ou une échéance différente.</div>`;
         return;
       }
 
       zones.forEach(z => {
+        const score = z.score_pct ?? z.score ?? 0;
+        const couleur = score >= 80 ? '#10b981' : (score >= 60 ? '#34d399' : '#f59e0b');
+
+        // Dessin du polygone forestier réel si disponible
+        if (z.polygone_coords && z.polygone_coords.length >= 3) {
+          L.polygon(z.polygone_coords, {
+            color: couleur,
+            fillColor: couleur,
+            fillOpacity: 0.35,
+            weight: 2
+          }).addTo(coucheZones5km).bindPopup(`
+            <strong>${nomEsp}</strong> (${score}%)<br>
+            <em>${z.libelle_biotope || 'Parcelle forestière'}</em><br>
+            Distance : ${z.distance_km != null ? z.distance_km.toFixed(1) : '?'} km
+          `);
+        }
+
+        // Marqueur circulaire lumineux
         const circle = L.circle([z.latitude, z.longitude], {
           radius: 120,
-          color: z.score >= 80 ? '#10b981' : '#f59e0b',
-          fillColor: z.score >= 80 ? '#10b981' : '#f59e0b',
-          fillOpacity: 0.45,
+          color: couleur,
+          fillColor: couleur,
+          fillOpacity: 0.55,
           weight: 2
         }).addTo(coucheZones5km);
 
         circle.bindPopup(`
-          <strong>${z.espece}</strong> (${z.score}%)<br>
-          <em>${z.essence}</em><br>
-          Distance : ${z.distance_km.toFixed(1)} km
+          <strong>${nomEsp}</strong> (${score}%)<br>
+          <em>${z.libelle_biotope || 'Sous-bois'}</em><br>
+          Distance : ${z.distance_km != null ? z.distance_km.toFixed(1) : '?'} km • ${z.direction_cardinale || ''}
         `);
       });
 
-      resDiv.innerHTML = `<strong>${zones.length} zone(s) favorable(s) détectée(s) :</strong><br>` +
-        zones.slice(0, 6).map(z => `• <strong>${z.score}%</strong> à ${z.distance_km.toFixed(1)} km (${z.essence})`).join('<br>');
+      resDiv.innerHTML = `<strong>${zones.length} zone(s) favorable(s) détectée(s) autour de ce lieu :</strong><br>` +
+        zones.slice(0, 8).map(z => {
+          const sc = z.score_pct ?? z.score ?? 0;
+          const dist = z.distance_km != null ? z.distance_km.toFixed(1) : '?';
+          const ess = z.libelle_biotope || z.essence || 'Sous-bois';
+          return `• <strong>${sc}%</strong> à ${dist} km (${ess})`;
+        }).join('<br>');
     }
 
     function effacerScan5km() {
       if (coucheZones5km) coucheZones5km.clearLayers();
       document.getElementById("statut-scan-5km").textContent = "";
-      document.getElementById("resultats-scan-5km").innerHTML = "Scan réinitialisé.";
+      document.getElementById("resultats-scan-5km").innerHTML = "Scan réinitialisé. Les marqueurs ont été effacés de la carte.";
     }
 
     // Fermer les suggestions au clic extérieur
     document.addEventListener('click', (e) => {
-      const dropAccueil = document.getElementById('suggestions-accueil-ville');
-      const inputAccueil = document.getElementById('input-accueil-ville');
-      if (dropAccueil && !dropAccueil.contains(e.target) && e.target !== inputAccueil) {
-        dropAccueil.style.display = 'none';
+      const wrap = document.querySelector('.search-box-wrap');
+      if (wrap && !wrap.contains(e.target)) {
+        const drop = document.getElementById('suggestions-ville');
+        if (drop) drop.style.display = 'none';
       }
     });
 
-    /* CHARGEMENT INITIAL (VÉRIFICATION URL VS ÉCRAN D'ACCUEIL) */
+    /* CHARGEMENT INITIAL */
     window.addEventListener("DOMContentLoaded", () => {
-      verifierDernierCoinAccueil();
+      initialiserCarte();
 
       const urlParams = new URLSearchParams(window.location.search);
       const pLat = parseFloat(urlParams.get("lat"));
@@ -2056,29 +1844,45 @@
       const pNom = urlParams.get("nom") || urlParams.get("ville") || null;
 
       if (!isNaN(pLat) && !isNaN(pLon)) {
-        // 1. L'ADRESSE DU SITE RENVOIE DIRECTEMENT SUR LA SITUATION D'UN LIEU PRÉCIS !
-        basculerVersResultats(pNom);
+        // 1. Paramètres dans l'URL
+        if (map) map.setView([pLat, pLon], 13);
         chargerSpot(pLat, pLon, pNom);
       } else if (pNom) {
-        // 2. Commune passée dans l'URL (?ville=Fontainebleau)
+        // 2. Nom de ville dans l'URL
         fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(pNom)}&type=municipality&limit=1`)
           .then(r => r.json())
           .then(data => {
             if (data.features && data.features.length > 0) {
               const f = data.features[0];
-              basculerVersResultats(f.properties.label);
-              chargerSpot(f.geometry.coordinates[1], f.geometry.coordinates[0], f.properties.label);
+              selectionnerVille(f.geometry.coordinates[1], f.geometry.coordinates[0], f.properties.label);
             } else {
-              retourAccueil();
+              chargerDernierLieuOuDefaut();
             }
           })
-          .catch(() => retourAccueil());
+          .catch(() => chargerDernierLieuOuDefaut());
       } else {
-        // 3. ARRIVÉE NORMALE SUR LE SITE : ZÉRO DONNÉE PARASITE !
-        // L'utilisateur voit l'écran d'accueil épuré et choisit son coin.
-        retourAccueil();
+        // 3. Arrivée directe sur le site : charge le dernier spot visité ou spot de démo par défaut
+        chargerDernierLieuOuDefaut();
       }
     });
+
+    function chargerDernierLieuOuDefaut() {
+      try {
+        const raw = localStorage.getItem('simulateur_dernier_lieu');
+        if (raw) {
+          const d = JSON.parse(raw);
+          if (d && d.lat && d.lon) {
+            if (map) map.setView([d.lat, d.lon], 13);
+            chargerSpot(d.lat, d.lon, d.nom || null);
+            return;
+          }
+        }
+      } catch (e) {}
+
+      // Par défaut : centrer sur la France et charger Fontainebleau
+      if (map) map.setView([48.4047, 2.6989], 12);
+      chargerSpot(48.4047, 2.6989, "Forêt de Fontainebleau (77)");
+    }
   </script>
 </body>
 </html>

@@ -2567,7 +2567,20 @@ def rechercher_zones_optimales_5km(
     3. Évalue le modèle mycologique complet (biotope, pH local, altitude, pente, exposition Adret/Ubac,
        cinétique et stades de maturité des carpophores) sur chaque zone candidate.
     """
-    espece = next((e for e in CATALOGUE_ESPECES if e["id"] == espece_id), None)
+    cible_propre = str(espece_id).strip().lower()
+    espece = next((e for e in CATALOGUE_ESPECES if (
+        e.get("id", "").lower() == cible_propre
+        or e.get("nom", "").strip().lower() == cible_propre
+        or e.get("nom_scientifique", "").strip().lower() == cible_propre
+    )), None)
+    if not espece:
+        # Recherche tolérante si correspondance partielle (ex: 'Cèpe de Bordeaux (85%)' ou 'boletus')
+        espece = next((e for e in CATALOGUE_ESPECES if (
+            e.get("nom", "").lower() in cible_propre
+            or cible_propre in e.get("nom", "").lower()
+            or e.get("id", "").lower() in cible_propre
+            or cible_propre in e.get("nom_scientifique", "").lower()
+        )), None)
     if not espece:
         raise ValueError(f"Espèce inconnue : {espece_id}")
 
