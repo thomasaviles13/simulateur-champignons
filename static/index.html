@@ -1102,38 +1102,51 @@
             Analyse chaque peuplement forestier IGN BD Forêt V2 et versant dans un disque de 5 km autour du point sélectionné, et cartographie les meilleurs spots directement sur la carte.
           </p>
 
-          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:0.85rem;align-items:end;">
-            <div>
-              <label style="font-size:0.78rem;color:var(--muted);display:block;margin-bottom:0.35rem;font-weight:700;">Espèce ciblée pour le scan :</label>
-              <select id="select-espece-5km" class="btn" style="width:100%;padding:0.6rem;background:#090d13;color:#fff;"></select>
-            </div>
-
-            <div>
-              <label style="font-size:0.78rem;color:var(--muted);display:block;margin-bottom:0.35rem;font-weight:700;">Échéance de prévision :</label>
-              <select id="select-jour-5km" class="btn" style="width:100%;padding:0.6rem;background:#090d13;color:#fff;">
-                <option value="0">Aujourd'hui (J)</option>
-                <option value="1">Demain (J+1)</option>
-                <option value="2">J+2</option>
-                <option value="3">J+3</option>
-                <option value="4">J+4</option>
-                <option value="5">J+5</option>
-                <option value="6">J+6</option>
-                <option value="7">J+7</option>
-                <option value="8">J+8</option>
-                <option value="9">J+9</option>
-                <option value="10">J+10</option>
-              </select>
-            </div>
-
-            <div style="display:flex;gap:0.5rem;">
-              <button class="btn btn-accent" onclick="lancerScan5km()" style="flex:1;justify-content:center;padding:0.65rem 1rem;">
-                📡 Lancer le scan 5 km
-              </button>
-              <button class="btn" id="btn-effacer-5km" onclick="effacerScan5km()" style="padding:0.65rem 0.9rem;" title="Effacer les marqueurs radar de la carte">
-                ✕ Effacer
-              </button>
-            </div>
+          <!-- BOUTON D'ACTION 1-CLIC SANS MENU DÉROULANT FORCÉ -->
+          <div style="display:flex;flex-wrap:wrap;gap:0.85rem;align-items:center;margin-bottom:1rem;">
+            <button class="btn btn-accent" onclick="lancerScan5km('auto')" style="flex:1;justify-content:center;padding:0.85rem 1.4rem;font-size:0.96rem;font-weight:800;border-radius:14px;box-shadow:0 6px 20px rgba(16,185,129,0.4);">
+              📡 Révéler immédiatement les meilleurs champignons à 5 km
+            </button>
+            <button class="btn" id="btn-effacer-5km" onclick="effacerScan5km()" style="padding:0.85rem 1.1rem;border-radius:14px;" title="Effacer les marqueurs radar de la carte">
+              ✕ Effacer la carte
+            </button>
           </div>
+
+          <!-- FILTRES SECONDAIRES OPTIONNELS (DÉPLIABLES) -->
+          <details style="font-size:0.82rem;color:var(--muted);background:rgba(0,0,0,0.25);border:1px solid var(--border);border-radius:12px;padding:0.65rem 0.95rem;">
+            <summary style="cursor:pointer;font-weight:700;color:#cbd5e1;">⚙️ Filtres avancés optionnels (Cibler une espèce précise ou une date future)</summary>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:0.85rem;align-items:end;margin-top:0.85rem;">
+              <div>
+                <label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:0.35rem;font-weight:700;">Filtrer sur une seule espèce (optionnel) :</label>
+                <select id="select-espece-5km" class="btn" style="width:100%;padding:0.5rem;background:#090d13;color:#fff;">
+                  <option value="auto" selected>✨ Tous les meilleurs champignons (Automatique)</option>
+                </select>
+              </div>
+
+              <div>
+                <label style="font-size:0.75rem;color:var(--muted);display:block;margin-bottom:0.35rem;font-weight:700;">Échéance de prévision :</label>
+                <select id="select-jour-5km" class="btn" style="width:100%;padding:0.5rem;background:#090d13;color:#fff;">
+                  <option value="0">Aujourd'hui (J)</option>
+                  <option value="1">Demain (J+1)</option>
+                  <option value="2">J+2</option>
+                  <option value="3">J+3</option>
+                  <option value="4">J+4</option>
+                  <option value="5">J+5</option>
+                  <option value="6">J+6</option>
+                  <option value="7">J+7</option>
+                  <option value="8">J+8</option>
+                  <option value="9">J+9</option>
+                  <option value="10">J+10</option>
+                </select>
+              </div>
+
+              <div>
+                <button class="btn" onclick="lancerScan5km()" style="width:100%;justify-content:center;padding:0.55rem;border-color:var(--accent);color:#34d399;">
+                  Re-scanner avec ces filtres
+                </button>
+              </div>
+            </div>
+          </details>
         </div>
 
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
@@ -1525,15 +1538,17 @@
         podiumEl.innerHTML = `<div style="font-size:0.8rem;color:var(--muted);padding:0.4rem;">Aucune espèce en récolte optimale aujourd'hui.</div>`;
       }
 
-      // SELECT SCAN 5 KM
+      // SELECT SCAN 5 KM AVEC OPTION AUTO PAR DÉFAUT
       const sel5km = document.getElementById("select-espece-5km");
-      sel5km.innerHTML = "";
-      (data.especes || []).forEach(item => {
-        const opt = document.createElement("option");
-        opt.value = item.espece.id || item.espece.nom;
-        opt.textContent = `${item.espece.nom} (${item.courbe_j_a_j10[0]?.score_pct || 0}%)`;
-        sel5km.appendChild(opt);
-      });
+      if (sel5km) {
+        sel5km.innerHTML = '<option value="auto" selected>✨ Tous les meilleurs champignons (Automatique)</option>';
+        (data.especes || []).forEach(item => {
+          const opt = document.createElement("option");
+          opt.value = item.espece.id || item.espece.nom;
+          opt.textContent = `${item.espece.nom} (${item.courbe_j_a_j10[0]?.score_pct || 0}%)`;
+          sel5km.appendChild(opt);
+        });
+      }
     }
 
     function classeScore(score) {
@@ -1732,16 +1747,20 @@
     }
 
     /* ======================================================== */
-    /* SCAN 5 KM ROBUSTE (RÉSOLUTION COMPLÈTE DU BOGUE)         */
+    /* SCAN 5 KM AUTOMATIQUE : MEILLEURS CHAMPIGNONS DIRECTS    */
     /* ======================================================== */
-    async function lancerScan5km() {
-      const nomEspece = document.getElementById("select-espece-5km").value;
-      const jourIdx = parseInt(document.getElementById("select-jour-5km").value, 10);
+    async function lancerScan5km(forceEsp = null) {
+      const selEsp = document.getElementById("select-espece-5km");
+      let nomEspece = forceEsp || (selEsp ? selEsp.value : "auto");
+      if (!nomEspece) nomEspece = "auto";
+      if (forceEsp && selEsp) selEsp.value = forceEsp;
+
+      const jourIdx = parseInt(document.getElementById("select-jour-5km")?.value || "0", 10);
       const lat = parseFloat(document.getElementById("input-lat").value);
       const lon = parseFloat(document.getElementById("input-lon").value);
 
       const statut = document.getElementById("statut-scan-5km");
-      statut.textContent = "⏳ Scan des parcelles en cours...";
+      if (statut) statut.textContent = "⏳ Scan des parcelles en cours...";
 
       try {
         const url = `/api/zones-espece?espece_id=${encodeURIComponent(nomEspece)}&nom_espece=${encodeURIComponent(nomEspece)}&lat=${lat}&lon=${lon}&decalage_jour=${jourIdx}&jour_idx=${jourIdx}&rayon_km=5`;
@@ -1753,12 +1772,12 @@
         dernierScan5km = await resp.json();
         afficherZonesScan5km(dernierScan5km);
         const nbZones = (dernierScan5km.zones_optimales || dernierScan5km.zones || []).length;
-        statut.textContent = `✅ ${nbZones} zone(s) identifiée(s)`;
+        if (statut) statut.textContent = `✅ ${nbZones} zone(s) identifiée(s)`;
 
-        // Scroll vers la carte pour voir le résultat
+        // Scroll vers la carte pour voir les zones projetées
         document.getElementById('map').scrollIntoView({ behavior: 'smooth', block: 'center' });
       } catch (err) {
-        statut.textContent = "❌ Erreur scan";
+        if (statut) statut.textContent = "❌ Erreur scan";
         alert("Erreur lors de la recherche 5 km : " + err.message);
       }
     }
@@ -1769,18 +1788,20 @@
 
       const resDiv = document.getElementById("resultats-scan-5km");
       const zones = data.zones_optimales || data.zones || [];
-      const nomEsp = (data.espece && data.espece.nom) ? data.espece.nom : (data.espece || "l'espèce");
+      const topEspeces = data.top_especes_5km || [];
 
       if (zones.length === 0) {
-        resDiv.innerHTML = `<div style="padding:0.75rem;color:var(--muted);">Aucune zone favorable détectée à 5 km pour ${nomEsp}. Essayez une autre espèce ou une échéance différente.</div>`;
+        resDiv.innerHTML = `<div style="padding:1rem;color:var(--muted);text-align:center;">Aucune zone favorable détectée à 5 km pour ces conditions.</div>`;
         return;
       }
 
+      // 1. Tracer chaque zone sur la carte Leaflet
       zones.forEach(z => {
+        const espNom = (z.espece && z.espece.nom) ? z.espece.nom : (data.espece?.nom || 'Champignon');
         const score = z.score_pct ?? z.score ?? 0;
         const couleur = score >= 80 ? '#10b981' : (score >= 60 ? '#34d399' : '#f59e0b');
 
-        // Dessin du polygone forestier réel si disponible
+        // Polygone forestier IGN réel si disponible
         if (z.polygone_coords && z.polygone_coords.length >= 3) {
           L.polygon(z.polygone_coords, {
             color: couleur,
@@ -1788,15 +1809,17 @@
             fillOpacity: 0.35,
             weight: 2
           }).addTo(coucheZones5km).bindPopup(`
-            <strong>${nomEsp}</strong> (${score}%)<br>
-            <em>${z.libelle_biotope || 'Parcelle forestière'}</em><br>
-            Distance : ${z.distance_km != null ? z.distance_km.toFixed(1) : '?'} km
+            <div style="font-size:0.88rem;">
+              <strong style="color:#ffffff;font-size:1rem;">🍄 ${espNom} (${score}%)</strong><br>
+              <span style="color:#a7f3d0;">${z.libelle_biotope || 'Parcelle forestière IGN'}</span><br>
+              <span style="color:#94a3b8;font-size:0.78rem;">Distance : ${z.distance_km != null ? z.distance_km.toFixed(1) : '?'} km (${z.direction_cardinale || ''})</span>
+            </div>
           `);
         }
 
         // Marqueur circulaire lumineux
         const circle = L.circle([z.latitude, z.longitude], {
-          radius: 120,
+          radius: 130,
           color: couleur,
           fillColor: couleur,
           fillOpacity: 0.55,
@@ -1804,19 +1827,63 @@
         }).addTo(coucheZones5km);
 
         circle.bindPopup(`
-          <strong>${nomEsp}</strong> (${score}%)<br>
-          <em>${z.libelle_biotope || 'Sous-bois'}</em><br>
-          Distance : ${z.distance_km != null ? z.distance_km.toFixed(1) : '?'} km • ${z.direction_cardinale || ''}
+          <div style="font-size:0.88rem;">
+            <strong style="color:#ffffff;font-size:1rem;">🍄 ${espNom} (${score}%)</strong><br>
+            <span style="color:#a7f3d0;">${z.libelle_biotope || 'Sous-bois'}</span><br>
+            <span style="color:#94a3b8;font-size:0.78rem;">Distance : ${z.distance_km != null ? z.distance_km.toFixed(1) : '?'} km • ${z.direction_cardinale || ''}</span>
+          </div>
         `);
       });
 
-      resDiv.innerHTML = `<strong>${zones.length} zone(s) favorable(s) détectée(s) autour de ce lieu :</strong><br>` +
-        zones.slice(0, 8).map(z => {
-          const sc = z.score_pct ?? z.score ?? 0;
-          const dist = z.distance_km != null ? z.distance_km.toFixed(1) : '?';
-          const ess = z.libelle_biotope || z.essence || 'Sous-bois';
-          return `• <strong>${sc}%</strong> à ${dist} km (${ess})`;
-        }).join('<br>');
+      // 2. Affichage immédiat des meilleurs champignons trouvés à 5 km
+      let html = "";
+      if (topEspeces.length > 0) {
+        html += `
+          <div style="margin-bottom:1.1rem;">
+            <div style="font-size:1rem;font-weight:800;color:#ffffff;margin-bottom:0.75rem;display:flex;align-items:center;gap:0.4rem;">
+              <span>🏆 Meilleurs champignons trouvés dans le rayon de 5 km :</span>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:0.75rem;">
+              ${topEspeces.slice(0, 8).map(esp => `
+                <div style="background:rgba(9,13,19,0.9);border:1px solid var(--border-accent);border-radius:12px;padding:0.85rem;display:flex;justify-content:space-between;align-items:center;gap:0.6rem;">
+                  <div>
+                    <div style="font-weight:700;color:#ffffff;font-size:0.95rem;">🍄 ${esp.nom}</div>
+                    <div style="font-size:0.76rem;color:var(--muted);margin-top:0.15rem;">
+                      ${esp.biotope || 'Forêt'} • à ${esp.meilleure_distance_km.toFixed(1)} km (${esp.direction})
+                    </div>
+                  </div>
+                  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.3rem;">
+                    <span class="score-cell ${classeScore(esp.score_max_pct)}">${esp.score_max_pct}%</span>
+                    <button class="btn" onclick="centrerSurZone(${esp.latitude}, ${esp.longitude})" style="padding:0.25rem 0.55rem;font-size:0.72rem;background:rgba(16,185,129,0.15);color:#34d399;border-color:rgba(16,185,129,0.3);">
+                      Voir ➔
+                    </button>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      html += `
+        <div style="font-size:0.84rem;color:#cbd5e1;padding-top:0.75rem;border-top:1px solid rgba(255,255,255,0.08);">
+          <strong>📍 ${zones.length} zone(s) favorable(s) répertoriée(s) :</strong><br>
+          ${zones.slice(0, 6).map(z => {
+            const sc = z.score_pct ?? z.score ?? 0;
+            const dist = z.distance_km != null ? z.distance_km.toFixed(1) : '?';
+            const esp = (z.espece && z.espece.nom) ? z.espece.nom : 'Champignon';
+            return `• <strong>${esp}</strong> (${sc}%) à ${dist} km (${z.direction_cardinale || ''}) — ${z.libelle_biotope || 'Sous-bois'}`;
+          }).join('<br>')}
+        </div>
+      `;
+
+      resDiv.innerHTML = html;
+    }
+
+    function centrerSurZone(lat, lon) {
+      if (!map) return;
+      map.setView([lat, lon], 14, { animate: true });
+      document.getElementById('map').scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
     function effacerScan5km() {

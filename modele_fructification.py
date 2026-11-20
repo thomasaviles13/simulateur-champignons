@@ -2567,22 +2567,24 @@ def rechercher_zones_optimales_5km(
     3. Évalue le modèle mycologique complet (biotope, pH local, altitude, pente, exposition Adret/Ubac,
        cinétique et stades de maturité des carpophores) sur chaque zone candidate.
     """
-    cible_propre = str(espece_id).strip().lower()
-    espece = next((e for e in CATALOGUE_ESPECES if (
-        e.get("id", "").lower() == cible_propre
-        or e.get("nom", "").strip().lower() == cible_propre
-        or e.get("nom_scientifique", "").strip().lower() == cible_propre
-    )), None)
-    if not espece:
-        # Recherche tolérante si correspondance partielle (ex: 'Cèpe de Bordeaux (85%)' ou 'boletus')
+    is_mode_auto = espece_id in (None, "", "auto", "toutes", "all", "top")
+    espece = None
+    if not is_mode_auto:
+        cible_propre = str(espece_id).strip().lower()
         espece = next((e for e in CATALOGUE_ESPECES if (
-            e.get("nom", "").lower() in cible_propre
-            or cible_propre in e.get("nom", "").lower()
-            or e.get("id", "").lower() in cible_propre
-            or cible_propre in e.get("nom_scientifique", "").lower()
+            e.get("id", "").lower() == cible_propre
+            or e.get("nom", "").strip().lower() == cible_propre
+            or e.get("nom_scientifique", "").strip().lower() == cible_propre
         )), None)
-    if not espece:
-        raise ValueError(f"Espèce inconnue : {espece_id}")
+        if not espece:
+            espece = next((e for e in CATALOGUE_ESPECES if (
+                e.get("nom", "").lower() in cible_propre
+                or cible_propre in e.get("nom", "").lower()
+                or e.get("id", "").lower() in cible_propre
+                or cible_propre in e.get("nom_scientifique", "").lower()
+            )), None)
+        if not espece:
+            is_mode_auto = True
 
     with ThreadPoolExecutor(max_workers=4) as pool:
         fut_meteo = pool.submit(recuperer_donnees_meteo, latitude, longitude, 20, 11)
@@ -2606,6 +2608,13 @@ def rechercher_zones_optimales_5km(
 
     topo_centre = calculer_topographie_sur_mnt(mnt, latitude, longitude)
     alt_centre = topo_centre.get("altitude_m") or 250.0
+
+    # Liste des espèces à tester : automatique (top saison) ou espèce ciblée
+    if is_mode_auto:
+        mois_actuel = datetime.now().month
+        especes_a_tester = selectionner_catalogue_contextuel(latitude, longitude, mois_actuel)[:20]
+    else:
+        especes_a_tester = [espece]
 
     # --- Génération des zones candidates dans le disque de 5 km ---
     candidats = []
@@ -2701,30 +2710,47 @@ def rechercher_zones_optimales_5km(
             "foret": foret_z,
         }
 
-        score_biotope = evaluer_biotope(espece, profil_z)
         delta_alt = (topo_z["altitude_m"] or alt_centre) - alt_centre
         meteo_z = _adapter_meteo_altitude(meteo_ref, delta_alt)
 
-        res_cible = calculer_score_jour(
-            espece,
-            meteo_z,
-            idx_cible,
-            score_biotope,
-            topographie=topo_z,
-            profil_env=profil_z,
-        )
+        meilleur_esp = None
+        meilleur_score = -1
+        meilleur_bio = 0.0
+        meilleure_res = None
+
+        for esp_cand in especes_a_tester:
+            score_biotope = evaluer_biotope(esp_cand, profil_z)
+            if score_biotope < 0.12:
+                continue
+            res_cible = calculer_score_jour(
+                esp_cand,
+                meteo_z,
+                idx_cible,
+                score_biotope,
+                topographie=topo_z,
+                profil_env=profil_z,
+            )
+            sc = res_cible["score_pct"]
+            if sc > meilleur_score:
+                meilleur_score = sc
+                meilleur_esp = esp_cand
+                meilleur_bio = score_biotope
+                meilleure_res = res_cible
+
+        if not meilleur_esp or meilleur_score <= 0:
+            continue
 
         # Calcul rapide du score max sur les 4 jours autour/après la date cible
-        score_max_proche = res_cible["score_pct"]
+        score_max_proche = meilleur_score
         meilleure_echeance = "J" if decalage_jour == 0 else f"J+{decalage_jour}"
         for d_alt in range(max(0, decalage_jour), min(11, decalage_jour + 4)):
             if d_alt == decalage_jour:
                 continue
             r_alt = calculer_score_jour(
-                espece,
+                meilleur_esp,
                 meteo_z,
                 idx_aujourd_hui + d_alt,
-                score_biotope,
+                meilleur_bio,
                 topographie=topo_z,
                 profil_env=profil_z,
             )
@@ -2744,10 +2770,10 @@ def rechercher_zones_optimales_5km(
             "distance_km": dist_km,
             "cap_deg": cap_deg,
             "direction_cardinale": dir_card,
-            "score_pct": res_cible["score_pct"],
+            "score_pct": meilleur_score,
             "score_max_proche_pct": score_max_proche,
             "meilleure_echeance": meilleure_echeance,
-            "compatibilite_biotope_pct": int(round(score_biotope * 100)),
+            "compatibilite_biotope_pct": int(round(meilleur_bio * 100)),
             "type_milieu": type_milieu,
             "libelle_biotope": _formater_libelle_biotope_zone(foret_z),
             "altitude_m": topo_z["altitude_m"],
@@ -2755,7 +2781,13 @@ def rechercher_zones_optimales_5km(
             "orientation": topo_z["orientation"],
             "ph_estime": sol_z["ph"],
             "type_sol": sol_z["type_sol"],
-            "details_jour": res_cible["details"],
+            "details_jour": meilleure_res["details"],
+            "espece": {
+                "id": meilleur_esp["id"],
+                "nom": meilleur_esp["nom"],
+                "nom_scientifique": meilleur_esp.get("nom_scientifique", ""),
+                "comestibilite": meilleur_esp.get("comestibilite", "Comestible"),
+            },
             "_parcelle": parcelle_poly,
         })
 
@@ -2792,19 +2824,42 @@ def rechercher_zones_optimales_5km(
             if len(zones_retenues) >= max_zones:
                 break
 
+    # Synthèse des meilleurs champignons trouvés dans le rayon de 5 km
+    especes_uniques = {}
+    for z in zones_retenues:
+        z_esp = z.get("espece") or {}
+        nom_esp = z_esp.get("nom") or "Champignon"
+        if nom_esp not in especes_uniques or z["score_pct"] > especes_uniques[nom_esp]["score_max_pct"]:
+            especes_uniques[nom_esp] = {
+                "nom": nom_esp,
+                "nom_scientifique": z_esp.get("nom_scientifique", ""),
+                "comestibilite": z_esp.get("comestibilite", "Comestible"),
+                "score_max_pct": z["score_pct"],
+                "meilleure_distance_km": z["distance_km"],
+                "direction": z["direction_cardinale"],
+                "biotope": z["libelle_biotope"],
+                "latitude": z["latitude"],
+                "longitude": z["longitude"],
+            }
+    top_especes_5km = sorted(especes_uniques.values(), key=lambda x: x["score_max_pct"], reverse=True)
+
+    info_esp = {
+        "id": espece["id"] if espece else "auto",
+        "nom": espece["nom"] if espece else "Tous les meilleurs champignons",
+        "nom_scientifique": espece["nom_scientifique"] if espece else "Multi-espèces automatiques",
+        "essences_hotes": espece.get("essences_hotes", []) if espece else [],
+        "ph_optimal": espece.get("ph_optimal", "") if espece else "",
+    }
+
     return {
         "centre": {"latitude": latitude, "longitude": longitude, "altitude_m": alt_centre},
         "rayon_km": rayon_km,
         "date_cible": date_cible,
         "echeance": "J" if decalage_jour == 0 else f"J+{decalage_jour}",
         "decalage_jour": decalage_jour,
-        "espece": {
-            "id": espece["id"],
-            "nom": espece["nom"],
-            "nom_scientifique": espece["nom_scientifique"],
-            "essences_hotes": espece["essences_hotes"],
-            "ph_optimal": espece["ph_optimal"],
-        },
+        "mode_auto": is_mode_auto,
+        "top_especes_5km": top_especes_5km,
+        "espece": info_esp,
         "nb_parcelles_ign_analysees": len(parcelles),
         "nb_points_testes": len(zones_evaluees),
         "score_max_rayon_pct": zones_retenues[0]["score_pct"] if zones_retenues else 0,
